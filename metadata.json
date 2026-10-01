@@ -1,0 +1,8 @@
+{
+  "name": "Transit SCHB - Gestion des Chèques de Transit",
+  "description": "Plateforme Transit SCHB pour le suivi des chèques de service transit, cautions conteneurs, débours douaniers et déconsignations maritimes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
