@@ -534,7 +534,7 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
                   </button>
                 </th>
                 <th className="py-3 px-3 font-bold text-slate-700">N° Chèque & Banque</th>
-                <th className="py-3 px-3 font-bold text-slate-700">Dossier / Client</th>
+                <th className="py-3 px-3 font-bold text-slate-700">Fournisseur / N° BC</th>
                 <th className="py-3 px-3 font-bold text-slate-700">Bénéficiaire & Nature</th>
                 <th className="py-3 px-3 font-bold text-slate-700">Montant</th>
                 <th className="py-3 px-3 font-bold text-slate-700">Déclarant / Coursier</th>
@@ -601,13 +601,13 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
                         </div>
                       </td>
 
-                      {/* Dossier & Client */}
+                      {/* Fournisseur & N° Bon de Commande */}
                       <td className="py-3 px-3">
-                        <div className="font-mono font-bold text-cyan-700">
+                        <div className="font-bold text-cyan-900 truncate max-w-[170px]" title={`Fournisseur: ${chq.dossierNumber}`}>
                           {chq.dossierNumber}
                         </div>
-                        <div className="text-xs text-slate-700 truncate max-w-[170px] font-semibold" title={chq.clientName}>
-                          {chq.clientName}
+                        <div className="text-xs text-slate-700 truncate max-w-[170px] font-semibold font-mono" title={`N° BC: ${chq.clientName}`}>
+                          BC: {chq.clientName}
                         </div>
                       </td>
 

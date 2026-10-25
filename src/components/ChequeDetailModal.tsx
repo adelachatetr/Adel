@@ -69,7 +69,7 @@ export const ChequeDetailModal: React.FC<ChequeDetailModalProps> = ({
                 )}
               </div>
               <p className="text-xs text-slate-500 mt-0.5 font-medium">
-                Dossier Transit: <strong className="text-cyan-700 font-mono font-bold">{cheque.dossierNumber}</strong> · Client: {cheque.clientName}
+                Fournisseur : <strong className="text-cyan-800 font-bold">{cheque.dossierNumber}</strong> · N° BC : <strong className="text-slate-800 font-mono font-bold">{cheque.clientName}</strong>
               </p>
             </div>
           </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, FolderPlus, Check, Trash2, Printer } from 'lucide-react';
+import { X, FolderPlus, Check, Trash2, Printer, Anchor, Landmark, Calendar, AlertCircle } from 'lucide-react';
 import { TransitDossier, DossierStatus } from '../types/transit';
 
 interface DossierFormModalProps {
@@ -27,10 +27,13 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
   const [declarationNumber, setDeclarationNumber] = useState('');
   const [vesselName, setVesselName] = useState('');
   const [eta, setEta] = useState('');
+  const [berthingDate, setBerthingDate] = useState('');
+  const [bankReceptionDate, setBankReceptionDate] = useState('');
   const [portOfDischarge, setPortOfDischarge] = useState('Port d\'Alger');
   const [goodsDescription, setGoodsDescription] = useState('');
   const [containerCount, setContainerCount] = useState<number>(1);
   const [status, setStatus] = useState<DossierStatus>('OUVERT');
+  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
     if (editingDossier) {
@@ -42,12 +45,15 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
       setDeclarationNumber(editingDossier.declarationNumber || '');
       setVesselName(editingDossier.vesselName || '');
       setEta(editingDossier.eta || '');
+      setBerthingDate(editingDossier.berthingDate || '');
+      setBankReceptionDate(editingDossier.bankReceptionDate || '');
       setPortOfDischarge(editingDossier.portOfDischarge);
       setGoodsDescription(editingDossier.goodsDescription);
       setContainerCount(editingDossier.containerCount);
       setStatus(editingDossier.status);
+      setFormError(null);
     } else {
-      setDossierNumber(`TR-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`);
+      setDossierNumber('');
       setClientName('');
       setClientContact('');
       setRegime('IMPORT_DIRECT');
@@ -55,10 +61,13 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
       setDeclarationNumber('');
       setVesselName('');
       setEta('');
+      setBerthingDate('');
+      setBankReceptionDate('');
       setPortOfDischarge('Port Maritime');
       setGoodsDescription('');
       setContainerCount(1);
       setStatus('OUVERT');
+      setFormError(null);
     }
   }, [editingDossier, isOpen]);
 
@@ -66,8 +75,10 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
+
     if (!dossierNumber.trim() || !clientName.trim() || !blNumber.trim()) {
-      alert('Veuillez renseigner au moins le N° de dossier, le client et le N° de B/L.');
+      setFormError('Veuillez renseigner au moins le Nom Fournisseur, le N° de Bon de Commande et le N° de B/L.');
       return;
     }
 
@@ -80,6 +91,8 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
       declarationNumber: declarationNumber.trim() || undefined,
       vesselName: vesselName.trim() || undefined,
       eta: eta || undefined,
+      berthingDate: berthingDate || undefined,
+      bankReceptionDate: bankReceptionDate || undefined,
       portOfDischarge: portOfDischarge.trim(),
       goodsDescription: goodsDescription.trim() || 'Marchandises diverses',
       containerCount: Number(containerCount) || 1,
@@ -103,17 +116,25 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
         </div>
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-4 text-xs">
+          {formError && (
+            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />
+              <span>{formError}</span>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-700 font-semibold mb-1">
-                N° Dossier Transit <span className="text-rose-500">*</span>
+                Nom Fournisseur <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
                 required
                 value={dossierNumber}
                 onChange={e => setDossierNumber(e.target.value)}
-                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-mono font-bold focus:border-cyan-600"
+                placeholder="ex: FLSMIDTH, SINOMA, LAFARGE..."
+                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-bold focus:border-cyan-600"
               />
             </div>
 
@@ -137,15 +158,15 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
 
           <div>
             <label className="block text-slate-700 font-semibold mb-1">
-              Client Importateur / Donneur d'Ordre <span className="text-rose-500">*</span>
+              N° DE BON DE COMMANDE <span className="text-rose-500">*</span>
             </label>
             <input
               type="text"
               required
               value={clientName}
               onChange={e => setClientName(e.target.value)}
-              placeholder="ex: Maghreb Agro Industries SARL"
-              className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-medium focus:border-cyan-600"
+              placeholder="ex: BC-2026-04192 / BON DE COMMANDE SCHB"
+              className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-bold font-mono focus:border-cyan-600"
             />
           </div>
 
@@ -202,6 +223,41 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
                 onChange={e => setPortOfDischarge(e.target.value)}
                 className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-medium focus:border-cyan-600"
               />
+            </div>
+          </div>
+
+          {/* Les 2 caisses demandées : 1er Date accostage, 2-Date Recu Dossier (Banque) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-cyan-50/70 p-3.5 rounded-2xl border border-cyan-200 shadow-2xs">
+            <div>
+              <label className="block text-slate-800 font-bold mb-1 text-xs flex items-center gap-1.5">
+                <Anchor className="h-4 w-4 text-cyan-700 shrink-0" />
+                <span>1. Date Accostage Navire</span>
+              </label>
+              <input
+                type="date"
+                value={berthingDate}
+                onChange={e => setBerthingDate(e.target.value)}
+                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-medium focus:outline-none focus:border-cyan-600 focus:ring-1 focus:ring-cyan-600 shadow-2xs"
+              />
+              <span className="text-[10px] text-cyan-800 font-medium mt-1 block">
+                Date effective d'accostage au port
+              </span>
+            </div>
+
+            <div>
+              <label className="block text-slate-800 font-bold mb-1 text-xs flex items-center gap-1.5">
+                <Landmark className="h-4 w-4 text-blue-700 shrink-0" />
+                <span>2. Date Reçu Dossier (Banque)</span>
+              </label>
+              <input
+                type="date"
+                value={bankReceptionDate}
+                onChange={e => setBankReceptionDate(e.target.value)}
+                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-medium focus:outline-none focus:border-cyan-600 focus:ring-1 focus:ring-cyan-600 shadow-2xs"
+              />
+              <span className="text-[10px] text-blue-800 font-medium mt-1 block">
+                Date réception dossier par la banque
+              </span>
             </div>
           </div>
 

@@ -401,7 +401,7 @@ export const BordereauModal: React.FC<BordereauModalProps> = ({
                 <tr className="border-y-2 border-slate-900 bg-slate-100 font-bold text-slate-800">
                   <th className="py-2 px-2 border-r border-slate-200">N°</th>
                   <th className="py-2 px-2 border-r border-slate-200">N° Chèque & Banque</th>
-                  <th className="py-2 px-2 border-r border-slate-200">Dossier / Client</th>
+                  <th className="py-2 px-2 border-r border-slate-200">Fournisseur / N° BC</th>
                   <th className="py-2 px-2 border-r border-slate-200">Bénéficiaire & Motif</th>
                   <th className="py-2 px-2 border-r border-slate-200">Réf. Conteneurs / B/L</th>
                   <th className="py-2 px-2 text-right">Montant</th>
@@ -427,8 +427,8 @@ export const BordereauModal: React.FC<BordereauModalProps> = ({
                           <div className="text-[10px] font-sans font-normal text-slate-600">{chq.bankName}</div>
                         </td>
                         <td className="py-2 px-2 border-r border-slate-200">
-                          <strong className="font-mono text-[11px]">{chq.dossierNumber}</strong>
-                          <div className="text-[10px] text-slate-600 truncate max-w-[140px]">{chq.clientName}</div>
+                          <strong className="text-[11px] font-bold text-slate-900">{chq.dossierNumber}</strong>
+                          <div className="text-[10px] text-slate-600 truncate max-w-[140px] font-mono">BC: {chq.clientName}</div>
                         </td>
                         <td className="py-2 px-2 border-r border-slate-200">
                           <span className="font-semibold">{chq.beneficiary}</span>

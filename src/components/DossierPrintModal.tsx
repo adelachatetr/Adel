@@ -287,8 +287,8 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
               </div>
 
               <div className="text-right">
-                <div className="text-xs font-mono font-bold uppercase bg-slate-100 px-3 py-1 border border-slate-300 rounded inline-block">
-                  Dossier : {dossier.dossierNumber}
+                <div className="text-xs font-bold uppercase bg-slate-100 px-3 py-1 border border-slate-300 rounded inline-block">
+                  Fournisseur : {dossier.dossierNumber}
                 </div>
                 <div className="text-xs text-slate-600 mt-1">
                   Édité le : <strong>{formatShortDate(printDate)}</strong>
@@ -305,8 +305,10 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
             <h2 className="text-sm font-bold uppercase tracking-wide border-y border-slate-300 py-1.5 bg-slate-50 text-slate-900">
               FICHE RÉCAPITULATIVE & ÉTAT DE DÉBOURS DU DOSSIER DE TRANSIT
             </h2>
-            <div className="text-xs text-slate-600 mt-1.5 flex items-center justify-center gap-4">
-              <span>Client : <strong className="text-slate-900">{dossier.clientName}</strong></span>
+            <div className="text-xs text-slate-600 mt-1.5 flex items-center justify-center gap-4 flex-wrap">
+              <span>N° Bon de Commande : <strong className="text-slate-900 font-mono">{dossier.clientName}</strong></span>
+              <span>·</span>
+              <span>Fournisseur : <strong className="text-slate-900">{dossier.dossierNumber}</strong></span>
               <span>·</span>
               <span>Statut : <strong className="text-slate-900">{statusCfg.label}</strong></span>
               <span>·</span>
@@ -340,7 +342,19 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
               <span className="text-slate-500 block text-[10px] uppercase font-bold">Date d'Ouverture</span>
               <span className="font-medium text-slate-900">{formatShortDate(dossier.openedDate)}</span>
             </div>
-            <div className="col-span-2">
+            <div>
+              <span className="text-slate-500 block text-[10px] uppercase font-bold">1. Date Accostage Navire</span>
+              <span className="font-medium text-slate-900 font-mono">
+                {dossier.berthingDate ? formatShortDate(dossier.berthingDate) : 'En attente'}
+              </span>
+            </div>
+            <div>
+              <span className="text-slate-500 block text-[10px] uppercase font-bold">2. Date Reçu Dossier (Banque)</span>
+              <span className="font-medium text-slate-900 font-mono">
+                {dossier.bankReceptionDate ? formatShortDate(dossier.bankReceptionDate) : 'En attente'}
+              </span>
+            </div>
+            <div>
               <span className="text-slate-500 block text-[10px] uppercase font-bold">Désignation Marchandises</span>
               <span className="font-medium text-slate-900 truncate block">{dossier.goodsDescription}</span>
             </div>

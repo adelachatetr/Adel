@@ -15,6 +15,11 @@ import { DossierFormModal } from './components/DossierFormModal';
 import { DossierPrintModal } from './components/DossierPrintModal';
 import { ChequeDetailModal } from './components/ChequeDetailModal';
 import { SettingsModal } from './components/SettingsModal';
+import { LoginView } from './components/LoginView';
+import { ChangePasswordModal } from './components/ChangePasswordModal';
+import { UserManagementModal } from './components/UserManagementModal';
+import { AuthSession } from './types/auth';
+import { getCurrentSession, clearSession } from './utils/authStorage';
 import { TransitCheque, TransitDossier, ChequeStatus } from './types/transit';
 import { 
   loadStoredCheques, 
@@ -52,6 +57,12 @@ export default function App() {
 
   // Cross-view filters
   const [activeFilter, setActiveFilter] = useState<{ type: string; value: string } | null>(null);
+
+  // User Authentication & Session
+  const [session, setSession] = useState<AuthSession | null>(() => getCurrentSession());
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [isUserManagementOpen, setIsUserManagementOpen] = useState(false);
+  const [isCreateUserMode, setIsCreateUserMode] = useState(false);
 
   // Pre-fill parameters when creating a cheque from a specific dossier
   const [prefillDossier, setPrefillDossier] = useState<{ number: string; client: string } | undefined>(undefined);
@@ -93,7 +104,7 @@ export default function App() {
                 id: `log-${Date.now()}`,
                 date: nowStr,
                 action: 'Modification des détails du chèque',
-                actor: 'Responsable Transit',
+                actor: session ? `${session.user.fullName} (${session.user.role})` : 'Responsable Transit',
                 comment: 'Mise à jour des informations administratives'
               },
               ...(item.auditTrail || [])
@@ -132,7 +143,7 @@ export default function App() {
             id: `log-${Date.now()}`,
             date: nowStr,
             action: 'Création et enregistrement du chèque',
-            actor: 'Caisse Service Transit'
+            actor: session ? `${session.user.fullName} (${session.user.role})` : 'Caisse Service Transit'
           }
         ]
       };
@@ -173,7 +184,7 @@ export default function App() {
               id: `log-${Date.now()}`,
               date: nowStr,
               action: `Changement de statut : ${newStatus}`,
-              actor: 'Service Transit',
+              actor: session ? `${session.user.fullName} (${session.user.role})` : 'Service Transit',
               comment: comment || 'Mise à jour opérationnelle'
             },
             ...(c.auditTrail || [])
@@ -233,14 +244,16 @@ export default function App() {
     } else {
       const newDossier: TransitDossier = {
         id: `dossier-${Date.now()}`,
-        dossierNumber: data.dossierNumber || `TR-2026-${Math.floor(100 + Math.random() * 900)}`,
-        clientName: data.clientName || 'Nouveau Client',
+        dossierNumber: data.dossierNumber || 'Fournisseur',
+        clientName: data.clientName || 'BC-SCHB',
         clientContact: data.clientContact,
         regime: data.regime || 'IMPORT_DIRECT',
         blNumber: data.blNumber || 'BL-AUTO',
         declarationNumber: data.declarationNumber,
         vesselName: data.vesselName,
         eta: data.eta,
+        berthingDate: data.berthingDate,
+        bankReceptionDate: data.bankReceptionDate,
         portOfDischarge: data.portOfDischarge || 'Port',
         goodsDescription: data.goodsDescription || 'Marchandises',
         containerCount: data.containerCount || 1,
@@ -288,6 +301,15 @@ export default function App() {
     }
   };
 
+  if (!session) {
+    return (
+      <LoginView
+        companyName={settings.companyName}
+        onLoginSuccess={() => setSession(getCurrentSession())}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 flex flex-col font-['Plus_Jakarta_Sans',sans-serif]">
       {/* Top Application Header */}
@@ -319,6 +341,20 @@ export default function App() {
         selectedCurrency={settings.defaultCurrency}
         onCurrencyChange={handleCurrencyChange}
         urgentCautionsCount={urgentCautionsCount}
+        currentUser={session.user}
+        onOpenChangePassword={() => setIsChangePasswordOpen(true)}
+        onOpenUserManagement={() => {
+          setIsCreateUserMode(false);
+          setIsUserManagementOpen(true);
+        }}
+        onOpenCreateUser={() => {
+          setIsCreateUserMode(true);
+          setIsUserManagementOpen(true);
+        }}
+        onLogout={() => {
+          clearSession();
+          setSession(null);
+        }}
       />
 
       {/* Main Workspace Body */}
@@ -335,6 +371,9 @@ export default function App() {
               setPrefillDossier(undefined);
               setIsChequeFormOpen(true);
             }}
+            companyName={settings.companyName}
+            agencyCity={settings.agencyCity}
+            agencyPhone={settings.agencyPhone}
           />
         )}
 
@@ -500,6 +539,7 @@ export default function App() {
           setDossiers(newD);
         }}
         onUpdateAllChequesBank={handleUpdateAllChequesBank}
+        currentUser={session.user}
       />
 
       <ChequeDetailModal
@@ -516,6 +556,28 @@ export default function App() {
           setIsBordereauModalOpen(true);
         }}
         onDeleteCheque={handleDeleteCheque}
+      />
+
+      <ChangePasswordModal
+        isOpen={isChangePasswordOpen}
+        onClose={() => setIsChangePasswordOpen(false)}
+        currentUser={session.user}
+        onPasswordChanged={() => {
+          setSession(getCurrentSession());
+        }}
+      />
+
+      <UserManagementModal
+        isOpen={isUserManagementOpen}
+        onClose={() => {
+          setIsUserManagementOpen(false);
+          setIsCreateUserMode(false);
+        }}
+        currentUser={session.user}
+        onUsersUpdated={() => {
+          setSession(getCurrentSession());
+        }}
+        initialAddMode={isCreateUserMode}
       />
     </div>
   );

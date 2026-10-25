@@ -155,9 +155,12 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                   }`}
                 >
                   <div className="flex items-center justify-between gap-1">
-                    <span className="font-mono text-xs font-bold text-cyan-700">
-                      {dossier.dossierNumber}
-                    </span>
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-cyan-800 block">Fournisseur</span>
+                      <span className="text-xs font-bold text-slate-900">
+                        {dossier.dossierNumber}
+                      </span>
+                    </div>
                     <div className="flex items-center gap-1.5 flex-wrap justify-end">
                       <span className={`text-[10px] px-2 py-0.5 rounded-md font-semibold border ${statusCfg.bgClass} ${statusCfg.textClass} ${statusCfg.borderClass}`}>
                         {statusCfg.label}
@@ -182,8 +185,8 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                           e.stopPropagation();
                           const count = dossierCheques.length;
                           const confirmMsg = count > 0
-                            ? `Êtes-vous sûr de vouloir supprimer définitivement le dossier ${dossier.dossierNumber} (${dossier.clientName}) ?\n\nAttention : ce dossier contient ${count} chèque(s) rattaché(s). Cette action est irréversible.`
-                            : `Êtes-vous sûr de vouloir supprimer définitivement le dossier ${dossier.dossierNumber} (${dossier.clientName}) ?\n\nCette action est irréversible.`;
+                            ? `Êtes-vous sûr de vouloir supprimer définitivement le dossier du fournisseur ${dossier.dossierNumber} (BC: ${dossier.clientName}) ?\n\nAttention : ce dossier contient ${count} chèque(s) rattaché(s). Cette action est irréversible.`
+                            : `Êtes-vous sûr de vouloir supprimer définitivement le dossier du fournisseur ${dossier.dossierNumber} (BC: ${dossier.clientName}) ?\n\nCette action est irréversible.`;
                           if (window.confirm(confirmMsg)) {
                             onDeleteDossier(dossier.id);
                           }
@@ -196,8 +199,9 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                     </div>
                   </div>
 
-                  <div className="text-xs font-bold text-slate-900 mt-1.5 truncate" title={dossier.clientName}>
-                    {dossier.clientName}
+                  <div className="text-xs font-bold text-slate-800 mt-2 truncate flex items-center gap-1.5" title={dossier.clientName}>
+                    <span className="text-[10px] text-slate-500 font-medium">N° BC:</span>
+                    <span className="font-mono text-cyan-800 font-bold">{dossier.clientName}</span>
                   </div>
 
                   <div className="text-[11px] text-slate-500 mt-1 flex items-center gap-1.5 font-mono font-medium">
@@ -224,7 +228,10 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-base font-bold font-mono text-slate-900">
+                    <span className="text-[10px] uppercase font-bold text-cyan-800 bg-cyan-50 px-2 py-0.5 rounded border border-cyan-200">
+                      Fournisseur
+                    </span>
+                    <span className="text-base font-bold text-slate-900">
                       {selectedDossier.dossierNumber}
                     </span>
                     {(() => {
@@ -249,13 +256,26 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                       </span>
                     )}
                   </div>
-                  <h2 className="text-sm font-bold text-slate-800 mt-1">
-                    Client : {selectedDossier.clientName}
+                  <h2 className="text-sm font-bold text-slate-800 mt-1.5 flex items-center gap-2 flex-wrap">
+                    <span className="text-xs text-slate-500 font-semibold uppercase">N° Bon de Commande :</span>
+                    <span className="font-mono text-cyan-900 font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-300">
+                      {selectedDossier.clientName}
+                    </span>
                   </h2>
-                  <div className="text-xs text-slate-500 mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 font-medium">
-                    <span>Port : {selectedDossier.portOfDischarge}</span>
-                    {selectedDossier.vesselName && <span>Navire : {selectedDossier.vesselName}</span>}
+                  <div className="text-xs text-slate-500 mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 font-medium">
+                    <span>Port : <strong>{selectedDossier.portOfDischarge}</strong></span>
+                    {selectedDossier.vesselName && <span>Navire : <strong>{selectedDossier.vesselName}</strong></span>}
                     <span>Marchandise : {selectedDossier.goodsDescription}</span>
+                    {selectedDossier.berthingDate && (
+                      <span className="text-cyan-900 font-bold bg-cyan-50 px-2 py-0.5 rounded-md border border-cyan-200 flex items-center gap-1">
+                        ⚓ Accostage : <strong className="font-mono">{formatShortDate(selectedDossier.berthingDate)}</strong>
+                      </span>
+                    )}
+                    {selectedDossier.bankReceptionDate && (
+                      <span className="text-blue-900 font-bold bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200 flex items-center gap-1">
+                        🏦 Reçu Banque : <strong className="font-mono">{formatShortDate(selectedDossier.bankReceptionDate)}</strong>
+                      </span>
+                    )}
                   </div>
                 </div>
 

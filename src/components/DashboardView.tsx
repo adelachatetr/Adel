@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Container, 
   Clock, 
@@ -7,10 +7,12 @@ import {
   ArrowDownLeft, 
   ChevronRight,
   ShieldAlert,
-  Anchor
+  Anchor,
+  Printer
 } from 'lucide-react';
 import { TransitCheque, TransitDossier } from '../types/transit';
 import { formatAmount, formatShortDate, STATUS_CONFIG, CATEGORY_LABELS } from '../utils/storage';
+import { DeboursBreakdownPrintModal } from './DeboursBreakdownPrintModal';
 
 interface DashboardViewProps {
   cheques: TransitCheque[];
@@ -19,6 +21,9 @@ interface DashboardViewProps {
   onNavigateToChequesWithFilter: (filterType: string, value: string) => void;
   onOpenChequeDetail: (cheque: TransitCheque) => void;
   onOpenNewCheque: () => void;
+  companyName?: string;
+  agencyCity?: string;
+  agencyPhone?: string;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
@@ -27,8 +32,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   selectedCurrency,
   onNavigateToChequesWithFilter,
   onOpenChequeDetail,
-  onOpenNewCheque
+  onOpenNewCheque,
+  companyName = 'TRANSIT SCHB',
+  agencyCity = 'Constantine / Hamma Bouziane & Ports',
+  agencyPhone = '+213 (0) 31 88 99 00'
 }) => {
+  const [isPrintBreakdownOpen, setIsPrintBreakdownOpen] = useState(false);
   // Financial computations
   const totalDeboursEmis = cheques
     .filter(c => c.direction === 'EMIS' && c.status !== 'ANNULE')
@@ -320,12 +329,25 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Répartition par Catégorie de Débours */}
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
-          <h3 className="text-sm font-bold text-slate-900 mb-1">
-            Répartition des Débours par Nature de Charge
-          </h3>
-          <p className="text-xs text-slate-500 mb-4 font-medium">
-            Douane, cautions, frais d'échange B/L, acconage et transport
-          </p>
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <div>
+              <h3 className="text-sm font-bold text-slate-900">
+                Répartition des Débours par Nature de Charge
+              </h3>
+              <p className="text-xs text-slate-500 font-medium">
+                Douane, cautions, frais d'échange B/L, acconage et transport
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsPrintBreakdownOpen(true)}
+              className="px-3.5 py-1.5 rounded-xl bg-cyan-700 hover:bg-cyan-800 active:bg-cyan-900 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm shadow-cyan-700/25 transition-all cursor-pointer shrink-0"
+              title="Imprimer l'état officiel des débours par nature"
+            >
+              <Printer className="h-3.5 w-3.5" />
+              <span>Imprimer l'état</span>
+            </button>
+          </div>
 
           <div className="space-y-3.5">
             {categoryBreakdown.map(([catKey, amount]) => {
@@ -470,6 +492,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </table>
         </div>
       </div>
+
+      <DeboursBreakdownPrintModal
+        isOpen={isPrintBreakdownOpen}
+        onClose={() => setIsPrintBreakdownOpen(false)}
+        cheques={cheques}
+        selectedCurrency={selectedCurrency}
+        companyName={companyName}
+        agencyCity={agencyCity}
+        agencyPhone={agencyPhone}
+      />
     </div>
   );
 };

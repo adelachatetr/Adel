@@ -326,11 +326,11 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
             </div>
           </div>
 
-          {/* Section 3: Dossier Transit & Client & Bénéficiaire */}
+          {/* Section 3: Fournisseur & N° Bon de Commande & Bénéficiaire */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="block text-slate-700 font-semibold mb-1">
-                N° Dossier Transit <span className="text-rose-500">*</span>
+                Nom Fournisseur <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
@@ -338,13 +338,13 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
                 list="dossiers-list"
                 value={dossierNumber}
                 onChange={e => handleDossierChange(e.target.value)}
-                placeholder="ex: TR-2026-0104"
-                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-mono font-bold focus:outline-none focus:border-cyan-600"
+                placeholder="ex: FLSMIDTH, SINOMA..."
+                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-bold focus:outline-none focus:border-cyan-600"
               />
               <datalist id="dossiers-list">
                 {dossiers.map(d => (
                   <option key={d.id} value={d.dossierNumber}>
-                    {d.clientName} (B/L {d.blNumber})
+                    BC: {d.clientName} (B/L {d.blNumber})
                   </option>
                 ))}
               </datalist>
@@ -352,15 +352,15 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
 
             <div>
               <label className="block text-slate-700 font-semibold mb-1">
-                Client Importateur / Exportateur <span className="text-rose-500">*</span>
+                N° DE BON DE COMMANDE <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
                 required
                 value={clientName}
                 onChange={e => setClientName(e.target.value)}
-                placeholder="ex: Société Maghreb Agro"
-                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-medium focus:outline-none focus:border-cyan-600"
+                placeholder="ex: BC-2026-04192 / BON DE COMMANDE SCHB"
+                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-bold font-mono focus:outline-none focus:border-cyan-600"
               />
             </div>
 

@@ -89,6 +89,8 @@ export interface TransitDossier {
   declarationNumber?: string;  // N° Déclaration en Douane (DUM / DAU / Sommier)
   vesselName?: string;         // Nom du navire ou N° de vol
   eta?: string;                // Date arrivée prévue
+  berthingDate?: string;       // Date d'accostage du navire au port
+  bankReceptionDate?: string;  // Date de réception du dossier par la banque
   portOfDischarge: string;     // Port / Aéroport
   goodsDescription: string;    // Désignation marchandise
   containerCount: number;
