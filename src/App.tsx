@@ -465,9 +465,9 @@ export default function App() {
             <span className="font-mono text-[11px] font-semibold text-slate-600 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200">
               {cheques.length} chèques · {dossiers.length} dossiers actifs
             </span>
-            <div className="text-[11px] font-bold text-slate-900 bg-slate-100/80 px-3 py-1 rounded-lg border border-slate-200 flex items-center gap-1.5">
+            <div className="text-[11px] font-bold text-slate-900 bg-slate-100/80 px-3 py-1 rounded-lg border border-slate-200 flex items-center gap-1.5 shadow-2xs">
               <span className="w-2 h-2 rounded-full bg-cyan-600"></span>
-              <span>Réalisé par : <strong className="text-cyan-700 font-extrabold">Noui Adel</strong></span>
+              <span>Réalisé par : <strong className="text-cyan-800 font-black tracking-wide">NOUI ADEL</strong></span>
             </div>
           </div>
         </div>

@@ -373,8 +373,8 @@ export const BordereauModal: React.FC<BordereauModalProps> = ({
                 <div className="text-xs text-slate-600 mt-1">
                   Date : <strong>{formatShortDate(bordereauDate)}</strong>
                 </div>
-                <div className="text-[10px] text-cyan-800 font-semibold mt-1">
-                  Réalisé par : Noui Adel
+                <div className="text-[10px] text-cyan-800 font-bold mt-1">
+                  Réalisé par : NOUI ADEL
                 </div>
               </div>
             </div>

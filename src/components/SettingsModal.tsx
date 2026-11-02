@@ -159,7 +159,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <span>Modification Verrouillée (Réservée à l'Administrateur)</span>
                 </div>
                 <p className="text-[11px] text-amber-800 mt-1 leading-relaxed">
-                  Seul l'administrateur système (<strong>Noui Adel</strong>) a le privilège de modifier les coordonnées de l'agence, le compte bancaire et de restaurer des sauvegardes. Votre compte ({currentUser.fullName} - {ROLE_CONFIG[currentUser.role].label}) est en consultation.
+                  Seul l'administrateur système (<strong>NOUI ADEL</strong>) a le privilège de modifier les coordonnées de l'agence, le compte bancaire et de restaurer des sauvegardes. Votre compte ({currentUser.fullName} - {ROLE_CONFIG[currentUser.role].label}) est en consultation.
                 </p>
               </div>
             </div>
@@ -184,7 +184,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
             <div className="text-right">
               <span className="text-[10px] font-bold text-cyan-800 bg-cyan-50 px-2 py-0.5 rounded-md border border-cyan-200 inline-block">
-                Réalisé par : <strong>Noui Adel</strong>
+                Réalisé par : <strong>NOUI ADEL</strong>
               </span>
             </div>
           </div>

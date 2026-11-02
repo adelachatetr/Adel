@@ -293,8 +293,8 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
                 <div className="text-xs text-slate-600 mt-1">
                   Édité le : <strong>{formatShortDate(printDate)}</strong>
                 </div>
-                <div className="text-[10px] text-cyan-800 font-semibold mt-0.5">
-                  Réalisé par : Noui Adel
+                <div className="text-[10px] text-cyan-800 font-bold mt-0.5">
+                  Réalisé par : NOUI ADEL
                 </div>
               </div>
             </div>

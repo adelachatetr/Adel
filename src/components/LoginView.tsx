@@ -139,9 +139,15 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, companyNam
           <p className="text-xs text-cyan-300 font-semibold tracking-wider uppercase mt-1">
             GROUPE INDUSTRIEL DES CIMENTS D'ALGÉRIE (GICA) · SCHB
           </p>
-          <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-500/30 text-cyan-200 text-[11px] font-medium">
-            <ShieldCheck className="h-3.5 w-3.5 text-cyan-400" />
-            <span>Portail de Transit, Débours & Cautions Maritimes</span>
+          <div className="mt-2 flex items-center justify-center gap-2 flex-wrap">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-500/30 text-cyan-200 text-[11px] font-medium">
+              <ShieldCheck className="h-3.5 w-3.5 text-cyan-400" />
+              <span>Portail de Transit, Débours & Cautions Maritimes</span>
+            </div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800/90 border border-cyan-400/30 text-slate-200 text-[11px] font-bold">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+              <span>Réalisé par : <strong className="text-cyan-300 font-black">NOUI ADEL</strong></span>
+            </div>
           </div>
         </div>
       </div>
@@ -505,9 +511,12 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, companyNam
             </form>
           )}
 
-          <div className="mt-4 text-center">
+          <div className="mt-4 text-center space-y-1">
             <p className="text-[10px] text-slate-400">
               Groupe GICA · SCHB · Système sécurisé de gestion transit et débours
+            </p>
+            <p className="text-[11px] font-bold text-slate-600">
+              Réalisé par : <strong className="text-cyan-800 font-black">NOUI ADEL</strong>
             </p>
           </div>
 

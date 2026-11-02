@@ -91,12 +91,17 @@ export const Header: React.FC<HeaderProps> = ({
               />
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-extrabold text-lg sm:text-xl tracking-tight text-slate-900">
                   Transit <span className="text-cyan-700">SCHB</span>
                 </span>
                 <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-cyan-800 bg-cyan-50 px-2 py-0.5 rounded border border-cyan-200">
                   GICA · Filiale SCHB
+                </span>
+                <span className="text-[10px] font-bold text-slate-800 bg-slate-100/90 px-2.5 py-0.5 rounded-md border border-slate-300 flex items-center gap-1 shadow-2xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-600"></span>
+                  <span>Réalisé par :</span>
+                  <strong className="text-cyan-800 font-black">NOUI ADEL</strong>
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 font-medium">

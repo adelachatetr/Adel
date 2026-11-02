@@ -325,6 +325,9 @@ export const DeboursBreakdownPrintModal: React.FC<DeboursBreakdownPrintModalProp
                 <div className="text-xs text-slate-600">
                   Date d'édition : <strong>{formatShortDate(reportDate)}</strong>
                 </div>
+                <div className="text-[10px] text-cyan-800 font-bold mt-1">
+                  Réalisé par : NOUI ADEL
+                </div>
               </div>
             </div>
 
@@ -531,7 +534,7 @@ export const DeboursBreakdownPrintModal: React.FC<DeboursBreakdownPrintModalProp
             <div className="space-y-12">
               <span className="font-bold text-slate-800 block">Vérifié par : Chef de Service Transit</span>
               <div className="border-b border-dashed border-slate-400 w-3/4"></div>
-              <span className="text-[10px] text-slate-500 italic block">Noui Adel - Visa Transit</span>
+              <span className="text-[10px] text-slate-700 font-bold italic block">NOUI ADEL - Visa Transit</span>
             </div>
 
             <div className="space-y-12">
