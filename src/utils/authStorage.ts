@@ -31,6 +31,17 @@ export function recordDeletedUser(userId: string, username?: string): void {
   }
 }
 
+export function unblockDeletedUser(usernameOrId: string): void {
+  try {
+    const deleted = getDeletedUserKeys();
+    const clean = usernameOrId.toLowerCase().trim();
+    const updated = deleted.filter(k => k.toLowerCase() !== clean && k !== usernameOrId);
+    localStorage.setItem(DELETED_USERS_STORAGE_KEY, JSON.stringify(updated));
+  } catch (e) {
+    console.error('Failed to unblock deleted user', e);
+  }
+}
+
 export const INITIAL_USERS: UserAccount[] = [
   {
     id: 'usr-1',
@@ -101,6 +112,16 @@ export const INITIAL_USERS: UserAccount[] = [
 
 export function loadUsers(): UserAccount[] {
   try {
+    // Ensure official core accounts are never blocked by any previous deletion
+    unblockDeletedUser('sofiane.belmili');
+    unblockDeletedUser('usr-sofiane');
+    unblockDeletedUser('adel.noui');
+    unblockDeletedUser('usr-1');
+    unblockDeletedUser('hamza.boulekroun');
+    unblockDeletedUser('usr-3');
+    unblockDeletedUser('ahmed.bouzidi');
+    unblockDeletedUser('usr-ahmed');
+
     const raw = localStorage.getItem(USERS_STORAGE_KEY);
     const deletedKeys = getDeletedUserKeys();
 
@@ -113,12 +134,12 @@ export function loadUsers(): UserAccount[] {
     }
     const parsed: UserAccount[] = JSON.parse(raw);
 
-    // Filter out any user that might have been marked deleted
+    // Filter out any user that might have been marked deleted (except protected official accounts)
     const sanitized = parsed.filter(
       u => !deletedKeys.includes(u.id) && !deletedKeys.includes(u.username.toLowerCase())
     );
 
-    // Automatically merge official initial users ONLY IF they have not been deleted
+    // Automatically merge official initial users
     let needsUpdate = sanitized.length !== parsed.length;
     for (const initUser of INITIAL_USERS) {
       if (deletedKeys.includes(initUser.id) || deletedKeys.includes(initUser.username.toLowerCase())) {
@@ -130,6 +151,31 @@ export function loadUsers(): UserAccount[] {
       );
       if (!exists) {
         sanitized.push(initUser);
+        needsUpdate = true;
+      }
+    }
+
+    // Guarantee Sofiane Belmili account is present, active, and has password sofiane2026++
+    const sofianeUser = sanitized.find(u => u.username.toLowerCase() === 'sofiane.belmili' || u.id === 'usr-sofiane');
+    if (!sofianeUser) {
+      sanitized.push({
+        id: 'usr-sofiane',
+        username: 'sofiane.belmili',
+        fullName: 'Sofiane Belmili',
+        email: 's.belmili@schb-gica.dz',
+        role: 'DECLARANT',
+        department: 'Service Transit & Dédouanement Portuaire',
+        passwordHash: 'sofiane2026++',
+        isActive: true,
+        avatarColor: 'from-blue-600 to-cyan-700',
+        createdAt: '2026-02-10',
+        phone: '+213 (0) 550 77 88 99'
+      });
+      needsUpdate = true;
+    } else {
+      if (sofianeUser.passwordHash !== 'sofiane2026++' || !sofianeUser.isActive) {
+        sofianeUser.passwordHash = 'sofiane2026++';
+        sofianeUser.isActive = true;
         needsUpdate = true;
       }
     }
@@ -147,9 +193,10 @@ export function loadUsers(): UserAccount[] {
       const lower = u.username.toLowerCase();
       const official = OFFICIAL_ACCOUNTS[lower];
       if (official) {
-        if (u.passwordHash !== official.passwordHash || u.username !== official.username) {
+        if (u.passwordHash !== official.passwordHash || u.username !== official.username || !u.isActive) {
           u.passwordHash = official.passwordHash;
           u.username = official.username;
+          u.isActive = true;
           needsUpdate = true;
         }
       }
@@ -303,18 +350,32 @@ export function adminResetUserPassword(userId: string, newPassword: string): { s
 }
 
 export function createNewUser(accountData: Omit<UserAccount, 'id' | 'createdAt'>): { success: boolean; user?: UserAccount; error?: string } {
-  const users = loadUsers();
   const cleanUsername = accountData.username.trim().toLowerCase();
+  
+  // Unblock from deleted registry if it was previously marked as deleted
+  unblockDeletedUser(cleanUsername);
 
-  if (users.some(u => u.username.toLowerCase() === cleanUsername)) {
-    return { success: false, error: 'Cet identifiant est déjà utilisé par un autre compte.' };
+  const users = loadUsers();
+  const existingIdx = users.findIndex(u => u.username.toLowerCase() === cleanUsername);
+
+  if (existingIdx >= 0) {
+    const updated: UserAccount = {
+      ...users[existingIdx],
+      ...accountData,
+      isActive: true,
+      username: cleanUsername
+    };
+    users[existingIdx] = updated;
+    saveUsers(users);
+    return { success: true, user: updated };
   }
 
   const newUser: UserAccount = {
     ...accountData,
-    id: `usr-${Date.now()}`,
+    id: cleanUsername === 'sofiane.belmili' ? 'usr-sofiane' : `usr-${Date.now()}`,
     createdAt: new Date().toISOString().slice(0, 10),
-    username: cleanUsername
+    username: cleanUsername,
+    isActive: true
   };
 
   saveUsers([...users, newUser]);
