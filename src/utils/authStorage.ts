@@ -2,6 +2,34 @@ import { UserAccount, AuthSession } from '../types/auth';
 
 const USERS_STORAGE_KEY = 'transit_users_accounts_v1';
 const AUTH_SESSION_KEY = 'transit_auth_session_v1';
+const DELETED_USERS_STORAGE_KEY = 'transit_deleted_users_v1';
+
+export function getDeletedUserKeys(): string[] {
+  try {
+    const raw = localStorage.getItem(DELETED_USERS_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function recordDeletedUser(userId: string, username?: string): void {
+  try {
+    const deleted = getDeletedUserKeys();
+    if (userId && !deleted.includes(userId)) {
+      deleted.push(userId);
+    }
+    if (username) {
+      const lower = username.toLowerCase().trim();
+      if (!deleted.includes(lower)) {
+        deleted.push(lower);
+      }
+    }
+    localStorage.setItem(DELETED_USERS_STORAGE_KEY, JSON.stringify(deleted));
+  } catch (e) {
+    console.error('Failed to record deleted user', e);
+  }
+}
 
 export const INITIAL_USERS: UserAccount[] = [
   {
@@ -87,31 +115,42 @@ export const INITIAL_USERS: UserAccount[] = [
 export function loadUsers(): UserAccount[] {
   try {
     const raw = localStorage.getItem(USERS_STORAGE_KEY);
+    const deletedKeys = getDeletedUserKeys();
+
     if (!raw) {
-      localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(INITIAL_USERS));
-      return INITIAL_USERS;
+      const filteredInit = INITIAL_USERS.filter(
+        u => !deletedKeys.includes(u.id) && !deletedKeys.includes(u.username.toLowerCase())
+      );
+      localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(filteredInit));
+      return filteredInit;
     }
     const parsed: UserAccount[] = JSON.parse(raw);
 
-    // Automatically merge official initial users (such as Sofiane Belmili)
-    // so that existing browsers and published URLs immediately get the updated accounts
-    let needsUpdate = false;
+    // Filter out any user that might have been marked deleted
+    const sanitized = parsed.filter(
+      u => !deletedKeys.includes(u.id) && !deletedKeys.includes(u.username.toLowerCase())
+    );
+
+    // Automatically merge official initial users ONLY IF they have not been deleted
+    let needsUpdate = sanitized.length !== parsed.length;
     for (const initUser of INITIAL_USERS) {
-      const exists = parsed.some(
+      if (deletedKeys.includes(initUser.id) || deletedKeys.includes(initUser.username.toLowerCase())) {
+        continue;
+      }
+      const exists = sanitized.some(
         u => u.username.toLowerCase() === initUser.username.toLowerCase() || 
-             u.id === initUser.id || 
-             u.fullName.toLowerCase() === initUser.fullName.toLowerCase()
+             u.id === initUser.id
       );
       if (!exists) {
-        parsed.push(initUser);
+        sanitized.push(initUser);
         needsUpdate = true;
       }
     }
 
     if (needsUpdate) {
-      localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(parsed));
+      localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(sanitized));
     }
-    return parsed;
+    return sanitized;
   } catch (e) {
     console.error('Failed to load users from localStorage', e);
     return INITIAL_USERS;
@@ -290,6 +329,16 @@ export function deleteUserAccount(userId: string, currentUserId: string): { succ
   }
 
   const users = loadUsers();
-  saveUsers(users.filter(u => u.id !== userId));
+  const target = users.find(u => u.id === userId);
+  if (!target) {
+    return { success: false, error: 'Utilisateur introuvable.' };
+  }
+
+  // Record into deleted keys so loadUsers() never brings back this account
+  recordDeletedUser(target.id, target.username);
+
+  const remaining = users.filter(u => u.id !== userId);
+  saveUsers(remaining);
+
   return { success: true };
 }

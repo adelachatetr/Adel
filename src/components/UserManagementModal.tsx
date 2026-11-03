@@ -138,7 +138,10 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
 
   const handleDelete = (user: UserAccount) => {
     if (user.id === currentUser.id) {
-      setFeedback({ type: 'error', message: 'Impossible de supprimer votre propre compte.' });
+      setFeedback({ 
+        type: 'error', 
+        message: 'Impossible de supprimer votre propre compte actuellement connecté (sécurité de session).' 
+      });
       return;
     }
     setUserToDelete(user);
@@ -146,15 +149,27 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
 
   const confirmDeleteUser = () => {
     if (!userToDelete) return;
+    const deletedId = userToDelete.id;
     const deletedName = userToDelete.fullName;
-    const res = deleteUserAccount(userToDelete.id, currentUser.id);
+
+    // Optimistically update local users list immediately
+    setUsers(prev => prev.filter(u => u.id !== deletedId));
+
+    const res = deleteUserAccount(deletedId, currentUser.id);
     if (res.success) {
-      setFeedback({ type: 'success', message: `Le compte de "${deletedName}" a été supprimé avec succès.` });
+      setFeedback({ 
+        type: 'success', 
+        message: `Le compte de "${deletedName}" a été définitivement supprimé.` 
+      });
       setUserToDelete(null);
       refreshList();
     } else {
-      setFeedback({ type: 'error', message: res.error || 'Erreur lors de la suppression.' });
+      setFeedback({ 
+        type: 'error', 
+        message: res.error || 'Erreur lors de la suppression du compte.' 
+      });
       setUserToDelete(null);
+      refreshList();
     }
   };
 
@@ -485,14 +500,22 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
                               <span>Modifier MDP</span>
                             </button>
 
-                            {!isSelf && (
+                            {isSelf ? (
+                              <span
+                                className="px-2.5 py-1 text-slate-400 bg-slate-100 rounded-lg text-[10px] font-semibold border border-slate-200 select-none inline-flex items-center gap-1 cursor-not-allowed"
+                                title="Vous ne pouvez pas supprimer le compte avec lequel vous êtes actuellement connecté"
+                              >
+                                <Lock className="h-3 w-3 text-slate-400" />
+                                <span>Connecté</span>
+                              </span>
+                            ) : (
                               <button
                                 type="button"
                                 onClick={() => handleDelete(u)}
-                                className="px-2.5 py-1 text-slate-600 hover:text-rose-700 bg-slate-50 hover:bg-rose-50 rounded-lg border border-slate-200 hover:border-rose-300 transition-colors cursor-pointer flex items-center gap-1 font-semibold text-[11px]"
-                                title="Supprimer définitivement ce compte"
+                                className="px-2.5 py-1 text-rose-700 hover:text-white bg-rose-50 hover:bg-rose-600 rounded-lg border border-rose-200 hover:border-rose-600 transition-all cursor-pointer flex items-center gap-1 font-bold text-[11px] shadow-2xs active:scale-95"
+                                title={`Supprimer définitivement l'utilisateur ${u.fullName}`}
                               >
-                                <Trash2 className="h-3.5 w-3.5 text-rose-600" />
+                                <Trash2 className="h-3.5 w-3.5" />
                                 <span>Supprimer</span>
                               </button>
                             )}
@@ -528,7 +551,7 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
 
       {/* In-app Deletion Confirmation Dialog (Replaces blocked window.confirm) */}
       {userToDelete && (
-        <div className="fixed inset-0 z-60 bg-black/70 flex items-center justify-center p-4 backdrop-blur-xs">
+        <div className="fixed inset-0 z-[70] bg-black/75 flex items-center justify-center p-4 backdrop-blur-xs">
           <div className="bg-white border border-rose-300 rounded-3xl max-w-md w-full p-6 shadow-2xl animate-scale-in">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-3 bg-rose-100 text-rose-700 rounded-2xl border border-rose-200">
