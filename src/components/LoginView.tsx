@@ -30,7 +30,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, companyNam
 
   // Login form state
   const [username, setUsername] = useState('adel.noui');
-  const [password, setPassword] = useState('Gica2026!');
+  const [password, setPassword] = useState('A37869gs05app');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);

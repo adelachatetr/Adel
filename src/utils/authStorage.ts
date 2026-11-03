@@ -39,11 +39,50 @@ export const INITIAL_USERS: UserAccount[] = [
     email: 'adelachatetr@gmail.com',
     role: 'ADMIN',
     department: 'Direction Transit & Douanes SCHB',
-    passwordHash: 'Gica2026!',
+    passwordHash: 'A37869gs05app',
     isActive: true,
     avatarColor: 'from-cyan-600 to-blue-700',
     createdAt: '2026-01-01',
     phone: '+213 (0) 550 12 34 56'
+  },
+  {
+    id: 'usr-3',
+    username: 'hamza.boulekroun',
+    fullName: 'Hamza Boulekroune',
+    email: 'h.boulekroune@schb-gica.dz',
+    role: 'DECLARANT',
+    department: 'Service Guichets Maritimes & Ports',
+    passwordHash: 'hamza2026++',
+    isActive: true,
+    avatarColor: 'from-amber-600 to-orange-700',
+    createdAt: '2026-01-15',
+    phone: '+213 (0) 661 22 33 44'
+  },
+  {
+    id: 'usr-sofiane',
+    username: 'sofiane.belmili',
+    fullName: 'Sofiane Belmili',
+    email: 's.belmili@schb-gica.dz',
+    role: 'DECLARANT',
+    department: 'Service Transit & Dédouanement Portuaire',
+    passwordHash: 'sofiane2026++',
+    isActive: true,
+    avatarColor: 'from-blue-600 to-cyan-700',
+    createdAt: '2026-02-10',
+    phone: '+213 (0) 550 77 88 99'
+  },
+  {
+    id: 'usr-ahmed',
+    username: 'ahmed.bouzidi',
+    fullName: 'Ahmed Bouzidi',
+    email: 'a.bouzidi@schb-gica.dz',
+    role: 'CHEF_TRANSIT',
+    department: 'Service Transit & Déclarations en Douane',
+    passwordHash: 'ahmed2026++',
+    isActive: true,
+    avatarColor: 'from-teal-600 to-emerald-700',
+    createdAt: '2026-02-15',
+    phone: '+213 (0) 551 23 45 67'
   },
   {
     id: 'usr-2',
@@ -57,58 +96,6 @@ export const INITIAL_USERS: UserAccount[] = [
     avatarColor: 'from-emerald-600 to-teal-700',
     createdAt: '2026-01-10',
     phone: '+213 (0) 31 88 99 12'
-  },
-  {
-    id: 'usr-3',
-    username: 'hamza.declarant',
-    fullName: 'Hamza Boulekroune',
-    email: 'h.boulekroune@schb-gica.dz',
-    role: 'DECLARANT',
-    department: 'Service Guichets Maritimes & Ports',
-    passwordHash: 'Transit2026!',
-    isActive: true,
-    avatarColor: 'from-amber-600 to-orange-700',
-    createdAt: '2026-01-15',
-    phone: '+213 (0) 661 22 33 44'
-  },
-  {
-    id: 'usr-4',
-    username: 'karim.transit',
-    fullName: 'Karim Mansouri',
-    email: 'k.mansouri@schb-gica.dz',
-    role: 'DECLARANT',
-    department: 'Dédouanement & Restitution Conteneurs',
-    passwordHash: 'Agent2026!',
-    isActive: true,
-    avatarColor: 'from-indigo-600 to-purple-700',
-    createdAt: '2026-02-01',
-    phone: '+213 (0) 770 99 88 77'
-  },
-  {
-    id: 'usr-5',
-    username: 'direction.audit',
-    fullName: 'Direction SCHB / Audit',
-    email: 'direction@schb-gica.dz',
-    role: 'CONSULTANT',
-    department: 'Direction Générale Groupe GICA',
-    passwordHash: 'Audit2026!',
-    isActive: true,
-    avatarColor: 'from-slate-600 to-zinc-800',
-    createdAt: '2026-02-15',
-    phone: '+213 (0) 31 88 99 00'
-  },
-  {
-    id: 'usr-sofiane',
-    username: 'sofiane.belmili',
-    fullName: 'Sofiane Belmili',
-    email: 's.belmili@schb-gica.dz',
-    role: 'DECLARANT',
-    department: 'Service Transit & Dédouanement Portuaire',
-    passwordHash: 'Transit2026!',
-    isActive: true,
-    avatarColor: 'from-blue-600 to-cyan-700',
-    createdAt: '2026-02-10',
-    phone: '+213 (0) 550 77 88 99'
   }
 ];
 
@@ -144,6 +131,27 @@ export function loadUsers(): UserAccount[] {
       if (!exists) {
         sanitized.push(initUser);
         needsUpdate = true;
+      }
+    }
+
+    // Ensure official requested credentials and usernames are updated to the exact ones requested
+    const OFFICIAL_ACCOUNTS: Record<string, { username: string; passwordHash: string; fullName: string }> = {
+      'adel.noui': { username: 'adel.noui', passwordHash: 'A37869gs05app', fullName: 'Noui Adel' },
+      'hamza.boulekroun': { username: 'hamza.boulekroun', passwordHash: 'hamza2026++', fullName: 'Hamza Boulekroune' },
+      'hamza.declarant': { username: 'hamza.boulekroun', passwordHash: 'hamza2026++', fullName: 'Hamza Boulekroune' },
+      'sofiane.belmili': { username: 'sofiane.belmili', passwordHash: 'sofiane2026++', fullName: 'Sofiane Belmili' },
+      'ahmed.bouzidi': { username: 'ahmed.bouzidi', passwordHash: 'ahmed2026++', fullName: 'Ahmed Bouzidi' }
+    };
+
+    for (const u of sanitized) {
+      const lower = u.username.toLowerCase();
+      const official = OFFICIAL_ACCOUNTS[lower];
+      if (official) {
+        if (u.passwordHash !== official.passwordHash || u.username !== official.username) {
+          u.passwordHash = official.passwordHash;
+          u.username = official.username;
+          needsUpdate = true;
+        }
       }
     }
 
@@ -204,8 +212,15 @@ export function loginUser(usernameOrEmail: string, passwordAttempt: string): { s
     u => u.username.toLowerCase() === cleanInput || 
          u.email.toLowerCase() === cleanInput ||
          u.fullName.toLowerCase() === cleanInput ||
+         (cleanInput === 'hamza' && (u.username === 'hamza.boulekroun' || u.username === 'hamza.declarant')) ||
+         (cleanInput === 'boulekroun' && (u.username === 'hamza.boulekroun' || u.username === 'hamza.declarant')) ||
+         (cleanInput === 'boulekroune' && (u.username === 'hamza.boulekroun' || u.username === 'hamza.declarant')) ||
+         (cleanInput === 'hamza.boulekroune' && (u.username === 'hamza.boulekroun' || u.username === 'hamza.declarant')) ||
          (cleanInput === 'sofiane' && u.username === 'sofiane.belmili') ||
-         (cleanInput === 'belmili' && u.username === 'sofiane.belmili')
+         (cleanInput === 'belmili' && u.username === 'sofiane.belmili') ||
+         (cleanInput === 'ahmed' && u.username === 'ahmed.bouzidi') ||
+         (cleanInput === 'bouzidi' && u.username === 'ahmed.bouzidi') ||
+         (cleanInput === 'adel' && u.username === 'adel.noui')
   );
 
   if (!user) {
@@ -216,7 +231,7 @@ export function loginUser(usernameOrEmail: string, passwordAttempt: string): { s
     return { success: false, error: 'Ce compte utilisateur a été désactivé par l\'administrateur.' };
   }
 
-  if (user.passwordHash !== passwordAttempt && passwordAttempt !== 'Gica2026!' && passwordAttempt !== 'Transit2026!') {
+  if (user.passwordHash !== passwordAttempt) {
     return { success: false, error: 'Mot de passe incorrect pour cet utilisateur.' };
   }
 
