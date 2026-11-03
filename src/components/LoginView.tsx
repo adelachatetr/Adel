@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   Lock, 
   User, 
@@ -28,9 +28,10 @@ interface LoginViewProps {
 export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, companyName }) => {
   const [mode, setMode] = useState<'LOGIN' | 'REGISTER'>('LOGIN');
 
-  // Login form state
+  // Login form state - Password must be entered manually by user
   const [username, setUsername] = useState('adel.noui');
-  const [password, setPassword] = useState('A37869gs05app');
+  const [password, setPassword] = useState('');
+  const passwordInputRef = useRef<HTMLInputElement>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -117,8 +118,11 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, companyNam
 
   const handleSelectAccount = (user: UserAccount) => {
     setUsername(user.username);
-    setPassword(user.passwordHash);
+    setPassword(''); // Jamais de saisie automatique du mot de passe
     setError(null);
+    setTimeout(() => {
+      passwordInputRef.current?.focus();
+    }, 50);
   };
 
   return (
@@ -254,6 +258,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, companyNam
                       <Lock className="h-4 w-4" />
                     </div>
                     <input
+                      ref={passwordInputRef}
                       type={showPassword ? 'text' : 'password'}
                       required
                       value={password}
@@ -329,21 +334,16 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, companyNam
                               : 'bg-slate-50 hover:bg-slate-100 border-slate-200'
                           }`}
                         >
-                          <div className="flex items-center gap-2">
-                            <div className={`w-7 h-7 rounded-lg bg-gradient-to-tr ${u.avatarColor} text-white flex items-center justify-center font-bold text-[11px] shadow-2xs`}>
+                          <div className="flex items-center gap-2.5">
+                            <div className={`w-8 h-8 rounded-xl bg-gradient-to-tr ${u.avatarColor} text-white flex items-center justify-center font-bold text-xs shadow-2xs`}>
                               {u.fullName.split(' ').map(n => n[0]).join('').substring(0, 2)}
                             </div>
-                            <div>
-                              <div className="font-bold text-slate-900 text-[11px] flex items-center gap-1">
-                                <span>{u.fullName}</span>
-                                {isSelected && <CheckCircle2 className="h-3 w-3 text-cyan-600 inline" />}
-                              </div>
-                              <div className="text-[10px] text-slate-500 font-mono">
-                                login: <span className="text-slate-800 font-bold">{u.username}</span> · mdp: <span className="text-cyan-800 font-bold">{u.passwordHash}</span>
-                              </div>
+                            <div className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                              <span>{u.fullName}</span>
+                              {isSelected && <CheckCircle2 className="h-3.5 w-3.5 text-cyan-600 inline" />}
                             </div>
                           </div>
-                          <span className={`px-2 py-0.5 rounded text-[9px] font-semibold border ${roleCfg.badgeClass}`}>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${roleCfg.badgeClass}`}>
                             {roleCfg.label}
                           </span>
                         </button>

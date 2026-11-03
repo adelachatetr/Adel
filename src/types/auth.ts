@@ -33,9 +33,9 @@ export const ROLE_CONFIG: Record<UserRole, { label: string; badgeClass: string; 
     description: 'Accès total, paramétrage général et gestion des comptes utilisateurs'
   },
   CHEF_TRANSIT: {
-    label: 'Chef Service Transit',
-    badgeClass: 'bg-cyan-100 text-cyan-900 border-cyan-300',
-    description: 'Supervision des dossiers, approbation des débours et bordereaux officiels'
+    label: 'Chef Département Appro',
+    badgeClass: 'bg-teal-100 text-teal-900 border-teal-300',
+    description: 'Chef de Département Approvisionnements & Transit SCHB'
   },
   CAISSIER: {
     label: 'Caisse & Finance',

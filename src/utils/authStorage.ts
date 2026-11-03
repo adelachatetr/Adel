@@ -1,4 +1,4 @@
-import { UserAccount, AuthSession } from '../types/auth';
+import { UserAccount, AuthSession, UserRole } from '../types/auth';
 
 const USERS_STORAGE_KEY = 'transit_users_accounts_v1';
 const AUTH_SESSION_KEY = 'transit_auth_session_v1';
@@ -88,25 +88,12 @@ export const INITIAL_USERS: UserAccount[] = [
     fullName: 'Ahmed Bouzidi',
     email: 'a.bouzidi@schb-gica.dz',
     role: 'CHEF_TRANSIT',
-    department: 'Service Transit & Déclarations en Douane',
+    department: 'Département Approvisionnements (Appro)',
     passwordHash: 'ahmed2026++',
     isActive: true,
     avatarColor: 'from-teal-600 to-emerald-700',
     createdAt: '2026-02-15',
     phone: '+213 (0) 551 23 45 67'
-  },
-  {
-    id: 'usr-2',
-    username: 'caisse.finance',
-    fullName: 'Samir Benali',
-    email: 'finance@schb-gica.dz',
-    role: 'CAISSIER',
-    department: 'Service Caisse & Trésorerie',
-    passwordHash: 'Caisse2026!',
-    isActive: true,
-    avatarColor: 'from-emerald-600 to-teal-700',
-    createdAt: '2026-01-10',
-    phone: '+213 (0) 31 88 99 12'
   }
 ];
 
@@ -134,9 +121,12 @@ export function loadUsers(): UserAccount[] {
     }
     const parsed: UserAccount[] = JSON.parse(raw);
 
-    // Filter out any user that might have been marked deleted (except protected official accounts)
+    // Filter out legacy demo users not in official team (so exact count is 4)
+    const LEGACY_REMOVE = ['caisse.finance', 'karim.transit', 'direction.audit', 'hamza.declarant'];
     const sanitized = parsed.filter(
-      u => !deletedKeys.includes(u.id) && !deletedKeys.includes(u.username.toLowerCase())
+      u => !LEGACY_REMOVE.includes(u.username.toLowerCase()) &&
+           !deletedKeys.includes(u.id) && 
+           !deletedKeys.includes(u.username.toLowerCase())
     );
 
     // Automatically merge official initial users
@@ -180,22 +170,36 @@ export function loadUsers(): UserAccount[] {
       }
     }
 
-    // Ensure official requested credentials and usernames are updated to the exact ones requested
-    const OFFICIAL_ACCOUNTS: Record<string, { username: string; passwordHash: string; fullName: string }> = {
+    // Ensure official requested credentials, roles and departments are updated
+    const OFFICIAL_ACCOUNTS: Record<string, { username: string; passwordHash: string; fullName: string; department?: string; role?: UserRole }> = {
       'adel.noui': { username: 'adel.noui', passwordHash: 'A37869gs05app', fullName: 'Noui Adel' },
       'hamza.boulekroun': { username: 'hamza.boulekroun', passwordHash: 'hamza2026++', fullName: 'Hamza Boulekroune' },
       'hamza.declarant': { username: 'hamza.boulekroun', passwordHash: 'hamza2026++', fullName: 'Hamza Boulekroune' },
       'sofiane.belmili': { username: 'sofiane.belmili', passwordHash: 'sofiane2026++', fullName: 'Sofiane Belmili' },
-      'ahmed.bouzidi': { username: 'ahmed.bouzidi', passwordHash: 'ahmed2026++', fullName: 'Ahmed Bouzidi' }
+      'ahmed.bouzidi': { 
+        username: 'ahmed.bouzidi', 
+        passwordHash: 'ahmed2026++', 
+        fullName: 'Ahmed Bouzidi',
+        department: 'Département Approvisionnements (Appro)',
+        role: 'CHEF_TRANSIT'
+      }
     };
 
     for (const u of sanitized) {
       const lower = u.username.toLowerCase();
       const official = OFFICIAL_ACCOUNTS[lower];
       if (official) {
-        if (u.passwordHash !== official.passwordHash || u.username !== official.username || !u.isActive) {
+        if (
+          u.passwordHash !== official.passwordHash || 
+          u.username !== official.username || 
+          !u.isActive ||
+          (official.department && u.department !== official.department) ||
+          (official.role && u.role !== official.role)
+        ) {
           u.passwordHash = official.passwordHash;
           u.username = official.username;
+          if (official.department) u.department = official.department;
+          if (official.role) u.role = official.role;
           u.isActive = true;
           needsUpdate = true;
         }
