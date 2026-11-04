@@ -162,20 +162,11 @@ export const Header: React.FC<HeaderProps> = ({
                 }`}
                 title={
                   currentUser.role === 'ADMIN'
-                    ? "Paramètres du site (Administrateur)"
+                    ? "Paramètres du site & Base de Données (Administrateur)"
                     : "Paramètres du site (Lecture seule - Réservé Administrateur)"
                 }
               >
                 <Settings className="h-4 w-4" />
-              </button>
-
-              <button
-                onClick={onOpenDatabaseModal}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-sm shadow-slate-900/20 active:scale-98 cursor-pointer border border-slate-700"
-                title="Gestionnaire et Sauvegarde de la Base de Données"
-              >
-                <Database className="h-3.5 w-3.5 text-emerald-400" />
-                <span className="hidden sm:inline">Base de Données</span>
               </button>
             </div>
 
@@ -266,21 +257,9 @@ export const Header: React.FC<HeaderProps> = ({
                         className="w-full text-left px-4 py-2 text-slate-700 hover:bg-cyan-50 hover:text-cyan-900 flex items-center gap-2.5 cursor-pointer font-medium"
                       >
                         <Settings className="h-4 w-4 text-cyan-700" />
-                        <span>Paramètres du site (Admin)</span>
+                        <span>Paramètres & Base de Données (Admin)</span>
                       </button>
                     )}
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsUserMenuOpen(false);
-                        onOpenDatabaseModal();
-                      }}
-                      className="w-full text-left px-4 py-2 text-slate-800 hover:bg-emerald-50 hover:text-emerald-950 flex items-center gap-2.5 cursor-pointer font-bold text-xs"
-                    >
-                      <Database className="h-4 w-4 text-emerald-600" />
-                      <span>Base de Données (Sauvegarde / État)</span>
-                    </button>
 
                     <div className="border-t border-slate-100 my-1"></div>
 
@@ -368,18 +347,6 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Printer className="h-4 w-4" />
             <span>Bordereaux & Décharges</span>
-          </button>
-
-          {/* Right-aligned Database Tab / Menu */}
-          <button
-            type="button"
-            onClick={onOpenDatabaseModal}
-            className="flex items-center gap-1.5 py-1.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold transition-all whitespace-nowrap cursor-pointer shadow-xs ml-auto border border-slate-700"
-            title="Console et Gestion de la Base de Données"
-          >
-            <Database className="h-3.5 w-3.5 text-emerald-400" />
-            <span>Base de Données</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
           </button>
         </div>
       </div>

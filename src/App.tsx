@@ -18,7 +18,6 @@ import { SettingsModal } from './components/SettingsModal';
 import { LoginView } from './components/LoginView';
 import { ChangePasswordModal } from './components/ChangePasswordModal';
 import { UserManagementModal } from './components/UserManagementModal';
-import { DatabaseManagementModal } from './components/DatabaseManagementModal';
 import { AuthSession } from './types/auth';
 import { getCurrentSession, clearSession } from './utils/authStorage';
 import { TransitCheque, TransitDossier, ChequeStatus } from './types/transit';
@@ -676,9 +675,10 @@ export default function App() {
         onSaveSettings={setSettings}
         cheques={cheques}
         dossiers={dossiers}
-        onImportBackup={({ cheques: newC, dossiers: newD }) => {
+        onImportBackup={({ cheques: newC, dossiers: newD, settings: newS }) => {
           setCheques(newC);
           setDossiers(newD);
+          if (newS) setSettings(newS);
         }}
         onUpdateAllChequesBank={handleUpdateAllChequesBank}
         currentUser={session.user}
@@ -720,20 +720,6 @@ export default function App() {
           setSession(getCurrentSession());
         }}
         initialAddMode={isCreateUserMode}
-      />
-
-      <DatabaseManagementModal
-        isOpen={isDatabaseModalOpen}
-        onClose={() => setIsDatabaseModalOpen(false)}
-        cheques={cheques}
-        dossiers={dossiers}
-        settings={settings}
-        currentUser={session.user}
-        onDataRestored={(newCheques, newDossiers, newSettings) => {
-          setCheques(newCheques);
-          setDossiers(newDossiers);
-          setSettings(newSettings);
-        }}
       />
     </div>
   );
