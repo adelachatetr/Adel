@@ -352,3 +352,41 @@ export function exportBackupJSON(cheques: TransitCheque[], dossiers: TransitDoss
   link.click();
   document.body.removeChild(link);
 }
+
+// ==================== SHARED SERVER DATABASE API ====================
+
+export async function fetchServerDatabase(): Promise<{
+  success: boolean;
+  dossiers?: TransitDossier[];
+  cheques?: TransitCheque[];
+  settings?: AppSettings;
+  users?: any[];
+  version?: number;
+}> {
+  try {
+    const res = await fetch('/api/sync');
+    if (!res.ok) return { success: false };
+    return await res.json();
+  } catch (e) {
+    return { success: false };
+  }
+}
+
+export async function pushServerDatabase(payload: {
+  dossiers?: TransitDossier[];
+  cheques?: TransitCheque[];
+  settings?: AppSettings;
+  users?: any[];
+  actor?: string;
+}): Promise<boolean> {
+  try {
+    const res = await fetch('/api/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    return res.ok;
+  } catch (e) {
+    return false;
+  }
+}

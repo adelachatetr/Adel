@@ -31,7 +31,9 @@ import {
   saveAppSettings,
   resetAllDataToDemo,
   exportChequesToCSV,
-  exportBackupJSON
+  exportBackupJSON,
+  fetchServerDatabase,
+  pushServerDatabase
 } from './utils/storage';
 
 export default function App() {
@@ -69,17 +71,118 @@ export default function App() {
   // Pre-fill parameters when creating a cheque from a specific dossier
   const [prefillDossier, setPrefillDossier] = useState<{ number: string; client: string } | undefined>(undefined);
 
-  // Save changes to localStorage
+  // Multi-user shared server database synchronization
+  useEffect(() => {
+    let isMounted = true;
+
+    const syncInitial = async () => {
+      try {
+        const localDossiers = loadStoredDossiers();
+        const localCheques = loadStoredCheques();
+        const localSettings = loadAppSettings();
+
+        const serverData = await fetchServerDatabase();
+
+        if (serverData && serverData.success) {
+          const serverDossiers = serverData.dossiers || [];
+          const serverCheques = serverData.cheques || [];
+
+          // If the server has no dossiers yet, but local browser has dossiers (e.g. Hydrolab, IKN, Borel):
+          if (serverDossiers.length === 0 && localDossiers.length > 0) {
+            await pushServerDatabase({
+              dossiers: localDossiers,
+              cheques: localCheques,
+              settings: localSettings,
+              actor: 'Initial Push'
+            });
+          } else if (serverDossiers.length > 0 || serverCheques.length > 0) {
+            // Server has data: load into local state so all accounts (Adel, Sofiane, Hamza, Ahmed) see it!
+            if (isMounted) {
+              setDossiers(serverDossiers);
+              setCheques(serverCheques);
+              if (serverData.settings) setSettings(serverData.settings);
+            }
+            saveStoredDossiers(serverDossiers);
+            saveStoredCheques(serverCheques);
+          }
+        }
+      } catch (err) {
+        console.error('Initial sync error:', err);
+      }
+    };
+
+    syncInitial();
+
+    // Auto-sync polling every 3 seconds so changes from Adel appear on Sofiane's screen automatically
+    const intervalId = setInterval(async () => {
+      try {
+        const serverData = await fetchServerDatabase();
+        if (serverData && serverData.success) {
+          if (Array.isArray(serverData.dossiers)) {
+            setDossiers(prev => {
+              if (JSON.stringify(prev) !== JSON.stringify(serverData.dossiers)) {
+                saveStoredDossiers(serverData.dossiers!);
+                return serverData.dossiers!;
+              }
+              return prev;
+            });
+          }
+          if (Array.isArray(serverData.cheques)) {
+            setCheques(prev => {
+              if (JSON.stringify(prev) !== JSON.stringify(serverData.cheques)) {
+                saveStoredCheques(serverData.cheques!);
+                return serverData.cheques!;
+              }
+              return prev;
+            });
+          }
+        }
+      } catch (e) {
+        // Silently continue
+      }
+    }, 3000);
+
+    const handleFocus = () => {
+      fetchServerDatabase().then(serverData => {
+        if (serverData && serverData.success) {
+          if (Array.isArray(serverData.dossiers) && serverData.dossiers.length > 0) {
+            setDossiers(serverData.dossiers);
+            saveStoredDossiers(serverData.dossiers);
+          }
+          if (Array.isArray(serverData.cheques) && serverData.cheques.length > 0) {
+            setCheques(serverData.cheques);
+            saveStoredCheques(serverData.cheques);
+          }
+        }
+      });
+    };
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
+
+  // Save changes to localStorage and push to server
   useEffect(() => {
     saveStoredCheques(cheques);
+    if (cheques.length > 0) {
+      pushServerDatabase({ cheques, actor: session?.user?.fullName || 'Transit SCHB' });
+    }
   }, [cheques]);
 
   useEffect(() => {
     saveStoredDossiers(dossiers);
+    if (dossiers.length > 0) {
+      pushServerDatabase({ dossiers, actor: session?.user?.fullName || 'Transit SCHB' });
+    }
   }, [dossiers]);
 
   useEffect(() => {
     saveAppSettings(settings);
+    pushServerDatabase({ settings, actor: session?.user?.fullName || 'Transit SCHB' });
   }, [settings]);
 
   // Urgent cautions count (conteneur rendu mais chèque bloqué chez l'armateur)
@@ -241,8 +344,9 @@ export default function App() {
 
   // Dossier actions
   const handleSaveDossier = (data: Partial<TransitDossier>) => {
+    let updatedList: TransitDossier[] = [];
     if (editingDossier) {
-      setDossiers(prev => prev.map(d => d.id === editingDossier.id ? { ...d, ...data } as TransitDossier : d));
+      updatedList = dossiers.map(d => d.id === editingDossier.id ? { ...d, ...data } as TransitDossier : d);
     } else {
       const newDossier: TransitDossier = {
         id: `dossier-${Date.now()}`,
@@ -263,8 +367,14 @@ export default function App() {
         openedDate: new Date().toISOString().slice(0, 10),
         totalProvisionsReceived: 0
       };
-      setDossiers(prev => [newDossier, ...prev]);
+      updatedList = [newDossier, ...dossiers];
     }
+    setDossiers(updatedList);
+    saveStoredDossiers(updatedList);
+    pushServerDatabase({
+      dossiers: updatedList,
+      actor: session?.user?.fullName || 'Transit SCHB'
+    });
     setIsDossierFormOpen(false);
     setEditingDossier(null);
   };
@@ -276,7 +386,13 @@ export default function App() {
   };
 
   const handleDeleteDossier = (dossierId: string) => {
-    setDossiers(prev => prev.filter(d => d.id !== dossierId));
+    const updated = dossiers.filter(d => d.id !== dossierId);
+    setDossiers(updated);
+    saveStoredDossiers(updated);
+    pushServerDatabase({
+      dossiers: updated,
+      actor: session?.user?.fullName || 'Transit SCHB'
+    });
   };
 
   // Cross navigation from dashboard
@@ -293,6 +409,10 @@ export default function App() {
     }));
     setCheques(updated);
     saveStoredCheques(updated);
+    pushServerDatabase({
+      cheques: updated,
+      actor: session?.user?.fullName || 'Transit SCHB'
+    });
   };
 
   const handleResetDemoData = () => {
@@ -300,6 +420,11 @@ export default function App() {
       const { cheques: initialC, dossiers: initialD } = resetAllDataToDemo();
       setCheques(initialC);
       setDossiers(initialD);
+      pushServerDatabase({
+        cheques: initialC,
+        dossiers: initialD,
+        actor: session?.user?.fullName || 'Admin'
+      });
     }
   };
 
@@ -307,7 +432,21 @@ export default function App() {
     return (
       <LoginView
         companyName={settings.companyName}
-        onLoginSuccess={() => setSession(getCurrentSession())}
+        onLoginSuccess={() => {
+          setSession(getCurrentSession());
+          fetchServerDatabase().then(serverData => {
+            if (serverData && serverData.success) {
+              if (Array.isArray(serverData.dossiers) && serverData.dossiers.length > 0) {
+                setDossiers(serverData.dossiers);
+                saveStoredDossiers(serverData.dossiers);
+              }
+              if (Array.isArray(serverData.cheques) && serverData.cheques.length > 0) {
+                setCheques(serverData.cheques);
+                saveStoredCheques(serverData.cheques);
+              }
+            }
+          });
+        }}
       />
     );
   }
