@@ -16,7 +16,8 @@ import {
   UserPlus,
   LogOut,
   ChevronDown,
-  ShieldCheck
+  ShieldCheck,
+  Database
 } from 'lucide-react';
 import { GICA_LOGO_BASE64 } from '../data/logoData';
 import { UserAccount, ROLE_CONFIG } from '../types/auth';
@@ -28,6 +29,7 @@ interface HeaderProps {
   onOpenNewDossierModal: () => void;
   onOpenBordereauModal: () => void;
   onOpenSettingsModal: () => void;
+  onOpenDatabaseModal: () => void;
   onExportCSV: () => void;
   onResetDemo: () => void;
   selectedCurrency: string;
@@ -47,6 +49,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenNewDossierModal,
   onOpenBordereauModal,
   onOpenSettingsModal,
+  onOpenDatabaseModal,
   onExportCSV,
   onResetDemo,
   selectedCurrency,
@@ -165,6 +168,15 @@ export const Header: React.FC<HeaderProps> = ({
               >
                 <Settings className="h-4 w-4" />
               </button>
+
+              <button
+                onClick={onOpenDatabaseModal}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-sm shadow-slate-900/20 active:scale-98 cursor-pointer border border-slate-700"
+                title="Gestionnaire et Sauvegarde de la Base de Données"
+              >
+                <Database className="h-3.5 w-3.5 text-emerald-400" />
+                <span className="hidden sm:inline">Base de Données</span>
+              </button>
             </div>
 
             {/* User Profile & Password Menu Pill */}
@@ -258,6 +270,18 @@ export const Header: React.FC<HeaderProps> = ({
                       </button>
                     )}
 
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsUserMenuOpen(false);
+                        onOpenDatabaseModal();
+                      }}
+                      className="w-full text-left px-4 py-2 text-slate-800 hover:bg-emerald-50 hover:text-emerald-950 flex items-center gap-2.5 cursor-pointer font-bold text-xs"
+                    >
+                      <Database className="h-4 w-4 text-emerald-600" />
+                      <span>Base de Données (Sauvegarde / État)</span>
+                    </button>
+
                     <div className="border-t border-slate-100 my-1"></div>
 
                     <button
@@ -344,6 +368,18 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Printer className="h-4 w-4" />
             <span>Bordereaux & Décharges</span>
+          </button>
+
+          {/* Right-aligned Database Tab / Menu */}
+          <button
+            type="button"
+            onClick={onOpenDatabaseModal}
+            className="flex items-center gap-1.5 py-1.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold transition-all whitespace-nowrap cursor-pointer shadow-xs ml-auto border border-slate-700"
+            title="Console et Gestion de la Base de Données"
+          >
+            <Database className="h-3.5 w-3.5 text-emerald-400" />
+            <span>Base de Données</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
           </button>
         </div>
       </div>

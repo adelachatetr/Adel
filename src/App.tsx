@@ -18,6 +18,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { LoginView } from './components/LoginView';
 import { ChangePasswordModal } from './components/ChangePasswordModal';
 import { UserManagementModal } from './components/UserManagementModal';
+import { DatabaseManagementModal } from './components/DatabaseManagementModal';
 import { AuthSession } from './types/auth';
 import { getCurrentSession, clearSession } from './utils/authStorage';
 import { TransitCheque, TransitDossier, ChequeStatus } from './types/transit';
@@ -52,6 +53,7 @@ export default function App() {
   const [preSelectedForBordereau, setPreSelectedForBordereau] = useState<TransitCheque[]>([]);
 
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isDatabaseModalOpen, setIsDatabaseModalOpen] = useState(false);
 
   const [selectedChequeDetail, setSelectedChequeDetail] = useState<TransitCheque | null>(null);
 
@@ -336,6 +338,7 @@ export default function App() {
           setIsBordereauModalOpen(true);
         }}
         onOpenSettingsModal={() => setIsSettingsModalOpen(true)}
+        onOpenDatabaseModal={() => setIsDatabaseModalOpen(true)}
         onExportCSV={() => exportChequesToCSV(cheques)}
         onResetDemo={handleResetDemoData}
         selectedCurrency={settings.defaultCurrency}
@@ -578,6 +581,20 @@ export default function App() {
           setSession(getCurrentSession());
         }}
         initialAddMode={isCreateUserMode}
+      />
+
+      <DatabaseManagementModal
+        isOpen={isDatabaseModalOpen}
+        onClose={() => setIsDatabaseModalOpen(false)}
+        cheques={cheques}
+        dossiers={dossiers}
+        settings={settings}
+        currentUser={session.user}
+        onDataRestored={(newCheques, newDossiers, newSettings) => {
+          setCheques(newCheques);
+          setDossiers(newDossiers);
+          setSettings(newSettings);
+        }}
       />
     </div>
   );

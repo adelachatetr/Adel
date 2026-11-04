@@ -1,29 +1,201 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
+import { createServer as createViteServer } from 'vite';
+import { db } from './server/db.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const app = express();
-const port = parseInt(process.env.PORT || '3000', 10);
+async function startServer() {
+  const app = express();
+  const port = parseInt(process.env.PORT || '3000', 10);
+  const isProd = process.env.NODE_ENV === 'production';
 
-app.use(express.json());
+  app.use(express.json({ limit: '25mb' }));
 
-// Serve static assets from production dist
-const distPath = path.resolve(__dirname, 'dist');
-app.use(express.static(distPath));
+  // ==================== API ROUTES ====================
 
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', service: 'Transit SCHB' });
-});
+  // Health check
+  app.get('/api/health', (req, res) => {
+    res.json({ 
+      status: 'ok', 
+      service: 'Transit SCHB Database Engine',
+      timestamp: new Date().toISOString()
+    });
+  });
 
-// Single Page Application fallback to index.html
-app.get('*', (req, res) => {
-  res.sendFile(path.resolve(distPath, 'index.html'));
-});
+  // Database info endpoint (answers user's "give me the path where ur working" & "data in db")
+  app.get('/api/database/info', (req, res) => {
+    const state = db.getState();
+    res.json({
+      status: 'CONNECTED',
+      engine: 'Persistent Local JSON Database',
+      databaseFilePath: db.getPath(),
+      workingDirectory: process.cwd(),
+      version: state.version,
+      lastModified: state.lastModified,
+      counts: {
+        dossiers: state.dossiers.length,
+        cheques: state.cheques.length,
+        users: state.users.length,
+        auditLogs: state.auditLogs.length
+      }
+    });
+  });
 
-app.listen(port, '0.0.0.0', () => {
-  console.log(`Transit SCHB server running on port ${port}`);
+  // Sync endpoint (fetch all shared database records)
+  app.get('/api/sync', (req, res) => {
+    try {
+      const state = db.getState();
+      res.json({
+        success: true,
+        version: state.version,
+        lastModified: state.lastModified,
+        dossiers: state.dossiers,
+        cheques: state.cheques,
+        settings: state.settings,
+        users: state.users,
+        auditLogs: state.auditLogs
+      });
+    } catch (e: any) {
+      res.status(500).json({ success: false, error: e?.message || 'Erreur lors de la synchronisation' });
+    }
+  });
+
+  // Full push sync (when client initializes or syncs local changes)
+  app.post('/api/sync', (req, res) => {
+    try {
+      const { dossiers, cheques, settings, users, actor } = req.body;
+      const updateData: any = {};
+      if (Array.isArray(dossiers)) updateData.dossiers = dossiers;
+      if (Array.isArray(cheques)) updateData.cheques = cheques;
+      if (settings && typeof settings === 'object') updateData.settings = settings;
+      if (Array.isArray(users)) updateData.users = users;
+
+      const state = db.updateFullState(updateData, actor);
+      res.json({
+        success: true,
+        version: state.version,
+        lastModified: state.lastModified,
+        dossiers: state.dossiers,
+        cheques: state.cheques,
+        settings: state.settings,
+        users: state.users
+      });
+    } catch (e: any) {
+      res.status(500).json({ success: false, error: e?.message || 'Erreur lors de la sauvegarde' });
+    }
+  });
+
+  // Dossier API endpoints
+  app.post('/api/dossiers', (req, res) => {
+    try {
+      const { dossier, actor } = req.body;
+      if (!dossier || !dossier.id) {
+        return res.status(400).json({ success: false, error: 'Dossier invalide ou ID manquant' });
+      }
+      const state = db.saveDossier(dossier, actor);
+      res.json({ success: true, version: state.version, dossiers: state.dossiers });
+    } catch (e: any) {
+      res.status(500).json({ success: false, error: e?.message });
+    }
+  });
+
+  app.delete('/api/dossiers/:id', (req, res) => {
+    try {
+      const { actor } = req.query;
+      const state = db.deleteDossier(req.params.id, actor as string);
+      res.json({ success: true, version: state.version, dossiers: state.dossiers });
+    } catch (e: any) {
+      res.status(500).json({ success: false, error: e?.message });
+    }
+  });
+
+  // Cheque API endpoints
+  app.post('/api/cheques', (req, res) => {
+    try {
+      const { cheque, actor } = req.body;
+      if (!cheque || !cheque.id) {
+        return res.status(400).json({ success: false, error: 'Chèque invalide ou ID manquant' });
+      }
+      const state = db.saveCheque(cheque, actor);
+      res.json({ success: true, version: state.version, cheques: state.cheques });
+    } catch (e: any) {
+      res.status(500).json({ success: false, error: e?.message });
+    }
+  });
+
+  app.delete('/api/cheques/:id', (req, res) => {
+    try {
+      const { actor } = req.query;
+      const state = db.deleteCheque(req.params.id, actor as string);
+      res.json({ success: true, version: state.version, cheques: state.cheques });
+    } catch (e: any) {
+      res.status(500).json({ success: false, error: e?.message });
+    }
+  });
+
+  // Settings API endpoints
+  app.post('/api/settings', (req, res) => {
+    try {
+      const state = db.saveSettings(req.body);
+      res.json({ success: true, version: state.version, settings: state.settings });
+    } catch (e: any) {
+      res.status(500).json({ success: false, error: e?.message });
+    }
+  });
+
+  // Users API endpoints
+  app.get('/api/users', (req, res) => {
+    const state = db.getState();
+    res.json({ success: true, users: state.users });
+  });
+
+  app.post('/api/users', (req, res) => {
+    try {
+      const state = db.saveUser(req.body);
+      res.json({ success: true, version: state.version, users: state.users });
+    } catch (e: any) {
+      res.status(500).json({ success: false, error: e?.message });
+    }
+  });
+
+  app.delete('/api/users/:id', (req, res) => {
+    try {
+      const state = db.deleteUser(req.params.id);
+      res.json({ success: true, version: state.version, users: state.users });
+    } catch (e: any) {
+      res.status(500).json({ success: false, error: e?.message });
+    }
+  });
+
+  // ==================== FRONTEND SERVING ====================
+
+  if (!isProd) {
+    // Development mode: mount Vite middlewares for hot module reloading and source transformations
+    const vite = await createViteServer({
+      server: { middlewareMode: true, hmr: process.env.DISABLE_HMR !== 'true' },
+      appType: 'spa'
+    });
+    app.use(vite.middlewares);
+  } else {
+    // Production mode: serve built assets from dist
+    const distPath = path.resolve(__dirname, 'dist');
+    app.use(express.static(distPath));
+    app.get('*', (req, res) => {
+      res.sendFile(path.resolve(distPath, 'index.html'));
+    });
+  }
+
+  app.listen(port, '0.0.0.0', () => {
+    console.log(`[Transit SCHB] Full-stack Server running on port ${port} (mode: ${isProd ? 'production' : 'development'})`);
+    console.log(`[Transit SCHB] Database active at: ${db.getPath()}`);
+  });
+}
+
+startServer().catch(err => {
+  console.error('[Transit SCHB] Failed to start server:', err);
+  process.exit(1);
 });
