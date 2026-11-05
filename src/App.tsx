@@ -32,7 +32,11 @@ import {
   exportChequesToCSV,
   exportBackupJSON,
   fetchServerDatabase,
-  pushServerDatabase
+  pushServerDatabase,
+  saveServerDossier,
+  deleteServerDossier,
+  saveServerCheque,
+  deleteServerCheque
 } from './utils/storage';
 
 export default function App() {
@@ -74,9 +78,18 @@ export default function App() {
   const [syncStatus, setSyncStatus] = useState<'SYNCED' | 'SYNCING' | 'ERROR'>('SYNCING');
   const [lastSyncTime, setLastSyncTime] = useState<string>('');
   const [serverVersion, setServerVersion] = useState<number>(0);
+  const serverVersionRef = React.useRef<number>(0);
 
-  // Multi-user shared server database synchronization
-  const triggerSync = async () => {
+  // User feedback toast for synchronization actions
+  const [syncToast, setSyncToast] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
+
+  const showSyncToast = (type: 'success' | 'error' | 'info', message: string) => {
+    setSyncToast({ type, message });
+    setTimeout(() => setSyncToast(null), 3500);
+  };
+
+  // Multi-user shared server database synchronization (READ-ONLY from central server)
+  const triggerSync = async (isManual = false) => {
     try {
       setSyncStatus('SYNCING');
       const serverData = await fetchServerDatabase();
@@ -84,54 +97,39 @@ export default function App() {
       if (serverData && serverData.success) {
         const serverDossiers = serverData.dossiers || [];
         const serverCheques = serverData.cheques || [];
-        const localDossiers = loadStoredDossiers();
-        const localCheques = loadStoredCheques();
 
-        // Smart merge: detect if local browser has new items not on the server
-        let needsServerPush = false;
-        let mergedDossiers = [...serverDossiers];
-        for (const ld of localDossiers) {
-          if (ld && ld.id && !serverDossiers.some(sd => sd.id === ld.id)) {
-            mergedDossiers.push(ld);
-            needsServerPush = true;
-          }
-        }
-
-        let mergedCheques = [...serverCheques];
-        for (const lc of localCheques) {
-          if (lc && lc.id && !serverCheques.some(sc => sc.id === lc.id)) {
-            mergedCheques.push(lc);
-            needsServerPush = true;
-          }
-        }
-
-        if (needsServerPush) {
-          await pushServerDatabase({
-            dossiers: mergedDossiers,
-            cheques: mergedCheques,
-            actor: session?.user?.fullName || 'Auto-Merge Synchro'
-          });
-        }
-
-        setDossiers(mergedDossiers);
-        setCheques(mergedCheques);
-        saveStoredDossiers(mergedDossiers);
-        saveStoredCheques(mergedCheques);
+        setDossiers(serverDossiers);
+        setCheques(serverCheques);
+        saveStoredDossiers(serverDossiers);
+        saveStoredCheques(serverCheques);
 
         if (serverData.settings) {
           setSettings(serverData.settings);
           saveAppSettings(serverData.settings);
         }
 
-        if (serverData.version) setServerVersion(serverData.version);
+        if (serverData.version !== undefined) {
+          serverVersionRef.current = serverData.version;
+          setServerVersion(serverData.version);
+        }
         setSyncStatus('SYNCED');
-        setLastSyncTime(new Date().toLocaleTimeString('fr-FR'));
+        const timeNow = new Date().toLocaleTimeString('fr-FR');
+        setLastSyncTime(timeNow);
+        if (isManual) {
+          showSyncToast('success', `Base Centrale : Synchronisation réussie (${serverDossiers.length} dossiers, ${serverCheques.length} chèques connectés)`);
+        }
       } else {
-        setSyncStatus('SYNCED');
+        setSyncStatus('ERROR');
+        if (isManual) {
+          showSyncToast('error', serverData?.error || 'Erreur lors de la synchronisation avec le serveur central');
+        }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Sync error:', err);
       setSyncStatus('ERROR');
+      if (isManual) {
+        showSyncToast('error', `Erreur de connexion : ${err?.message || 'Serveur indisponible'}`);
+      }
     }
   };
 
@@ -141,12 +139,13 @@ export default function App() {
     // Initial sync immediately upon mounting
     triggerSync();
 
-    // Auto-sync polling every 2.5 seconds: guarantees changes on PC 1 (Adel) appear on PC 2 (Sofiane) in real-time
+    // Auto-sync polling every 2 seconds: guarantees changes on PC 1 (Adel) appear on PC 2 (Sofiane) in real-time
     const intervalId = setInterval(async () => {
       try {
         const serverData = await fetchServerDatabase();
         if (serverData && serverData.success && isMounted) {
-          if (serverData.version !== undefined && serverData.version !== serverVersion) {
+          if (serverData.version !== undefined && serverData.version !== serverVersionRef.current) {
+            serverVersionRef.current = serverData.version;
             setServerVersion(serverData.version);
             if (Array.isArray(serverData.dossiers)) {
               setDossiers(serverData.dossiers);
@@ -167,7 +166,7 @@ export default function App() {
       } catch (e) {
         // Silently continue
       }
-    }, 2500);
+    }, 2000);
 
     const handleFocus = () => {
       triggerSync();
@@ -179,7 +178,7 @@ export default function App() {
       clearInterval(intervalId);
       window.removeEventListener('focus', handleFocus);
     };
-  }, [serverVersion]);
+  }, []);
 
   // Urgent cautions count (conteneur rendu mais chèque bloqué chez l'armateur)
   const urgentCautionsCount = cheques.filter(c => c.status === 'A_RECUPERER').length;
@@ -256,9 +255,18 @@ export default function App() {
       updatedCheques = [newCheque, ...cheques];
     }
 
+    const savedCheque = editingCheque 
+      ? updatedCheques.find(c => c.id === editingCheque.id) || updatedCheques[0]
+      : updatedCheques[0];
+
     setCheques(updatedCheques);
     saveStoredCheques(updatedCheques);
-    pushServerDatabase({ cheques: updatedCheques, actor: session?.user?.fullName || 'Transit SCHB' });
+    saveServerCheque(savedCheque, session?.user?.fullName || 'Transit SCHB').then(res => {
+      if (res && res.version) {
+        serverVersionRef.current = res.version;
+        setServerVersion(res.version);
+      }
+    });
 
     setIsChequeFormOpen(false);
     setEditingCheque(null);
@@ -269,7 +277,12 @@ export default function App() {
     const updated = cheques.filter(c => c.id !== id);
     setCheques(updated);
     saveStoredCheques(updated);
-    pushServerDatabase({ cheques: updated, actor: session?.user?.fullName || 'Transit SCHB' });
+    deleteServerCheque(id, session?.user?.fullName || 'Transit SCHB').then(res => {
+      if (res && res.version) {
+        serverVersionRef.current = res.version;
+        setServerVersion(res.version);
+      }
+    });
     if (selectedChequeDetail?.id === id) {
       setSelectedChequeDetail(null);
     }
@@ -313,7 +326,15 @@ export default function App() {
 
     setCheques(updatedList);
     saveStoredCheques(updatedList);
-    pushServerDatabase({ cheques: updatedList, actor: session?.user?.fullName || 'Transit SCHB' });
+    const updatedCheque = updatedList.find(c => c.id === id);
+    if (updatedCheque) {
+      saveServerCheque(updatedCheque, session?.user?.fullName || 'Transit SCHB').then(res => {
+        if (res && res.version) {
+          serverVersionRef.current = res.version;
+          setServerVersion(res.version);
+        }
+      });
+    }
   };
 
   const handleSaveContainerRestitution = (
@@ -354,16 +375,26 @@ export default function App() {
 
     setCheques(updatedList);
     saveStoredCheques(updatedList);
-    pushServerDatabase({ cheques: updatedList, actor: session?.user?.fullName || 'Transit SCHB' });
+    const updatedCheque = updatedList.find(c => c.id === chequeId);
+    if (updatedCheque) {
+      saveServerCheque(updatedCheque, session?.user?.fullName || 'Transit SCHB').then(res => {
+        if (res && res.version) {
+          serverVersionRef.current = res.version;
+          setServerVersion(res.version);
+        }
+      });
+    }
   };
 
   // Dossier actions
   const handleSaveDossier = (data: Partial<TransitDossier>) => {
     let updatedList: TransitDossier[] = [];
+    let savedDossier: TransitDossier;
     if (editingDossier) {
-      updatedList = dossiers.map(d => d.id === editingDossier.id ? { ...d, ...data } as TransitDossier : d);
+      savedDossier = { ...editingDossier, ...data } as TransitDossier;
+      updatedList = dossiers.map(d => d.id === editingDossier.id ? savedDossier : d);
     } else {
-      const newDossier: TransitDossier = {
+      savedDossier = {
         id: `dossier-${Date.now()}`,
         dossierNumber: data.dossierNumber || 'Fournisseur',
         clientName: data.clientName || 'BC-SCHB',
@@ -382,13 +413,15 @@ export default function App() {
         openedDate: new Date().toISOString().slice(0, 10),
         totalProvisionsReceived: 0
       };
-      updatedList = [newDossier, ...dossiers];
+      updatedList = [savedDossier, ...dossiers];
     }
     setDossiers(updatedList);
     saveStoredDossiers(updatedList);
-    pushServerDatabase({
-      dossiers: updatedList,
-      actor: session?.user?.fullName || 'Transit SCHB'
+    saveServerDossier(savedDossier, session?.user?.fullName || 'Transit SCHB').then(res => {
+      if (res && res.version) {
+        serverVersionRef.current = res.version;
+        setServerVersion(res.version);
+      }
     });
     setIsDossierFormOpen(false);
     setEditingDossier(null);
@@ -404,9 +437,11 @@ export default function App() {
     const updated = dossiers.filter(d => d.id !== dossierId);
     setDossiers(updated);
     saveStoredDossiers(updated);
-    pushServerDatabase({
-      dossiers: updated,
-      actor: session?.user?.fullName || 'Transit SCHB'
+    deleteServerDossier(dossierId, session?.user?.fullName || 'Transit SCHB').then(res => {
+      if (res && res.version) {
+        serverVersionRef.current = res.version;
+        setServerVersion(res.version);
+      }
     });
   };
 
@@ -449,18 +484,7 @@ export default function App() {
         companyName={settings.companyName}
         onLoginSuccess={() => {
           setSession(getCurrentSession());
-          fetchServerDatabase().then(serverData => {
-            if (serverData && serverData.success) {
-              if (Array.isArray(serverData.dossiers) && serverData.dossiers.length > 0) {
-                setDossiers(serverData.dossiers);
-                saveStoredDossiers(serverData.dossiers);
-              }
-              if (Array.isArray(serverData.cheques) && serverData.cheques.length > 0) {
-                setCheques(serverData.cheques);
-                saveStoredCheques(serverData.cheques);
-              }
-            }
-          });
+          triggerSync();
         }}
       />
     );
@@ -468,6 +492,22 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 flex flex-col font-['Plus_Jakarta_Sans',sans-serif]">
+      {/* Real-time sync feedback notification */}
+      {syncToast && (
+        <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 px-4 py-2 rounded-xl shadow-xl border text-xs font-bold transition-all backdrop-blur-md ${
+          syncToast.type === 'error'
+            ? 'bg-rose-50/95 text-rose-900 border-rose-300'
+            : syncToast.type === 'success'
+            ? 'bg-emerald-50/95 text-emerald-950 border-emerald-300'
+            : 'bg-cyan-50/95 text-cyan-950 border-cyan-300'
+        }`}>
+          <span className={`w-2.5 h-2.5 rounded-full ${
+            syncToast.type === 'error' ? 'bg-rose-600' : syncToast.type === 'success' ? 'bg-emerald-600' : 'bg-cyan-600'
+          }`} />
+          <span>{syncToast.message}</span>
+        </div>
+      )}
+
       {/* Top Application Header */}
       <Header
         activeTab={activeTab}
@@ -514,7 +554,7 @@ export default function App() {
         }}
         syncStatus={syncStatus}
         lastSyncTime={lastSyncTime}
-        onForceSync={triggerSync}
+        onForceSync={() => triggerSync(true)}
       />
 
       {/* Main Workspace Body */}
@@ -701,6 +741,9 @@ export default function App() {
         }}
         onUpdateAllChequesBank={handleUpdateAllChequesBank}
         currentUser={session.user}
+        onForceSync={() => triggerSync(true)}
+        syncStatus={syncStatus}
+        lastSyncTime={lastSyncTime}
       />
 
       <ChequeDetailModal

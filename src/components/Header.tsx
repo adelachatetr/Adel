@@ -121,17 +121,35 @@ export const Header: React.FC<HeaderProps> = ({
                     syncStatus === 'SYNCING'
                       ? 'bg-amber-50 text-amber-900 border-amber-300'
                       : syncStatus === 'ERROR'
-                      ? 'bg-rose-50 text-rose-900 border-rose-300'
+                      ? 'bg-rose-50 text-rose-900 border-rose-300 hover:bg-rose-100'
                       : 'bg-emerald-50 text-emerald-900 border-emerald-300 hover:bg-emerald-100'
                   }`}
                   title={`Base Centrale Partagée (Multi-PC)\nDossiers & chèques synchronisés en temps réel entre Adel Noui, Sofiane Belmili, Hamza Boulekroun et Ahmed Bouzidi.\n${lastSyncTime ? `Dernière synchro : ${lastSyncTime}\n` : ''}Cliquez pour actualiser immédiatement.`}
                 >
                   <span className={`w-1.5 h-1.5 rounded-full ${
-                    syncStatus === 'SYNCING' ? 'bg-amber-500 animate-spin' : syncStatus === 'ERROR' ? 'bg-rose-500' : 'bg-emerald-500 animate-pulse'
+                    syncStatus === 'SYNCING' 
+                      ? 'bg-amber-500 animate-spin' 
+                      : syncStatus === 'ERROR' 
+                      ? 'bg-rose-500' 
+                      : 'bg-emerald-500 animate-pulse'
                   }`}></span>
                   <span>Base Centrale :</span>
-                  <span className="text-emerald-700 font-black">{syncStatus === 'SYNCING' ? 'Synchro...' : 'Multi-PC Synchronisé'}</span>
-                  {lastSyncTime && <span className="font-mono text-[9px] text-emerald-800 hidden sm:inline">({lastSyncTime})</span>}
+                  <span className={`font-black ${
+                    syncStatus === 'ERROR' 
+                      ? 'text-rose-700' 
+                      : syncStatus === 'SYNCING' 
+                      ? 'text-amber-700' 
+                      : 'text-emerald-700'
+                  }`}>
+                    {syncStatus === 'SYNCING' 
+                      ? 'Synchro en cours...' 
+                      : syncStatus === 'ERROR' 
+                      ? 'Hors-ligne (Cliquer)' 
+                      : 'Multi-PC Synchronisé'}
+                  </span>
+                  {lastSyncTime && syncStatus === 'SYNCED' && (
+                    <span className="font-mono text-[9px] text-emerald-800 hidden sm:inline">({lastSyncTime})</span>
+                  )}
                 </button>
               </div>
               <p className="text-[11px] text-slate-500 font-medium">

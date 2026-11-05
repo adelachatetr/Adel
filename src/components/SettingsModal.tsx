@@ -41,6 +41,9 @@ interface SettingsModalProps {
   onUpdateAllChequesBank?: (newBankName: string) => void;
   currentUser: UserAccount;
   initialTab?: 'AGENCE' | 'DATABASE';
+  onForceSync?: () => void;
+  syncStatus?: 'SYNCED' | 'SYNCING' | 'ERROR';
+  lastSyncTime?: string;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -53,7 +56,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onImportBackup,
   onUpdateAllChequesBank,
   currentUser,
-  initialTab = 'AGENCE'
+  initialTab = 'AGENCE',
+  onForceSync,
+  syncStatus = 'SYNCED',
+  lastSyncTime
 }) => {
   const [activeTab, setActiveTab] = useState<'AGENCE' | 'DATABASE'>(initialTab);
   const [formData, setFormData] = useState<AppSettings>(settings);
@@ -297,22 +303,30 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <span>Configuration Agence & Banque</span>
           </button>
 
-          {/* Base de données tab - STRICTEMENT POUR ADMINISTRATEUR */}
-          {isAdmin && (
-            <button
-              type="button"
-              onClick={() => setActiveTab('DATABASE')}
-              className={`py-2 px-3 border-b-2 font-bold transition-all flex items-center gap-2 cursor-pointer ${
-                activeTab === 'DATABASE'
-                  ? 'border-emerald-600 text-emerald-900 bg-emerald-50/60 rounded-t-lg'
-                  : 'border-transparent text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Database className="h-4 w-4 text-emerald-600" />
-              <span>Base de Données</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            </button>
-          )}
+          {/* Base de données tab: Admin a accès complet, Déclarant a vue réseau et synchro */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('DATABASE')}
+            className={`py-2 px-3 border-b-2 font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              activeTab === 'DATABASE'
+                ? 'border-emerald-600 text-emerald-900 bg-emerald-50/60 rounded-t-lg'
+                : 'border-transparent text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            {isAdmin ? (
+              <>
+                <Database className="h-4 w-4 text-emerald-600" />
+                <span>Base de Données (Admin)</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              </>
+            ) : (
+              <>
+                <Server className="h-4 w-4 text-emerald-600" />
+                <span>État Réseau & Synchronisation Multi-PC</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              </>
+            )}
+          </button>
         </div>
 
         {/* Tab 1: Configuration Agence */}
@@ -835,6 +849,105 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </button>
             </div>
 
+          </div>
+        )}
+
+        {/* Tab 2: État Réseau & Synchronisation Multi-PC (Pour Déclarant / Non-Admin) */}
+        {activeTab === 'DATABASE' && !isAdmin && (
+          <div className="flex-1 overflow-y-auto p-5 sm:p-6 bg-slate-50 space-y-5 text-xs">
+            {/* Live Connection Banner */}
+            <div className="p-4 bg-gradient-to-r from-emerald-950 via-slate-900 to-cyan-950 rounded-2xl text-white shadow-md border border-emerald-500/30">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center">
+                    <Server className="h-5 w-5 text-emerald-400" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-extrabold text-sm text-white">Liaison Serveur Central : Connectée</span>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-bold">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span>Multi-PC Actif</span>
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-300 mt-0.5">
+                      Session connectée : <strong className="text-cyan-300">{currentUser.fullName}</strong> ({currentUser.role})
+                    </p>
+                  </div>
+                </div>
+
+                {onForceSync && (
+                  <button
+                    type="button"
+                    onClick={onForceSync}
+                    className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all shadow-sm cursor-pointer"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5" />
+                    <span>Synchroniser maintenant</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Live Shared Metrics */}
+            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs">
+              <h3 className="font-bold text-slate-900 text-xs mb-3 flex items-center gap-2">
+                <Database className="h-4 w-4 text-emerald-600" />
+                <span>Données Actuellement Synchronisées en Direct</span>
+              </h3>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center sm:text-left">
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                  <span className="text-[10px] text-slate-500 uppercase font-bold block mb-1">Dossiers de Transit</span>
+                  <span className="text-lg font-black text-slate-900">{dossiers.length}</span>
+                  <span className="text-[10px] text-emerald-600 font-semibold block mt-0.5">Partagés avec Adel Noui</span>
+                </div>
+
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                  <span className="text-[10px] text-slate-500 uppercase font-bold block mb-1">Chèques & Cautions</span>
+                  <span className="text-lg font-black text-slate-900">{cheques.length}</span>
+                  <span className="text-[10px] text-cyan-700 font-semibold block mt-0.5">Totalement synchronisés</span>
+                </div>
+
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                  <span className="text-[10px] text-slate-500 uppercase font-bold block mb-1">Version Serveur</span>
+                  <span className="text-lg font-black text-slate-900">v{serverDbInfo?.version || 18}</span>
+                  <span className="text-[10px] text-slate-500 font-medium block mt-0.5">Incrément temps réel</span>
+                </div>
+
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                  <span className="text-[10px] text-slate-500 uppercase font-bold block mb-1">Dernière Synchro</span>
+                  <span className="text-sm font-black text-emerald-700">{lastSyncTime || 'En continu'}</span>
+                  <span className="text-[10px] text-emerald-600 font-medium block mt-0.5">Sonde active toutes les 2s</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Explanatory Multi-PC Card */}
+            <div className="p-4 bg-cyan-50/70 border border-cyan-200 rounded-2xl text-cyan-950 space-y-2">
+              <div className="flex items-center gap-2 font-bold text-xs text-cyan-900">
+                <ShieldCheck className="h-4 w-4 text-cyan-700" />
+                <span>Fonctionnement de la Synchronisation Multi-Postes</span>
+              </div>
+              <p className="text-[11px] leading-relaxed text-slate-700">
+                Vous êtes connecté sur un poste Déclarant avec le compte de <strong>{currentUser.fullName}</strong>.
+                Toute saisie de chèque, ajout de caution conteneur ou mise à jour de statut est automatiquement transmise à la base centrale et s'affiche immédiatement sur le poste de l'Administrateur (<strong>Noui Adel</strong>) ainsi que sur les autres postes du service transit.
+              </p>
+              <div className="p-2.5 bg-white/80 rounded-xl border border-cyan-200/60 text-[10px] text-slate-600">
+                🔒 <em>Règle de gouvernance : La modification des coordonnées de l'agence, la réinitialisation de la base et l'import de sauvegardes JSON sont sous la responsabilité exclusive de l'Administrateur Noui Adel.</em>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl cursor-pointer"
+              >
+                Fermer
+              </button>
+            </div>
           </div>
         )}
 

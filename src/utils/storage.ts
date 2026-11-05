@@ -29,8 +29,7 @@ export function loadStoredCheques(): TransitCheque[] {
   try {
     const raw = localStorage.getItem(CHEQUES_STORAGE_KEY);
     if (!raw) {
-      localStorage.setItem(CHEQUES_STORAGE_KEY, JSON.stringify(INITIAL_CHEQUES));
-      return INITIAL_CHEQUES;
+      return [];
     }
     const parsed: TransitCheque[] = JSON.parse(raw);
     return parsed.map(c => ({
@@ -40,7 +39,7 @@ export function loadStoredCheques(): TransitCheque[] {
     }));
   } catch (e) {
     console.error('Failed to load cheques from storage', e);
-    return INITIAL_CHEQUES;
+    return [];
   }
 }
 
@@ -56,13 +55,12 @@ export function loadStoredDossiers(): TransitDossier[] {
   try {
     const raw = localStorage.getItem(DOSSIERS_STORAGE_KEY);
     if (!raw) {
-      localStorage.setItem(DOSSIERS_STORAGE_KEY, JSON.stringify(INITIAL_DOSSIERS));
-      return INITIAL_DOSSIERS;
+      return [];
     }
     return JSON.parse(raw);
   } catch (e) {
     console.error('Failed to load dossiers from storage', e);
-    return INITIAL_DOSSIERS;
+    return [];
   }
 }
 
@@ -362,13 +360,22 @@ export async function fetchServerDatabase(): Promise<{
   settings?: AppSettings;
   users?: any[];
   version?: number;
+  error?: string;
 }> {
   try {
-    const res = await fetch('/api/sync');
-    if (!res.ok) return { success: false };
-    return await res.json();
-  } catch (e) {
-    return { success: false };
+    const res = await fetch('/api/sync', {
+      headers: { 'Cache-Control': 'no-cache, no-store' }
+    });
+    if (!res.ok) {
+      return { success: false, error: `Erreur serveur HTTP ${res.status}` };
+    }
+    const data = await res.json();
+    return {
+      success: true,
+      ...data
+    };
+  } catch (e: any) {
+    return { success: false, error: e?.message || 'Impossible de joindre le serveur central' };
   }
 }
 
@@ -378,22 +385,80 @@ export async function pushServerDatabase(payload: {
   settings?: AppSettings;
   users?: any[];
   actor?: string;
-}): Promise<boolean> {
+}): Promise<{ success: boolean; version?: number; error?: string }> {
   try {
     const res = await fetch('/api/sync', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-    return res.ok;
+    if (!res.ok) {
+      return { success: false, error: `Erreur HTTP ${res.status}` };
+    }
+    const data = await res.json();
+    return { success: true, version: data?.version };
+  } catch (e: any) {
+    return { success: false, error: e?.message || 'Erreur réseau' };
+  }
+}
+
+export async function saveServerDossier(dossier: TransitDossier, actor?: string): Promise<{ success: boolean; version?: number; dossiers?: TransitDossier[] }> {
+  try {
+    const res = await fetch('/api/dossiers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ dossier, actor })
+    });
+    if (!res.ok) return { success: false };
+    return await res.json();
   } catch (e) {
-    return false;
+    return { success: false };
+  }
+}
+
+export async function deleteServerDossier(dossierId: string, actor?: string): Promise<{ success: boolean; version?: number; dossiers?: TransitDossier[] }> {
+  try {
+    const res = await fetch(`/api/dossiers/${encodeURIComponent(dossierId)}?actor=${encodeURIComponent(actor || '')}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) return { success: false };
+    return await res.json();
+  } catch (e) {
+    return { success: false };
+  }
+}
+
+export async function saveServerCheque(cheque: TransitCheque, actor?: string): Promise<{ success: boolean; version?: number; cheques?: TransitCheque[] }> {
+  try {
+    const res = await fetch('/api/cheques', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cheque, actor })
+    });
+    if (!res.ok) return { success: false };
+    return await res.json();
+  } catch (e) {
+    return { success: false };
+  }
+}
+
+export async function deleteServerCheque(chequeId: string, actor?: string): Promise<{ success: boolean; version?: number; cheques?: TransitCheque[] }> {
+  try {
+    const res = await fetch(`/api/cheques/${encodeURIComponent(chequeId)}?actor=${encodeURIComponent(actor || '')}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) return { success: false };
+    return await res.json();
+  } catch (e) {
+    return { success: false };
   }
 }
 
 export async function fetchDatabaseInfo(): Promise<any> {
   try {
-    const res = await fetch('/api/database/info');
+    const res = await fetch('/api/database/info', {
+      headers: { 'Cache-Control': 'no-cache, no-store' }
+    });
     if (!res.ok) return null;
     return await res.json();
   } catch (e) {
