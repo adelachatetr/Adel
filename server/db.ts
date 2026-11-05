@@ -166,9 +166,65 @@ class DatabaseManager {
   }
 
   public updateFullState(newState: Partial<DatabaseState>, actor?: string): DatabaseState {
+    let mergedDossiers = this.state.dossiers;
+    if (Array.isArray(newState.dossiers)) {
+      // If server has no dossiers, take the incoming dossiers
+      if (this.state.dossiers.length === 0) {
+        mergedDossiers = newState.dossiers;
+      } else {
+        // Merge incoming dossiers with existing ones by ID
+        const dossierMap = new Map<string, any>();
+        for (const d of this.state.dossiers) {
+          if (d && d.id) dossierMap.set(d.id, d);
+        }
+        for (const d of newState.dossiers) {
+          if (d && d.id) {
+            dossierMap.set(d.id, { ...(dossierMap.get(d.id) || {}), ...d });
+          }
+        }
+        mergedDossiers = Array.from(dossierMap.values());
+      }
+    }
+
+    let mergedCheques = this.state.cheques;
+    if (Array.isArray(newState.cheques)) {
+      if (this.state.cheques.length === 0) {
+        mergedCheques = newState.cheques;
+      } else {
+        const chequeMap = new Map<string, any>();
+        for (const c of this.state.cheques) {
+          if (c && c.id) chequeMap.set(c.id, c);
+        }
+        for (const c of newState.cheques) {
+          if (c && c.id) {
+            chequeMap.set(c.id, { ...(chequeMap.get(c.id) || {}), ...c });
+          }
+        }
+        mergedCheques = Array.from(chequeMap.values());
+      }
+    }
+
+    let mergedUsers = this.state.users;
+    if (Array.isArray(newState.users)) {
+      const userMap = new Map<string, any>();
+      for (const u of this.state.users) {
+        if (u && (u.id || u.username)) userMap.set(u.id || u.username.toLowerCase(), u);
+      }
+      for (const u of newState.users) {
+        if (u && (u.id || u.username)) {
+          const key = u.id || u.username.toLowerCase();
+          userMap.set(key, { ...(userMap.get(key) || {}), ...u });
+        }
+      }
+      mergedUsers = Array.from(userMap.values());
+    }
+
     this.state = {
       ...this.state,
       ...newState,
+      dossiers: mergedDossiers,
+      cheques: mergedCheques,
+      users: mergedUsers,
       version: (this.state.version || 0) + 1,
       lastModified: new Date().toISOString()
     };

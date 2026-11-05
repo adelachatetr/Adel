@@ -40,6 +40,9 @@ interface HeaderProps {
   onOpenUserManagement: () => void;
   onOpenCreateUser?: () => void;
   onLogout: () => void;
+  syncStatus?: 'SYNCED' | 'SYNCING' | 'ERROR';
+  lastSyncTime?: string;
+  onForceSync?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -59,7 +62,10 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenChangePassword,
   onOpenUserManagement,
   onOpenCreateUser,
-  onLogout
+  onLogout,
+  syncStatus = 'SYNCED',
+  lastSyncTime,
+  onForceSync
 }) => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -106,6 +112,27 @@ export const Header: React.FC<HeaderProps> = ({
                   <span>Réalisé par :</span>
                   <strong className="text-cyan-800 font-black">NOUI ADEL</strong>
                 </span>
+
+                {/* Multi-PC Live Server Synchronization Badge */}
+                <button
+                  type="button"
+                  onClick={onForceSync}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold border transition-all cursor-pointer shadow-2xs ${
+                    syncStatus === 'SYNCING'
+                      ? 'bg-amber-50 text-amber-900 border-amber-300'
+                      : syncStatus === 'ERROR'
+                      ? 'bg-rose-50 text-rose-900 border-rose-300'
+                      : 'bg-emerald-50 text-emerald-900 border-emerald-300 hover:bg-emerald-100'
+                  }`}
+                  title={`Base Centrale Partagée (Multi-PC)\nDossiers & chèques synchronisés en temps réel entre Adel Noui, Sofiane Belmili, Hamza Boulekroun et Ahmed Bouzidi.\n${lastSyncTime ? `Dernière synchro : ${lastSyncTime}\n` : ''}Cliquez pour actualiser immédiatement.`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${
+                    syncStatus === 'SYNCING' ? 'bg-amber-500 animate-spin' : syncStatus === 'ERROR' ? 'bg-rose-500' : 'bg-emerald-500 animate-pulse'
+                  }`}></span>
+                  <span>Base Centrale :</span>
+                  <span className="text-emerald-700 font-black">{syncStatus === 'SYNCING' ? 'Synchro...' : 'Multi-PC Synchronisé'}</span>
+                  {lastSyncTime && <span className="font-mono text-[9px] text-emerald-800 hidden sm:inline">({lastSyncTime})</span>}
+                </button>
               </div>
               <p className="text-[11px] text-slate-500 font-medium">
                 Suivi des chèques de transit, débours & cautions conteneurs

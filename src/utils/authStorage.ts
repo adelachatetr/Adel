@@ -219,10 +219,43 @@ export function loadUsers(): UserAccount[] {
 export function saveUsers(users: UserAccount[]): void {
   try {
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+    // Asynchronously push to central server database so all PCs receive the update
+    fetch('/api/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ users })
+    }).catch(() => {});
   } catch (e) {
     console.error('Failed to save users', e);
   }
 }
+
+export async function syncUsersWithServer(): Promise<UserAccount[]> {
+  try {
+    const res = await fetch('/api/users');
+    if (!res.ok) return loadUsers();
+    const data = await res.json();
+    if (data && data.success && Array.isArray(data.users) && data.users.length > 0) {
+      const localUsers = loadUsers();
+      const userMap = new Map<string, UserAccount>();
+      for (const u of localUsers) {
+        userMap.set(u.username.toLowerCase(), u);
+      }
+      for (const u of data.users) {
+        userMap.set(u.username.toLowerCase(), { ...(userMap.get(u.username.toLowerCase()) || {}), ...u });
+      }
+      const merged = Array.from(userMap.values());
+      try {
+        localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(merged));
+      } catch {}
+      return merged;
+    }
+  } catch (e) {
+    // Silently continue
+  }
+  return loadUsers();
+}
+
 
 export function getCurrentSession(): AuthSession | null {
   try {

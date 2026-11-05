@@ -22,7 +22,8 @@ import {
   createNewUser, 
   adminResetUserPassword, 
   updateUserAccount, 
-  deleteUserAccount 
+  deleteUserAccount,
+  syncUsersWithServer
 } from '../utils/authStorage';
 
 interface UserManagementModalProps {
@@ -50,6 +51,11 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setUsers(loadUsers());
+      syncUsersWithServer().then(serverUsers => {
+        if (serverUsers && serverUsers.length > 0) {
+          setUsers(serverUsers);
+        }
+      });
       if (initialAddMode) {
         setIsAddMode(true);
       }

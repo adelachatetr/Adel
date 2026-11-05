@@ -70,90 +70,107 @@ export default function App() {
   // Pre-fill parameters when creating a cheque from a specific dossier
   const [prefillDossier, setPrefillDossier] = useState<{ number: string; client: string } | undefined>(undefined);
 
+  // Multi-PC server sync state
+  const [syncStatus, setSyncStatus] = useState<'SYNCED' | 'SYNCING' | 'ERROR'>('SYNCING');
+  const [lastSyncTime, setLastSyncTime] = useState<string>('');
+  const [serverVersion, setServerVersion] = useState<number>(0);
+
   // Multi-user shared server database synchronization
+  const triggerSync = async () => {
+    try {
+      setSyncStatus('SYNCING');
+      const serverData = await fetchServerDatabase();
+
+      if (serverData && serverData.success) {
+        const serverDossiers = serverData.dossiers || [];
+        const serverCheques = serverData.cheques || [];
+        const localDossiers = loadStoredDossiers();
+        const localCheques = loadStoredCheques();
+
+        // Smart merge: detect if local browser has new items not on the server
+        let needsServerPush = false;
+        let mergedDossiers = [...serverDossiers];
+        for (const ld of localDossiers) {
+          if (ld && ld.id && !serverDossiers.some(sd => sd.id === ld.id)) {
+            mergedDossiers.push(ld);
+            needsServerPush = true;
+          }
+        }
+
+        let mergedCheques = [...serverCheques];
+        for (const lc of localCheques) {
+          if (lc && lc.id && !serverCheques.some(sc => sc.id === lc.id)) {
+            mergedCheques.push(lc);
+            needsServerPush = true;
+          }
+        }
+
+        if (needsServerPush) {
+          await pushServerDatabase({
+            dossiers: mergedDossiers,
+            cheques: mergedCheques,
+            actor: session?.user?.fullName || 'Auto-Merge Synchro'
+          });
+        }
+
+        setDossiers(mergedDossiers);
+        setCheques(mergedCheques);
+        saveStoredDossiers(mergedDossiers);
+        saveStoredCheques(mergedCheques);
+
+        if (serverData.settings) {
+          setSettings(serverData.settings);
+          saveAppSettings(serverData.settings);
+        }
+
+        if (serverData.version) setServerVersion(serverData.version);
+        setSyncStatus('SYNCED');
+        setLastSyncTime(new Date().toLocaleTimeString('fr-FR'));
+      } else {
+        setSyncStatus('SYNCED');
+      }
+    } catch (err) {
+      console.error('Sync error:', err);
+      setSyncStatus('ERROR');
+    }
+  };
+
   useEffect(() => {
     let isMounted = true;
 
-    const syncInitial = async () => {
-      try {
-        const localDossiers = loadStoredDossiers();
-        const localCheques = loadStoredCheques();
-        const localSettings = loadAppSettings();
+    // Initial sync immediately upon mounting
+    triggerSync();
 
-        const serverData = await fetchServerDatabase();
-
-        if (serverData && serverData.success) {
-          const serverDossiers = serverData.dossiers || [];
-          const serverCheques = serverData.cheques || [];
-
-          // If the server has no dossiers yet, but local browser has dossiers (e.g. Hydrolab, IKN, Borel):
-          if (serverDossiers.length === 0 && localDossiers.length > 0) {
-            await pushServerDatabase({
-              dossiers: localDossiers,
-              cheques: localCheques,
-              settings: localSettings,
-              actor: 'Initial Push'
-            });
-          } else if (serverDossiers.length > 0 || serverCheques.length > 0) {
-            // Server has data: load into local state so all accounts (Adel, Sofiane, Hamza, Ahmed) see it!
-            if (isMounted) {
-              setDossiers(serverDossiers);
-              setCheques(serverCheques);
-              if (serverData.settings) setSettings(serverData.settings);
-            }
-            saveStoredDossiers(serverDossiers);
-            saveStoredCheques(serverCheques);
-          }
-        }
-      } catch (err) {
-        console.error('Initial sync error:', err);
-      }
-    };
-
-    syncInitial();
-
-    // Auto-sync polling every 3 seconds so changes from Adel appear on Sofiane's screen automatically
+    // Auto-sync polling every 2.5 seconds: guarantees changes on PC 1 (Adel) appear on PC 2 (Sofiane) in real-time
     const intervalId = setInterval(async () => {
       try {
         const serverData = await fetchServerDatabase();
-        if (serverData && serverData.success) {
-          if (Array.isArray(serverData.dossiers)) {
-            setDossiers(prev => {
-              if (JSON.stringify(prev) !== JSON.stringify(serverData.dossiers)) {
-                saveStoredDossiers(serverData.dossiers!);
-                return serverData.dossiers!;
-              }
-              return prev;
-            });
-          }
-          if (Array.isArray(serverData.cheques)) {
-            setCheques(prev => {
-              if (JSON.stringify(prev) !== JSON.stringify(serverData.cheques)) {
-                saveStoredCheques(serverData.cheques!);
-                return serverData.cheques!;
-              }
-              return prev;
-            });
+        if (serverData && serverData.success && isMounted) {
+          if (serverData.version !== undefined && serverData.version !== serverVersion) {
+            setServerVersion(serverData.version);
+            if (Array.isArray(serverData.dossiers)) {
+              setDossiers(serverData.dossiers);
+              saveStoredDossiers(serverData.dossiers);
+            }
+            if (Array.isArray(serverData.cheques)) {
+              setCheques(serverData.cheques);
+              saveStoredCheques(serverData.cheques);
+            }
+            if (serverData.settings) {
+              setSettings(serverData.settings);
+              saveAppSettings(serverData.settings);
+            }
+            setSyncStatus('SYNCED');
+            setLastSyncTime(new Date().toLocaleTimeString('fr-FR'));
           }
         }
       } catch (e) {
         // Silently continue
       }
-    }, 3000);
+    }, 2500);
 
     const handleFocus = () => {
-      fetchServerDatabase().then(serverData => {
-        if (serverData && serverData.success) {
-          if (Array.isArray(serverData.dossiers) && serverData.dossiers.length > 0) {
-            setDossiers(serverData.dossiers);
-            saveStoredDossiers(serverData.dossiers);
-          }
-          if (Array.isArray(serverData.cheques) && serverData.cheques.length > 0) {
-            setCheques(serverData.cheques);
-            saveStoredCheques(serverData.cheques);
-          }
-        }
-      });
+      triggerSync();
     };
     window.addEventListener('focus', handleFocus);
 
@@ -162,43 +179,27 @@ export default function App() {
       clearInterval(intervalId);
       window.removeEventListener('focus', handleFocus);
     };
-  }, []);
-
-  // Save changes to localStorage and push to server
-  useEffect(() => {
-    saveStoredCheques(cheques);
-    if (cheques.length > 0) {
-      pushServerDatabase({ cheques, actor: session?.user?.fullName || 'Transit SCHB' });
-    }
-  }, [cheques]);
-
-  useEffect(() => {
-    saveStoredDossiers(dossiers);
-    if (dossiers.length > 0) {
-      pushServerDatabase({ dossiers, actor: session?.user?.fullName || 'Transit SCHB' });
-    }
-  }, [dossiers]);
-
-  useEffect(() => {
-    saveAppSettings(settings);
-    pushServerDatabase({ settings, actor: session?.user?.fullName || 'Transit SCHB' });
-  }, [settings]);
+  }, [serverVersion]);
 
   // Urgent cautions count (conteneur rendu mais chèque bloqué chez l'armateur)
   const urgentCautionsCount = cheques.filter(c => c.status === 'A_RECUPERER').length;
 
   // Currency handler
   const handleCurrencyChange = (curr: string) => {
-    setSettings(prev => ({ ...prev, defaultCurrency: curr }));
+    const updated = { ...settings, defaultCurrency: curr };
+    setSettings(updated);
+    saveAppSettings(updated);
+    pushServerDatabase({ settings: updated, actor: session?.user?.fullName || 'Transit SCHB' });
   };
 
   // Cheque actions
   const handleSaveCheque = (data: Partial<TransitCheque>) => {
     const nowStr = new Date().toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
+    let updatedCheques: TransitCheque[] = [];
 
     if (editingCheque) {
       // Update existing
-      setCheques(prev => prev.map(item => {
+      updatedCheques = cheques.map(item => {
         if (item.id === editingCheque.id) {
           const updated: TransitCheque = {
             ...item,
@@ -220,7 +221,7 @@ export default function App() {
           return updated;
         }
         return item;
-      }));
+      });
     } else {
       // Create new
       const newCheque: TransitCheque = {
@@ -252,8 +253,12 @@ export default function App() {
         ]
       };
 
-      setCheques(prev => [newCheque, ...prev]);
+      updatedCheques = [newCheque, ...cheques];
     }
+
+    setCheques(updatedCheques);
+    saveStoredCheques(updatedCheques);
+    pushServerDatabase({ cheques: updatedCheques, actor: session?.user?.fullName || 'Transit SCHB' });
 
     setIsChequeFormOpen(false);
     setEditingCheque(null);
@@ -261,7 +266,10 @@ export default function App() {
   };
 
   const handleDeleteCheque = (id: string) => {
-    setCheques(prev => prev.filter(c => c.id !== id));
+    const updated = cheques.filter(c => c.id !== id);
+    setCheques(updated);
+    saveStoredCheques(updated);
+    pushServerDatabase({ cheques: updated, actor: session?.user?.fullName || 'Transit SCHB' });
     if (selectedChequeDetail?.id === id) {
       setSelectedChequeDetail(null);
     }
@@ -269,7 +277,7 @@ export default function App() {
 
   const handleUpdateStatus = (id: string, newStatus: ChequeStatus, comment?: string) => {
     const nowStr = new Date().toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
-    setCheques(prev => prev.map(c => {
+    const updatedList = cheques.map(c => {
       if (c.id === id) {
         const extraUpdates: Partial<TransitCheque> = {};
         if (newStatus === 'REMIS_COURSIER' && !c.dateRemiseCoursier) {
@@ -301,7 +309,11 @@ export default function App() {
         return updated;
       }
       return c;
-    }));
+    });
+
+    setCheques(updatedList);
+    saveStoredCheques(updatedList);
+    pushServerDatabase({ cheques: updatedList, actor: session?.user?.fullName || 'Transit SCHB' });
   };
 
   const handleSaveContainerRestitution = (
@@ -311,7 +323,7 @@ export default function App() {
     notes?: string
   ) => {
     const nowStr = new Date().toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
-    setCheques(prev => prev.map(c => {
+    const updatedList = cheques.map(c => {
       if (c.id === chequeId && c.containerInfo) {
         const updated: TransitCheque = {
           ...c,
@@ -338,7 +350,11 @@ export default function App() {
         return updated;
       }
       return c;
-    }));
+    });
+
+    setCheques(updatedList);
+    saveStoredCheques(updatedList);
+    pushServerDatabase({ cheques: updatedList, actor: session?.user?.fullName || 'Transit SCHB' });
   };
 
   // Dossier actions
@@ -496,6 +512,9 @@ export default function App() {
           clearSession();
           setSession(null);
         }}
+        syncStatus={syncStatus}
+        lastSyncTime={lastSyncTime}
+        onForceSync={triggerSync}
       />
 
       {/* Main Workspace Body */}

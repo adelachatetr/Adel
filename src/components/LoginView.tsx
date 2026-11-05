@@ -17,7 +17,7 @@ import {
   Check
 } from 'lucide-react';
 import { GICA_LOGO_BASE64 } from '../data/logoData';
-import { loadUsers, loginUser, createNewUser } from '../utils/authStorage';
+import { loadUsers, loginUser, createNewUser, syncUsersWithServer } from '../utils/authStorage';
 import { UserAccount, UserRole, ROLE_CONFIG } from '../types/auth';
 
 interface LoginViewProps {
@@ -49,7 +49,16 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, companyNam
   const [regConfirmPassword, setRegConfirmPassword] = useState('');
   const [showRegPassword, setShowRegPassword] = useState(false);
 
-  const users = loadUsers();
+  const [users, setUsers] = useState<UserAccount[]>(() => loadUsers());
+
+  // On mount, sync users from central server (crucial when opening on another PC)
+  React.useEffect(() => {
+    syncUsersWithServer().then(serverUsers => {
+      if (serverUsers && serverUsers.length > 0) {
+        setUsers(serverUsers);
+      }
+    });
+  }, []);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
