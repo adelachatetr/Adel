@@ -15,6 +15,18 @@ async function startServer() {
 
   app.use(express.json({ limit: '25mb' }));
 
+  // Enable CORS & permissive headers for cross-origin iframes and multi-PC clients
+  app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cache-Control, Pragma, X-Requested-With');
+    res.setHeader('Access-Control-Max-Age', '86400');
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(200);
+    }
+    next();
+  });
+
   // ==================== API ROUTES ====================
 
   // Health check
@@ -82,6 +94,9 @@ async function startServer() {
   // Sync endpoint (fetch all shared database records)
   app.get('/api/sync', (req, res) => {
     try {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
       const state = db.getState();
       res.json({
         success: true,

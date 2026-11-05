@@ -91,8 +91,14 @@ export default function App() {
   // Multi-user shared server database synchronization (READ-ONLY from central server)
   const triggerSync = async (isManual = false) => {
     try {
-      setSyncStatus('SYNCING');
-      const serverData = await fetchServerDatabase();
+      if (isManual) setSyncStatus('SYNCING');
+      let serverData = await fetchServerDatabase();
+
+      // If initial attempt failed, retry once after 600ms (smoothly handles server restart)
+      if (!serverData || !serverData.success) {
+        await new Promise(r => setTimeout(r, 600));
+        serverData = await fetchServerDatabase();
+      }
 
       if (serverData && serverData.success) {
         const serverDossiers = serverData.dossiers || [];
@@ -144,6 +150,10 @@ export default function App() {
       try {
         const serverData = await fetchServerDatabase();
         if (serverData && serverData.success && isMounted) {
+          // As long as the server responds with 200, the app is online and synced
+          setSyncStatus('SYNCED');
+          setLastSyncTime(new Date().toLocaleTimeString('fr-FR'));
+
           if (serverData.version !== undefined && serverData.version !== serverVersionRef.current) {
             serverVersionRef.current = serverData.version;
             setServerVersion(serverData.version);
@@ -159,8 +169,6 @@ export default function App() {
               setSettings(serverData.settings);
               saveAppSettings(serverData.settings);
             }
-            setSyncStatus('SYNCED');
-            setLastSyncTime(new Date().toLocaleTimeString('fr-FR'));
           }
         }
       } catch (e) {

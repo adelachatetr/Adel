@@ -363,8 +363,8 @@ export async function fetchServerDatabase(): Promise<{
   error?: string;
 }> {
   try {
-    const res = await fetch('/api/sync', {
-      headers: { 'Cache-Control': 'no-cache, no-store' }
+    const res = await fetch(`/api/sync?t=${Date.now()}`, {
+      cache: 'no-store'
     });
     if (!res.ok) {
       return { success: false, error: `Erreur serveur HTTP ${res.status}` };
@@ -456,8 +456,8 @@ export async function deleteServerCheque(chequeId: string, actor?: string): Prom
 
 export async function fetchDatabaseInfo(): Promise<any> {
   try {
-    const res = await fetch('/api/database/info', {
-      headers: { 'Cache-Control': 'no-cache, no-store' }
+    const res = await fetch(`/api/database/info?t=${Date.now()}`, {
+      cache: 'no-store'
     });
     if (!res.ok) return null;
     return await res.json();
