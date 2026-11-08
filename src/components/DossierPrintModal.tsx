@@ -482,15 +482,15 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
             </div>
 
             <div className="space-y-12">
-              <span className="font-bold text-slate-800 block">Chef de Service Transit & Douane :</span>
+              <span className="font-bold text-slate-800 block">Chef de Service Achats Étrangers :</span>
               <div className="border-b border-dashed border-slate-400 w-3/4"></div>
               <span className="text-[10px] text-slate-500 italic block">Visa & Cachet Service</span>
             </div>
 
             <div className="space-y-12">
-              <span className="font-bold text-slate-800 block">Direction Financière / Caisse :</span>
+              <span className="font-bold text-slate-800 block">Chef de Département Approvisionnements :</span>
               <div className="border-b border-dashed border-slate-400 w-3/4"></div>
-              <span className="text-[10px] text-slate-500 italic block">Pour Acquit & Conformité</span>
+              <span className="text-[10px] text-slate-500 italic block">Visa & Approbation</span>
             </div>
           </div>
 
