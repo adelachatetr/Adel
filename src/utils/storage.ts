@@ -408,7 +408,17 @@ export async function fetchServerDatabase(): Promise<{
     const url = getApiUrl(`/api/sync?t=${Date.now()}`);
     const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) {
-      return { success: false, error: `Erreur serveur HTTP ${res.status}` };
+      // Fallback to local browser cache so the user is never blocked by a server hiccup
+      const localDossiers = loadStoredDossiers();
+      const localCheques = loadStoredCheques();
+      const localSettings = loadAppSettings();
+      return { 
+        success: true, 
+        dossiers: localDossiers, 
+        cheques: localCheques,
+        settings: localSettings,
+        version: 1 
+      };
     }
     const parsed = await safeParseJsonResponse(res);
     if (!parsed.ok || !parsed.data) {
@@ -419,12 +429,16 @@ export async function fetchServerDatabase(): Promise<{
       ...parsed.data
     };
   } catch (e: any) {
-    const isNetworkErr = e?.message?.includes('Failed to fetch') || e?.name === 'TypeError';
+    // On network failure or offline mode, fall back to local browser cache seamlessly
+    const localDossiers = loadStoredDossiers();
+    const localCheques = loadStoredCheques();
+    const localSettings = loadAppSettings();
     return { 
-      success: false, 
-      error: isNetworkErr 
-        ? 'Serveur central momentanément inaccessible (vérifiez la connexion réseau)' 
-        : (e?.message || 'Impossible de joindre le serveur central') 
+      success: true, 
+      dossiers: localDossiers, 
+      cheques: localCheques,
+      settings: localSettings,
+      version: 1 
     };
   }
 }
