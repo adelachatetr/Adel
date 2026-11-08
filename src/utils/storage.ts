@@ -360,21 +360,13 @@ export function exportBackupJSON(cheques: TransitCheque[], dossiers: TransitDoss
 
 // ==================== SHARED SERVER DATABASE API ====================
 
-// Central backend server hosted on Cloud Run (contains central database)
-export const CLOUD_RUN_CENTRAL_BACKEND = 'https://ais-dev-gcnx42ravfvajk7bedupa3-61973235787.europe-west1.run.app';
-
 /**
  * Returns the correct API URL.
- * When running on Vercel (e.g. schbtransit.vercel.app), routes directly to the central Cloud Run server.
+ * Uses same-origin relative endpoints (/api/...) ensuring full compatibility on
+ * localhost:3000, Google AI Studio preview, and Vercel (https://schbtransit.vercel.app/api/...)
+ * without triggering CORS blocks, external 302 redirects, or "Failed to fetch" errors.
  */
 export function getApiUrl(endpoint: string): string {
-  if (typeof window !== 'undefined') {
-    const host = window.location.hostname;
-    // When accessed from Vercel or any external domain without local Express, route to central Cloud Run
-    if (host.includes('vercel.app')) {
-      return `${CLOUD_RUN_CENTRAL_BACKEND}${endpoint}`;
-    }
-  }
   return endpoint;
 }
 
@@ -427,7 +419,13 @@ export async function fetchServerDatabase(): Promise<{
       ...parsed.data
     };
   } catch (e: any) {
-    return { success: false, error: e?.message || 'Impossible de joindre le serveur central' };
+    const isNetworkErr = e?.message?.includes('Failed to fetch') || e?.name === 'TypeError';
+    return { 
+      success: false, 
+      error: isNetworkErr 
+        ? 'Serveur central momentanément inaccessible (vérifiez la connexion réseau)' 
+        : (e?.message || 'Impossible de joindre le serveur central') 
+    };
   }
 }
 
@@ -454,7 +452,13 @@ export async function pushServerDatabase(payload: {
     }
     return { success: true, version: parsed.data?.version };
   } catch (e: any) {
-    return { success: false, error: e?.message || 'Erreur réseau' };
+    const isNetworkErr = e?.message?.includes('Failed to fetch') || e?.name === 'TypeError';
+    return { 
+      success: false, 
+      error: isNetworkErr 
+        ? 'Serveur central momentanément inaccessible (vérifiez la connexion réseau)' 
+        : (e?.message || 'Erreur réseau') 
+    };
   }
 }
 
