@@ -1,4 +1,5 @@
 import { UserAccount, AuthSession, UserRole } from '../types/auth';
+import { getApiUrl, safeParseJsonResponse } from './storage';
 
 const USERS_STORAGE_KEY = 'transit_users_accounts_v1';
 const AUTH_SESSION_KEY = 'transit_auth_session_v1';
@@ -220,7 +221,8 @@ export function saveUsers(users: UserAccount[]): void {
   try {
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
     // Asynchronously push to central server database so all PCs receive the update
-    fetch('/api/sync', {
+    const url = getApiUrl('/api/sync');
+    fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ users })
@@ -232,9 +234,12 @@ export function saveUsers(users: UserAccount[]): void {
 
 export async function syncUsersWithServer(): Promise<UserAccount[]> {
   try {
-    const res = await fetch('/api/users');
+    const url = getApiUrl('/api/users');
+    const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) return loadUsers();
-    const data = await res.json();
+    const parsed = await safeParseJsonResponse(res);
+    if (!parsed.ok || !parsed.data) return loadUsers();
+    const data = parsed.data;
     if (data && data.success && Array.isArray(data.users) && data.users.length > 0) {
       const localUsers = loadUsers();
       const userMap = new Map<string, UserAccount>();

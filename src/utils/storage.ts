@@ -29,9 +29,12 @@ export function loadStoredCheques(): TransitCheque[] {
   try {
     const raw = localStorage.getItem(CHEQUES_STORAGE_KEY);
     if (!raw) {
-      return [];
+      return INITIAL_CHEQUES;
     }
     const parsed: TransitCheque[] = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      return INITIAL_CHEQUES;
+    }
     return parsed.map(c => ({
       ...c,
       currency: 'DA',
@@ -39,7 +42,7 @@ export function loadStoredCheques(): TransitCheque[] {
     }));
   } catch (e) {
     console.error('Failed to load cheques from storage', e);
-    return [];
+    return INITIAL_CHEQUES;
   }
 }
 
@@ -55,12 +58,16 @@ export function loadStoredDossiers(): TransitDossier[] {
   try {
     const raw = localStorage.getItem(DOSSIERS_STORAGE_KEY);
     if (!raw) {
-      return [];
+      return INITIAL_DOSSIERS;
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      return INITIAL_DOSSIERS;
+    }
+    return parsed;
   } catch (e) {
     console.error('Failed to load dossiers from storage', e);
-    return [];
+    return INITIAL_DOSSIERS;
   }
 }
 
@@ -353,6 +360,49 @@ export function exportBackupJSON(cheques: TransitCheque[], dossiers: TransitDoss
 
 // ==================== SHARED SERVER DATABASE API ====================
 
+// Central backend server hosted on Cloud Run (contains central database)
+export const CLOUD_RUN_CENTRAL_BACKEND = 'https://ais-dev-gcnx42ravfvajk7bedupa3-61973235787.europe-west1.run.app';
+
+/**
+ * Returns the correct API URL.
+ * When running on Vercel (e.g. schbtransit.vercel.app), routes directly to the central Cloud Run server.
+ */
+export function getApiUrl(endpoint: string): string {
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    // When accessed from Vercel or any external domain without local Express, route to central Cloud Run
+    if (host.includes('vercel.app')) {
+      return `${CLOUD_RUN_CENTRAL_BACKEND}${endpoint}`;
+    }
+  }
+  return endpoint;
+}
+
+/**
+ * Safely parses JSON response. If response is HTML (e.g. Vercel SPA rewrite fallback <!doctype html>),
+ * it cleanly returns null without throwing an unhandled SyntaxError.
+ */
+export async function safeParseJsonResponse(res: Response): Promise<{ ok: boolean; data?: any; error?: string }> {
+  try {
+    const contentType = res.headers.get('content-type') || '';
+    const text = await res.text();
+    const trimmed = text.trim();
+
+    // Catch any HTML responses (like Vercel index.html fallback)
+    if (trimmed.startsWith('<') || (!contentType.includes('application/json') && !trimmed.startsWith('{') && !trimmed.startsWith('['))) {
+      return { 
+        ok: false, 
+        error: 'Le serveur a renvoyé une page HTML (redirection SPA Vercel)' 
+      };
+    }
+
+    const data = JSON.parse(text);
+    return { ok: true, data };
+  } catch (err: any) {
+    return { ok: false, error: err?.message || 'Erreur d\'analyse JSON' };
+  }
+}
+
 export async function fetchServerDatabase(): Promise<{
   success: boolean;
   dossiers?: TransitDossier[];
@@ -363,16 +413,18 @@ export async function fetchServerDatabase(): Promise<{
   error?: string;
 }> {
   try {
-    const res = await fetch(`/api/sync?t=${Date.now()}`, {
-      cache: 'no-store'
-    });
+    const url = getApiUrl(`/api/sync?t=${Date.now()}`);
+    const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) {
       return { success: false, error: `Erreur serveur HTTP ${res.status}` };
     }
-    const data = await res.json();
+    const parsed = await safeParseJsonResponse(res);
+    if (!parsed.ok || !parsed.data) {
+      return { success: false, error: parsed.error || 'Réponse serveur invalide' };
+    }
     return {
       success: true,
-      ...data
+      ...parsed.data
     };
   } catch (e: any) {
     return { success: false, error: e?.message || 'Impossible de joindre le serveur central' };
@@ -387,7 +439,8 @@ export async function pushServerDatabase(payload: {
   actor?: string;
 }): Promise<{ success: boolean; version?: number; error?: string }> {
   try {
-    const res = await fetch('/api/sync', {
+    const url = getApiUrl('/api/sync');
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -395,8 +448,11 @@ export async function pushServerDatabase(payload: {
     if (!res.ok) {
       return { success: false, error: `Erreur HTTP ${res.status}` };
     }
-    const data = await res.json();
-    return { success: true, version: data?.version };
+    const parsed = await safeParseJsonResponse(res);
+    if (!parsed.ok || !parsed.data) {
+      return { success: false, error: parsed.error };
+    }
+    return { success: true, version: parsed.data?.version };
   } catch (e: any) {
     return { success: false, error: e?.message || 'Erreur réseau' };
   }
@@ -404,13 +460,15 @@ export async function pushServerDatabase(payload: {
 
 export async function saveServerDossier(dossier: TransitDossier, actor?: string): Promise<{ success: boolean; version?: number; dossiers?: TransitDossier[] }> {
   try {
-    const res = await fetch('/api/dossiers', {
+    const url = getApiUrl('/api/dossiers');
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ dossier, actor })
     });
     if (!res.ok) return { success: false };
-    return await res.json();
+    const parsed = await safeParseJsonResponse(res);
+    return parsed.ok && parsed.data ? parsed.data : { success: false };
   } catch (e) {
     return { success: false };
   }
@@ -418,11 +476,13 @@ export async function saveServerDossier(dossier: TransitDossier, actor?: string)
 
 export async function deleteServerDossier(dossierId: string, actor?: string): Promise<{ success: boolean; version?: number; dossiers?: TransitDossier[] }> {
   try {
-    const res = await fetch(`/api/dossiers/${encodeURIComponent(dossierId)}?actor=${encodeURIComponent(actor || '')}`, {
+    const url = getApiUrl(`/api/dossiers/${encodeURIComponent(dossierId)}?actor=${encodeURIComponent(actor || '')}`);
+    const res = await fetch(url, {
       method: 'DELETE'
     });
     if (!res.ok) return { success: false };
-    return await res.json();
+    const parsed = await safeParseJsonResponse(res);
+    return parsed.ok && parsed.data ? parsed.data : { success: false };
   } catch (e) {
     return { success: false };
   }
@@ -430,13 +490,15 @@ export async function deleteServerDossier(dossierId: string, actor?: string): Pr
 
 export async function saveServerCheque(cheque: TransitCheque, actor?: string): Promise<{ success: boolean; version?: number; cheques?: TransitCheque[] }> {
   try {
-    const res = await fetch('/api/cheques', {
+    const url = getApiUrl('/api/cheques');
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ cheque, actor })
     });
     if (!res.ok) return { success: false };
-    return await res.json();
+    const parsed = await safeParseJsonResponse(res);
+    return parsed.ok && parsed.data ? parsed.data : { success: false };
   } catch (e) {
     return { success: false };
   }
@@ -444,11 +506,13 @@ export async function saveServerCheque(cheque: TransitCheque, actor?: string): P
 
 export async function deleteServerCheque(chequeId: string, actor?: string): Promise<{ success: boolean; version?: number; cheques?: TransitCheque[] }> {
   try {
-    const res = await fetch(`/api/cheques/${encodeURIComponent(chequeId)}?actor=${encodeURIComponent(actor || '')}`, {
+    const url = getApiUrl(`/api/cheques/${encodeURIComponent(chequeId)}?actor=${encodeURIComponent(actor || '')}`);
+    const res = await fetch(url, {
       method: 'DELETE'
     });
     if (!res.ok) return { success: false };
-    return await res.json();
+    const parsed = await safeParseJsonResponse(res);
+    return parsed.ok && parsed.data ? parsed.data : { success: false };
   } catch (e) {
     return { success: false };
   }
@@ -456,11 +520,11 @@ export async function deleteServerCheque(chequeId: string, actor?: string): Prom
 
 export async function fetchDatabaseInfo(): Promise<any> {
   try {
-    const res = await fetch(`/api/database/info?t=${Date.now()}`, {
-      cache: 'no-store'
-    });
+    const url = getApiUrl(`/api/database/info?t=${Date.now()}`);
+    const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) return null;
-    return await res.json();
+    const parsed = await safeParseJsonResponse(res);
+    return parsed.ok ? parsed.data : null;
   } catch (e) {
     return null;
   }
