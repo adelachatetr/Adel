@@ -107,13 +107,13 @@ export function resetAllDataToDemo(): { cheques: TransitCheque[]; dossiers: Tran
   return { cheques: INITIAL_CHEQUES, dossiers: INITIAL_DOSSIERS };
 }
 
-// Format number with spaces as thousand separators
+// Format number with non-breaking spaces as thousand separators and before currency to prevent wrapping
 export function formatAmount(amount: number, currency: string = 'DA'): string {
   const formatted = new Intl.NumberFormat('fr-FR', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
-  }).format(amount);
-  return `${formatted} ${currency}`;
+  }).format(amount).replace(/\s/g, '\u00A0');
+  return `${formatted}\u00A0${currency}`;
 }
 
 export function formatShortDate(dateStr?: string): string {

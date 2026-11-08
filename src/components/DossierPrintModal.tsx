@@ -149,6 +149,7 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
     @page { margin: 1cm; size: A4 portrait; }
     body { background: white !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #0f172a; margin: 0; padding: 24px; }
     .printable-document { max-width: 900px; margin: 0 auto; }
+    .whitespace-nowrap { white-space: nowrap !important; }
     @media print {
       body { padding: 0; }
     }
@@ -361,28 +362,28 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
           </div>
 
           {/* Financial Summary Strip */}
-          <div className="grid grid-cols-3 gap-2.5 my-3">
-            <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
-              <span className="text-[10px] text-slate-500 uppercase font-bold block">Total Débours Émis</span>
-              <span className="font-mono font-bold text-sm text-slate-900">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 my-3 print:grid-cols-3">
+            <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg min-w-0 flex flex-col justify-between shadow-2xs">
+              <span className="text-[10px] text-slate-500 uppercase font-bold block truncate">Total Débours Émis</span>
+              <div className="mt-1 font-mono font-bold text-sm sm:text-base text-slate-900 whitespace-nowrap tracking-tight leading-none">
                 {formatAmount(totalDebourseDossier, selectedCurrency)}
-              </span>
+              </div>
             </div>
-            <div className="p-2.5 bg-emerald-50/70 border border-emerald-200 rounded-lg">
-              <span className="text-[10px] text-emerald-800 uppercase font-bold block">Avances Client Reçues</span>
-              <span className="font-mono font-bold text-sm text-emerald-950">
+            <div className="p-2.5 bg-emerald-50/70 border border-emerald-200 rounded-lg min-w-0 flex flex-col justify-between shadow-2xs">
+              <span className="text-[10px] text-emerald-800 uppercase font-bold block truncate">Avances Client Reçues</span>
+              <div className="mt-1 font-mono font-bold text-sm sm:text-base text-emerald-950 whitespace-nowrap tracking-tight leading-none">
                 {formatAmount(totalProvisionsDossier, selectedCurrency)}
-              </span>
+              </div>
             </div>
-            <div className={`p-2.5 rounded-lg border ${
+            <div className={`p-2.5 rounded-lg border min-w-0 flex flex-col justify-between shadow-2xs ${
               balanceDossier >= 0 ? 'bg-teal-50/70 border-teal-200' : 'bg-rose-50/70 border-rose-200'
             }`}>
-              <span className="text-[10px] uppercase font-bold block text-slate-600">Solde Net Dossier</span>
-              <span className={`font-mono font-bold text-sm ${
+              <span className="text-[10px] uppercase font-bold block text-slate-600 truncate">Solde Net Dossier</span>
+              <div className={`mt-1 font-mono font-bold text-sm sm:text-base whitespace-nowrap tracking-tight leading-none ${
                 balanceDossier >= 0 ? 'text-teal-800' : 'text-rose-800'
               }`}>
                 {balanceDossier >= 0 ? '+' : ''}{formatAmount(balanceDossier, selectedCurrency)}
-              </span>
+              </div>
             </div>
           </div>
 
@@ -402,7 +403,7 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
                   <th className="py-2 px-2 border-r border-slate-200">Bénéficiaire</th>
                   <th className="py-2 px-2 border-r border-slate-200">Déclarant / Coursier</th>
                   <th className="py-2 px-2 border-r border-slate-200">Statut</th>
-                  <th className="py-2 px-2 text-right">Montant</th>
+                  <th className="py-2 px-3 text-right whitespace-nowrap min-w-[130px]">Montant</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
@@ -444,7 +445,7 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
                             {chqStatusCfg.label}
                           </span>
                         </td>
-                        <td className="py-2 px-2 text-right font-mono font-bold whitespace-nowrap">
+                        <td className="py-2 px-3 text-right font-mono font-bold whitespace-nowrap text-slate-900">
                           {formatAmount(chq.amount, chq.currency)}
                         </td>
                       </tr>
@@ -457,7 +458,7 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
                   <td colSpan={6} className="py-2 px-2 text-right uppercase">
                     Total Débours Dossier :
                   </td>
-                  <td className="py-2 px-2 text-right font-mono text-sm text-slate-900">
+                  <td className="py-2 px-3 text-right font-mono font-black text-sm whitespace-nowrap text-slate-900">
                     {formatAmount(totalDebourseDossier, selectedCurrency)}
                   </td>
                 </tr>
