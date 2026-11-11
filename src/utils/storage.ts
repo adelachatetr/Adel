@@ -38,6 +38,9 @@ export function loadStoredCheques(): TransitCheque[] {
     return parsed.map(c => ({
       ...c,
       currency: 'DA',
+      bankName: (!c.bankName || !c.bankName.toUpperCase().includes('BEA'))
+        ? 'BEA (Banque Extérieure d\'Algérie)'
+        : c.bankName,
       coursierName: c.coursierName === 'Noui Adel' ? 'Hamza Boulekroune' : c.coursierName
     }));
   } catch (e) {
@@ -424,9 +427,19 @@ export async function fetchServerDatabase(): Promise<{
     if (!parsed.ok || !parsed.data) {
       return { success: false, error: parsed.error || 'Réponse serveur invalide' };
     }
+    const cheques = Array.isArray(parsed.data.cheques)
+      ? parsed.data.cheques.map((c: any) => ({
+          ...c,
+          bankName: (!c.bankName || !c.bankName.toUpperCase().includes('BEA'))
+            ? 'BEA (Banque Extérieure d\'Algérie)'
+            : c.bankName
+        }))
+      : [];
+
     return {
       success: true,
-      ...parsed.data
+      ...parsed.data,
+      cheques
     };
   } catch (e: any) {
     // On network failure or offline mode, fall back to local browser cache seamlessly

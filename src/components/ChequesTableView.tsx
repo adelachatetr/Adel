@@ -298,18 +298,18 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
             </select>
           </div>
 
-          {/* 3. Filtre par Banque (BEA, BNA, etc.) */}
+          {/* 3. Filtre par Agence BEA */}
           <div className="flex flex-col gap-1">
             <label className="text-[11px] font-bold text-slate-600 flex items-center gap-1">
-              <Landmark className="h-3.5 w-3.5 text-cyan-700" />
-              <span>Banque Tirée</span>
+              <Landmark className="h-3.5 w-3.5 text-blue-700" />
+              <span>Banque Tirée (BEA)</span>
             </label>
             <select
               value={bankFilter}
               onChange={e => setBankFilter(e.target.value)}
               className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 font-semibold focus:outline-none focus:border-cyan-600 focus:bg-white truncate"
             >
-              <option value="ALL">Toutes les banques ({uniqueBanks.length})</option>
+              <option value="ALL">Toutes les agences BEA ({uniqueBanks.length})</option>
               {uniqueBanks.map(([bName, count]) => (
                 <option key={bName} value={bName}>
                   {bName} ({count})

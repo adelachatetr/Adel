@@ -408,16 +408,9 @@ export const MAJOR_BANKS = [
   'BEA (Banque Extérieure d\'Algérie)',
   'BEA - Agence Constantine (002)',
   'BEA - Agence Hamma Bouziane',
-  'BNA (Banque Nationale d\'Algérie)',
-  'CPA (Crédit Populaire d\'Algérie)',
-  'BDL (Banque de Développement Local)',
-  'BADR (Banque de l\'Agriculture et du Développement Rural)',
-  'CNEP Banque',
-  'Al Baraka Bank Algérie',
-  'Société Générale Algérie',
-  'BNP Paribas El Djazaïr',
-  'Attijariwafa Bank',
-  'Autre Banque'
+  'BEA - Agence Port Skikda',
+  'BEA - Agence Port Djendjen',
+  'BEA - Agence Port Alger'
 ];
 
 export const TRANSIT_AGENTS = [

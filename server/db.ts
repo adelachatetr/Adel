@@ -105,6 +105,12 @@ class DatabaseManager {
         const parsed = JSON.parse(raw);
         if (parsed && Array.isArray(parsed.dossiers) && Array.isArray(parsed.cheques)) {
           console.log(`[Database] Loaded from ${this.dbPath} (${parsed.dossiers.length} dossiers, ${parsed.cheques.length} cheques)`);
+          parsed.cheques = parsed.cheques.map((c: any) => ({
+            ...c,
+            bankName: (!c.bankName || !c.bankName.toUpperCase().includes('BEA'))
+              ? 'BEA (Banque Extérieure d\'Algérie)'
+              : c.bankName
+          }));
           return parsed;
         }
       }
@@ -167,7 +173,13 @@ class DatabaseManager {
 
   public updateFullState(newState: Partial<DatabaseState>, actor?: string): DatabaseState {
     const updatedDossiers = Array.isArray(newState.dossiers) ? newState.dossiers : this.state.dossiers;
-    const updatedCheques = Array.isArray(newState.cheques) ? newState.cheques : this.state.cheques;
+    const rawCheques = Array.isArray(newState.cheques) ? newState.cheques : this.state.cheques;
+    const updatedCheques = rawCheques.map(c => ({
+      ...c,
+      bankName: (!c.bankName || !c.bankName.toUpperCase().includes('BEA'))
+        ? 'BEA (Banque Extérieure d\'Algérie)'
+        : c.bankName
+    }));
     const updatedSettings = (newState.settings && typeof newState.settings === 'object') ? { ...this.state.settings, ...newState.settings } : this.state.settings;
     
     let updatedUsers = this.state.users;
@@ -259,14 +271,19 @@ class DatabaseManager {
     return this.state;
   }
 
-  // Cheque operations
   public saveCheque(cheque: any, actor?: string): DatabaseState {
-    const existingIndex = this.state.cheques.findIndex(c => c.id === cheque.id);
+    const normalizedCheque = {
+      ...cheque,
+      bankName: (!cheque.bankName || !cheque.bankName.toUpperCase().includes('BEA'))
+        ? 'BEA (Banque Extérieure d\'Algérie)'
+        : cheque.bankName
+    };
+    const existingIndex = this.state.cheques.findIndex(c => c.id === normalizedCheque.id);
     let updatedCheques = [...this.state.cheques];
     if (existingIndex >= 0) {
-      updatedCheques[existingIndex] = { ...updatedCheques[existingIndex], ...cheque };
+      updatedCheques[existingIndex] = { ...updatedCheques[existingIndex], ...normalizedCheque };
     } else {
-      updatedCheques.unshift(cheque);
+      updatedCheques.unshift(normalizedCheque);
     }
 
     this.state = {

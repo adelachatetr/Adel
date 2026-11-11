@@ -270,10 +270,16 @@ export default async function handler(req: any, res: any) {
           res.statusCode = 400;
           return res.end(JSON.stringify({ success: false, error: 'Chèque invalide ou ID manquant' }));
         }
+        const normalizedCheque = {
+          ...cheque,
+          bankName: (!cheque.bankName || !cheque.bankName.toUpperCase().includes('BEA'))
+            ? 'BEA (Banque Extérieure d\'Algérie)'
+            : cheque.bankName
+        };
         const cheques = [...state.cheques];
-        const idx = cheques.findIndex(c => c.id === cheque.id);
-        if (idx >= 0) cheques[idx] = { ...cheques[idx], ...cheque };
-        else cheques.unshift(cheque);
+        const idx = cheques.findIndex(c => c.id === normalizedCheque.id);
+        if (idx >= 0) cheques[idx] = { ...cheques[idx], ...normalizedCheque };
+        else cheques.unshift(normalizedCheque);
         const updated = persistState({ cheques }, actor);
         res.statusCode = 200;
         return res.end(JSON.stringify({ success: true, version: updated.version, cheques: updated.cheques }));
@@ -294,7 +300,14 @@ export default async function handler(req: any, res: any) {
       const { dossiers, cheques, settings, users, actor } = body || {};
       const updates: any = {};
       if (Array.isArray(dossiers)) updates.dossiers = dossiers;
-      if (Array.isArray(cheques)) updates.cheques = cheques;
+      if (Array.isArray(cheques)) {
+        updates.cheques = cheques.map(c => ({
+          ...c,
+          bankName: (!c.bankName || !c.bankName.toUpperCase().includes('BEA'))
+            ? 'BEA (Banque Extérieure d\'Algérie)'
+            : c.bankName
+        }));
+      }
       if (settings && typeof settings === 'object') updates.settings = settings;
       if (Array.isArray(users)) updates.users = users;
 

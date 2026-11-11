@@ -53,7 +53,11 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
   useEffect(() => {
     if (editingCheque) {
       setChequeNumber(editingCheque.chequeNumber);
-      setBankName(editingCheque.bankName);
+      setBankName(
+        editingCheque.bankName && editingCheque.bankName.toUpperCase().includes('BEA')
+          ? editingCheque.bankName
+          : (defaultBankName || MAJOR_BANKS[0])
+      );
       setDirection(editingCheque.direction);
       setCategory(editingCheque.category);
       setAmount(editingCheque.amount.toString());
@@ -151,7 +155,9 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
 
     const payload: Partial<TransitCheque> = {
       chequeNumber: chequeNumber.trim(),
-      bankName: bankName.trim(),
+      bankName: (bankName && bankName.toUpperCase().includes('BEA'))
+        ? bankName.trim()
+        : 'BEA (Banque Extérieure d\'Algérie)',
       direction,
       category,
       amount: parsedAmount,
@@ -233,39 +239,21 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-slate-700 font-semibold text-xs">
-                  Banque Tirée <span className="text-rose-500">*</span>
+                  Banque Tirée (BEA Uniquement) <span className="text-rose-500">*</span>
                 </label>
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => setBankName('BEA (Banque Extérieure d\'Algérie)')}
-                    className="text-[10px] bg-blue-50 text-blue-800 hover:bg-blue-100 px-1.5 py-0.5 rounded font-bold border border-blue-200 cursor-pointer"
-                  >
-                    BEA
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setBankName('BEA - Agence Constantine (002)')}
-                    className="text-[10px] bg-slate-100 text-slate-700 hover:bg-slate-200 px-1.5 py-0.5 rounded font-medium border border-slate-200 cursor-pointer"
-                  >
-                    BEA 002
-                  </button>
-                </div>
+                <span className="text-[10px] bg-blue-100 text-blue-900 font-extrabold px-2 py-0.5 rounded border border-blue-200 tracking-wider">
+                  BEA EXCLUSIVE
+                </span>
               </div>
-              <input
-                type="text"
-                required
-                list="banks-list"
+              <select
                 value={bankName}
                 onChange={e => setBankName(e.target.value)}
-                placeholder="ex: BEA (Banque Extérieure d'Algérie)"
-                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-medium focus:outline-none focus:border-cyan-600"
-              />
-              <datalist id="banks-list">
+                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-bold focus:outline-none focus:border-cyan-600 text-xs sm:text-sm"
+              >
                 {MAJOR_BANKS.map(b => (
-                  <option key={b} value={b} />
+                  <option key={b} value={b}>{b}</option>
                 ))}
-              </datalist>
+              </select>
             </div>
 
             <div>

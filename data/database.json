@@ -111,7 +111,7 @@
     {
       "id": "chq-001",
       "chequeNumber": "CHQ-804192",
-      "bankName": "Banque Nationale d'Algérie (BNA)",
+      "bankName": "BEA (Banque Extérieure d'Algérie)",
       "direction": "EMIS",
       "category": "CAUTION_CONTENEUR",
       "amount": 500000,
@@ -183,7 +183,7 @@
     {
       "id": "chq-002",
       "chequeNumber": "CHQ-804193",
-      "bankName": "Banque Nationale d'Algérie (BNA)",
+      "bankName": "BEA (Banque Extérieure d'Algérie)",
       "direction": "EMIS",
       "category": "DROITS_DOUANE",
       "amount": 1420500,
@@ -223,7 +223,7 @@
     {
       "id": "chq-003",
       "chequeNumber": "CHQ-804194",
-      "bankName": "Société Générale",
+      "bankName": "BEA (Banque Extérieure d'Algérie)",
       "direction": "EMIS",
       "category": "FRAIS_MARITIMES",
       "amount": 185000,
@@ -257,7 +257,7 @@
     {
       "id": "chq-004",
       "chequeNumber": "CHQ-509121",
-      "bankName": "Attijariwafa Bank",
+      "bankName": "BEA (Banque Extérieure d'Algérie)",
       "direction": "EMIS",
       "category": "CAUTION_CONTENEUR",
       "amount": 45000,
@@ -303,7 +303,7 @@
     {
       "id": "chq-005",
       "chequeNumber": "CHQ-509122",
-      "bankName": "Attijariwafa Bank",
+      "bankName": "BEA (Banque Extérieure d'Algérie)",
       "direction": "EMIS",
       "category": "MANUTENTION_PORT",
       "amount": 18200,
@@ -336,7 +336,7 @@
     {
       "id": "chq-006",
       "chequeNumber": "CHQ-992104",
-      "bankName": "Ecobank Côte d'Ivoire",
+      "bankName": "BEA (Banque Extérieure d'Algérie)",
       "direction": "EMIS",
       "category": "CAUTION_CONTENEUR",
       "amount": 2400000,
@@ -389,7 +389,7 @@
     {
       "id": "chq-007",
       "chequeNumber": "CHQ-992105",
-      "bankName": "Ecobank Côte d'Ivoire",
+      "bankName": "BEA (Banque Extérieure d'Algérie)",
       "direction": "EMIS",
       "category": "TRANSPORT_TRACTION",
       "amount": 1350000,
@@ -422,7 +422,7 @@
     {
       "id": "chq-008",
       "chequeNumber": "CHQ-CLIENT-778",
-      "bankName": "Banque de l'Habitat de Côte d'Ivoire",
+      "bankName": "BEA (Banque Extérieure d'Algérie)",
       "direction": "RECU",
       "category": "AVANCE_PROVISION",
       "amount": 5000000,
@@ -453,7 +453,7 @@
     {
       "id": "chq-009",
       "chequeNumber": "CHQ-331094",
-      "bankName": "Amen Bank",
+      "bankName": "BEA (Banque Extérieure d'Algérie)",
       "direction": "EMIS",
       "category": "DROITS_DOUANE",
       "amount": 14500,
@@ -479,7 +479,7 @@
     {
       "id": "chq-010",
       "chequeNumber": "CHQ-104882",
-      "bankName": "BNP Paribas",
+      "bankName": "BEA (Banque Extérieure d'Algérie)",
       "direction": "EMIS",
       "category": "CAUTION_CONTENEUR",
       "amount": 3200,
