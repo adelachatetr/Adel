@@ -256,7 +256,7 @@ export const BordereauModal: React.FC<BordereauModalProps> = ({
               className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-medium focus:outline-none focus:border-cyan-600"
             >
               <option value="REMISE_COURSIER">Bordereau de Remise au Coursier / Déclarant</option>
-              <option value="DECHARGE_COMPAGNIE">Accusé de Dépôt / Décharge Guichet Maritime</option>
+              <option value="DECHARGE_COMPAGNIE">Accusé Réception Guichet (Transitaire) / Décharge</option>
               <option value="DEMANDE_RESTITUTION_CAUTION">Demande de Déconsignation de Caution</option>
             </select>
           </div>
@@ -422,7 +422,7 @@ export const BordereauModal: React.FC<BordereauModalProps> = ({
           <div className="text-center my-4">
             <h2 className="text-base font-bold uppercase tracking-wide border-y border-slate-300 py-2 bg-slate-50">
               {documentType === 'REMISE_COURSIER' && 'Bordereau de Remise de Chèques de Service Transit'}
-              {documentType === 'DECHARGE_COMPAGNIE' && 'Bordereau de Dépôt de Chèques & Décharge Maritime'}
+              {documentType === 'DECHARGE_COMPAGNIE' && 'Bordereau de Dépôt de Chèques & Accusé Réception Guichet (Transitaire)'}
               {documentType === 'DEMANDE_RESTITUTION_CAUTION' && 'Demande de Restitution de Chèque de Caution (Déconsignation)'}
             </h2>
             <div className="text-xs text-slate-600 mt-2 flex justify-center gap-6">
@@ -538,9 +538,9 @@ export const BordereauModal: React.FC<BordereauModalProps> = ({
             </div>
 
             <div className="space-y-12">
-              <span className="font-bold text-slate-800 block">Accusé Réception Guichet :</span>
+              <span className="font-bold text-slate-800 block">Accusé Réception Guichet (Transitaire) :</span>
               <div className="border-b border-dashed border-slate-400 w-3/4"></div>
-              <span className="text-[10px] text-slate-500 italic block">Date, Signature & Tampon Guichet</span>
+              <span className="text-[10px] text-slate-500 italic block">Date, Signature & Tampon Guichet / Transitaire</span>
             </div>
           </div>
         </div>
