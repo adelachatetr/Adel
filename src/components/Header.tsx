@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
-  PlusCircle, 
   FolderPlus, 
   Download, 
   RotateCcw, 
@@ -164,20 +163,12 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Quick action buttons */}
             <div className="flex items-center gap-1.5">
               <button
-                onClick={onOpenNewChequeModal}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-700 hover:bg-cyan-800 text-white text-xs font-bold transition-all shadow-sm shadow-cyan-700/30 active:scale-98 cursor-pointer"
-              >
-                <PlusCircle className="h-4 w-4" />
-                <span>Nouveau Chèque</span>
-              </button>
-
-              <button
                 onClick={onOpenNewDossierModal}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold border border-slate-300 transition-colors shadow-2xs cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold border border-slate-300 transition-colors shadow-2xs cursor-pointer"
                 title="Créer un nouveau dossier de transit"
               >
                 <FolderPlus className="h-4 w-4 text-cyan-700" />
-                <span className="hidden sm:inline">Dossier</span>
+                <span>Nouveau Dossier</span>
               </button>
 
               <button
