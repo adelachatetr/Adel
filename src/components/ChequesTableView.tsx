@@ -179,10 +179,15 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
     );
   };
 
-  const handleBulkPrintBordereau = () => {
-    const selected = cheques.filter(c => selectedIds.includes(c.id));
-    if (selected.length > 0) {
+  const handlePrintBordereau = () => {
+    if (selectedIds.length > 0) {
+      const selected = cheques.filter(c => selectedIds.includes(c.id));
       onGenerateBordereauForSelection(selected);
+    } else {
+      const toSend = filteredCheques.length > 0 && filteredCheques.length <= 25 
+        ? filteredCheques 
+        : [];
+      onGenerateBordereauForSelection(toSend);
     }
   };
 
@@ -217,15 +222,26 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
 
           {/* Quick Primary Actions */}
           <div className="flex items-center gap-2">
-            {selectedIds.length > 0 && (
-              <button
-                onClick={handleBulkPrintBordereau}
-                className="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm shadow-amber-600/30 transition-all cursor-pointer"
-              >
-                <Printer className="h-3.5 w-3.5" />
-                <span>Bordereau sélection ({selectedIds.length})</span>
-              </button>
-            )}
+            <button
+              onClick={handlePrintBordereau}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm ${
+                selectedIds.length > 0
+                  ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-amber-600/30'
+                  : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 shadow-2xs'
+              }`}
+              title={
+                selectedIds.length > 0
+                  ? `Imprimer le bordereau pour les ${selectedIds.length} chèque(s) sélectionné(s)`
+                  : 'Générer et imprimer un bordereau de remise ou décharge'
+              }
+            >
+              <Printer className={`h-4 w-4 ${selectedIds.length > 0 ? 'text-white' : 'text-amber-600'}`} />
+              <span>
+                {selectedIds.length > 0
+                  ? `Imprimer Bordereau (${selectedIds.length})`
+                  : 'Imprimer Bordereau'}
+              </span>
+            </button>
 
             <button
               onClick={onOpenNewCheque}
@@ -515,6 +531,31 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
         </div>
       </div>
 
+      {/* Selected Cheques Action Banner */}
+      {selectedIds.length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 text-xs shadow-2xs animate-fadeIn">
+          <div className="flex items-center gap-2 text-amber-950 font-bold">
+            <Printer className="h-4 w-4 text-amber-700 shrink-0" />
+            <span>{selectedIds.length} chèque(s) sélectionné(s) pour le bordereau</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handlePrintBordereau}
+              className="px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold flex items-center gap-1.5 shadow-sm shadow-amber-600/30 transition-all cursor-pointer"
+            >
+              <Printer className="h-3.5 w-3.5" />
+              <span>Générer le Bordereau d'Émargement</span>
+            </button>
+            <button
+              onClick={() => setSelectedIds([])}
+              className="px-2.5 py-1.5 rounded-lg bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 font-semibold transition-colors cursor-pointer"
+            >
+              Désélectionner tout
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Cheques Main Table */}
       <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
@@ -766,6 +807,14 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
                       {/* Actions */}
                       <td className="py-3 px-3 text-right">
                         <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => onGenerateBordereauForSelection([chq])}
+                            className="p-1.5 text-slate-500 hover:text-amber-700 rounded-lg hover:bg-amber-50 transition-colors cursor-pointer"
+                            title={`Imprimer le bordereau de remise / décharge pour le chèque N° ${chq.chequeNumber}`}
+                          >
+                            <Printer className="h-4 w-4 text-amber-600" />
+                          </button>
+
                           <button
                             onClick={() => onOpenChequeDetail(chq)}
                             className="p-1.5 text-slate-500 hover:text-cyan-700 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"

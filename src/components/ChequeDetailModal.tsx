@@ -77,10 +77,11 @@ export const ChequeDetailModal: React.FC<ChequeDetailModalProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={() => onPrintSingleDischarge(cheque)}
-              className="p-2 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-colors border border-slate-300 shadow-2xs cursor-pointer"
-              title="Imprimer décharge ou récépissé de ce chèque"
+              className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+              title="Générer et imprimer le bordereau / décharge de ce chèque"
             >
-              <Printer className="h-4 w-4" />
+              <Printer className="h-4 w-4 text-amber-700" />
+              <span>Imprimer Bordereau</span>
             </button>
             <button
               onClick={() => {
