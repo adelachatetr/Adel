@@ -20,7 +20,7 @@ import { ChangePasswordModal } from './components/ChangePasswordModal';
 import { UserManagementModal } from './components/UserManagementModal';
 import { AuthSession } from './types/auth';
 import { getCurrentSession, clearSession } from './utils/authStorage';
-import { TransitCheque, TransitDossier, ChequeStatus } from './types/transit';
+import { TransitCheque, TransitDossier, ChequeStatus, DossierStatus } from './types/transit';
 import { 
   loadStoredCheques, 
   saveStoredCheques, 
@@ -437,6 +437,21 @@ export default function App() {
     setEditingDossier(null);
   };
 
+  const handleUpdateDossierStatus = (dossierId: string, newStatus: DossierStatus) => {
+    const target = dossiers.find(d => d.id === dossierId);
+    if (!target) return;
+    const updated: TransitDossier = { ...target, status: newStatus };
+    const updatedList = dossiers.map(d => d.id === dossierId ? updated : d);
+    setDossiers(updatedList);
+    saveStoredDossiers(updatedList);
+    saveServerDossier(updated, session?.user?.fullName || 'Transit SCHB').then(res => {
+      if (res && res.version) {
+        serverVersionRef.current = res.version;
+        setServerVersion(res.version);
+      }
+    });
+  };
+
   const handleAddChequeToDossier = (dossierNumber: string, clientName: string) => {
     setPrefillDossier({ number: dossierNumber, client: clientName });
     setEditingCheque(null);
@@ -648,6 +663,7 @@ export default function App() {
               setEditingDossier(dossier);
               setIsDossierFormOpen(true);
             }}
+            onUpdateDossierStatus={handleUpdateDossierStatus}
             onAddChequeToDossier={handleAddChequeToDossier}
             onOpenChequeDetail={cheque => setSelectedChequeDetail(cheque)}
             onDeleteCheque={handleDeleteCheque}

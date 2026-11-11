@@ -276,6 +276,12 @@ export const DOSSIER_STATUS_CONFIG: Record<DossierStatus, { label: string; textC
     bgClass: 'bg-cyan-50',
     borderClass: 'border-cyan-200'
   },
+  TRANSMIS_POUR_PAIEMENT: {
+    label: 'Transmis pour paiement',
+    textClass: 'text-emerald-800 font-bold',
+    bgClass: 'bg-emerald-50',
+    borderClass: 'border-emerald-300'
+  },
   SORTI_PORT: {
     label: 'Sorti Port / Livré',
     textClass: 'text-emerald-800 font-semibold',

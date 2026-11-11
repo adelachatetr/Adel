@@ -72,12 +72,13 @@ export interface TransitCheque {
 }
 
 export type DossierStatus = 
-  | 'RECEPTIONNE'         // Dossier réceptionné à l'agence / documents reçus
-  | 'OUVERT'              // Ouvert / En cours de constitution & préparation
-  | 'EN_DEDOUANEMENT'     // En cours de déclaration / visite douane
-  | 'BON_A_DELIVRER'      // Bon à Délivrer (BAD) obtenu
-  | 'SORTI_PORT'          // Marchandise sortie du port / livrée
-  | 'SOLDE_ARCHIVE';      // Dossier financièrement soldé & archivé
+  | 'RECEPTIONNE'               // Dossier réceptionné à l'agence / documents reçus
+  | 'OUVERT'                    // Ouvert / En cours de constitution & préparation
+  | 'EN_DEDOUANEMENT'           // En cours de déclaration / visite douane
+  | 'BON_A_DELIVRER'            // Bon à Délivrer (BAD) obtenu
+  | 'TRANSMIS_POUR_PAIEMENT'    // Transmis pour paiement (Direction des Finances / Comptabilité / Caisse)
+  | 'SORTI_PORT'                // Marchandise sortie du port / livrée
+  | 'SOLDE_ARCHIVE';            // Dossier financièrement soldé & archivé
 
 export interface TransitDossier {
   id: string;

@@ -6,7 +6,8 @@ import {
   FileText,
   Filter,
   Trash2,
-  Printer
+  Printer,
+  CheckCircle
 } from 'lucide-react';
 import { TransitDossier, TransitCheque, DossierStatus } from '../types/transit';
 import { formatAmount, formatShortDate, CATEGORY_LABELS, STATUS_CONFIG, DOSSIER_STATUS_CONFIG } from '../utils/storage';
@@ -17,6 +18,7 @@ interface DossiersViewProps {
   selectedCurrency: string;
   onOpenNewDossier: () => void;
   onEditDossier: (dossier: TransitDossier) => void;
+  onUpdateDossierStatus?: (dossierId: string, newStatus: DossierStatus) => void;
   onDeleteDossier: (dossierId: string) => void;
   onPrintDossier: (dossier: TransitDossier) => void;
   onAddChequeToDossier: (dossierNumber: string, clientName: string) => void;
@@ -30,6 +32,7 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
   selectedCurrency,
   onOpenNewDossier,
   onEditDossier,
+  onUpdateDossierStatus,
   onDeleteDossier,
   onPrintDossier,
   onAddChequeToDossier,
@@ -127,6 +130,7 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
               <option value="OUVERT">Ouvert</option>
               <option value="EN_DEDOUANEMENT">En Dédouanement</option>
               <option value="BON_A_DELIVRER">BAD</option>
+              <option value="TRANSMIS_POUR_PAIEMENT">Transmis pour paiement</option>
               <option value="SORTI_PORT">Sorti Port</option>
               <option value="SOLDE_ARCHIVE">Soldé</option>
             </select>
@@ -242,9 +246,27 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                         borderClass: 'border-slate-200'
                       };
                       return (
-                        <span className={`text-xs px-2.5 py-0.5 rounded-lg font-bold border ${selStatusCfg.bgClass} ${selStatusCfg.textClass} ${selStatusCfg.borderClass}`}>
-                          {selStatusCfg.label}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className={`text-xs px-2.5 py-0.5 rounded-lg font-bold border ${selStatusCfg.bgClass} ${selStatusCfg.textClass} ${selStatusCfg.borderClass}`}>
+                            {selStatusCfg.label}
+                          </span>
+                          {onUpdateDossierStatus && (
+                            <select
+                              value={selectedDossier.status}
+                              onChange={e => onUpdateDossierStatus(selectedDossier.id, e.target.value as DossierStatus)}
+                              className="text-[11px] font-semibold bg-slate-50 hover:bg-slate-100 border border-slate-300 rounded-lg px-2 py-0.5 text-slate-700 cursor-pointer focus:outline-none focus:border-cyan-600 transition-colors"
+                              title="Changer rapidement le statut du dossier"
+                            >
+                              <option value="RECEPTIONNE">Réceptionné</option>
+                              <option value="OUVERT">Ouvert / Préparation</option>
+                              <option value="EN_DEDOUANEMENT">En Dédouanement</option>
+                              <option value="BON_A_DELIVRER">Bon à Délivrer (BAD)</option>
+                              <option value="TRANSMIS_POUR_PAIEMENT">Transmis pour paiement</option>
+                              <option value="SORTI_PORT">Sorti Port / Livré</option>
+                              <option value="SOLDE_ARCHIVE">Soldé & Archivé</option>
+                            </select>
+                          )}
+                        </div>
                       );
                     })()}
                     <span className="text-xs text-cyan-700 font-mono font-bold">
@@ -280,6 +302,17 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 self-start">
+                  {selectedDossier.status !== 'TRANSMIS_POUR_PAIEMENT' && onUpdateDossierStatus && (
+                    <button
+                      type="button"
+                      onClick={() => onUpdateDossierStatus(selectedDossier.id, 'TRANSMIS_POUR_PAIEMENT')}
+                      className="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-bold flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+                      title="Changer le statut à Transmis pour paiement"
+                    >
+                      <CheckCircle className="h-3.5 w-3.5 text-emerald-600" />
+                      <span>Transmis pour paiement</span>
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => onPrintDossier(selectedDossier)}

@@ -288,6 +288,7 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
                 <option value="OUVERT">Ouvert / Préparation</option>
                 <option value="EN_DEDOUANEMENT">En Dédouanement</option>
                 <option value="BON_A_DELIVRER">Bon à Délivrer (BAD) Obtenu</option>
+                <option value="TRANSMIS_POUR_PAIEMENT">Transmis pour paiement</option>
                 <option value="SORTI_PORT">Sorti Port / Livré</option>
                 <option value="SOLDE_ARCHIVE">Soldé & Archivé</option>
               </select>
@@ -336,6 +337,39 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
                   }`}
                 >
                   BAD
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStatus('TRANSMIS_POUR_PAIEMENT')}
+                  className={`px-2 py-0.5 rounded-lg text-[11px] font-semibold border transition-all cursor-pointer ${
+                    status === 'TRANSMIS_POUR_PAIEMENT'
+                      ? 'bg-emerald-100 text-emerald-950 border-emerald-400 ring-1 ring-emerald-500 font-bold'
+                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  Transmis pour paiement
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStatus('SORTI_PORT')}
+                  className={`px-2 py-0.5 rounded-lg text-[11px] font-semibold border transition-all cursor-pointer ${
+                    status === 'SORTI_PORT'
+                      ? 'bg-teal-100 text-teal-900 border-teal-300 ring-1 ring-teal-400 font-bold'
+                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  Sorti Port
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStatus('SOLDE_ARCHIVE')}
+                  className={`px-2 py-0.5 rounded-lg text-[11px] font-semibold border transition-all cursor-pointer ${
+                    status === 'SOLDE_ARCHIVE'
+                      ? 'bg-purple-100 text-purple-900 border-purple-300 ring-1 ring-purple-400 font-bold'
+                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  Soldé
                 </button>
               </div>
             </div>
