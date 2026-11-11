@@ -38,6 +38,24 @@ export const BordereauModal: React.FC<BordereauModalProps> = ({
     if (isOpen) {
       if (preSelectedCheques && preSelectedCheques.length > 0) {
         setSelectedIds(preSelectedCheques.map(c => c.id));
+
+        // Intelligent prefill of destination & document type based on preSelectedCheques:
+        const firstCheque = preSelectedCheques[0];
+        const allCustoms = preSelectedCheques.every(c => c.category === 'DROITS_DOUANE');
+        const allShipping = preSelectedCheques.every(c => c.category === 'FRAIS_MARITIMES' || c.category === 'CAUTION_CONTENEUR');
+        const commonBeneficiary = preSelectedCheques.every(c => c.beneficiary === firstCheque.beneficiary) 
+          ? firstCheque.beneficiary 
+          : null;
+
+        if (allCustoms) {
+          setDestinationEntity(commonBeneficiary || 'Inspection Principale & Recette des Douanes de Constantine');
+          setDocumentType('REMISE_COURSIER');
+        } else if (allShipping && commonBeneficiary) {
+          setDestinationEntity(commonBeneficiary);
+          setDocumentType('DECHARGE_COMPAGNIE');
+        } else if (commonBeneficiary) {
+          setDestinationEntity(commonBeneficiary);
+        }
       } else {
         const defaultIds = availableCheques
           .filter(c => c.status === 'EMIS' || c.status === 'REMIS_COURSIER')
@@ -288,6 +306,21 @@ export const BordereauModal: React.FC<BordereauModalProps> = ({
 
         {/* Cheques Selection pills (Hidden when printing) */}
         <div className="print:hidden p-3 bg-slate-50 border-b border-slate-200 text-xs">
+          {preSelectedCheques && preSelectedCheques.length > 0 && (
+            <div className="bg-emerald-50 border border-emerald-200 text-emerald-950 px-3 py-2 rounded-xl mb-2.5 flex flex-wrap items-center justify-between gap-2 text-xs shadow-2xs">
+              <div className="flex items-center gap-2 font-bold">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                <span>
+                  {preSelectedCheques.length} chèque{preSelectedCheques.length > 1 ? 's' : ''} filtré{preSelectedCheques.length > 1 ? 's' : ''} chargé{preSelectedCheques.length > 1 ? 's' : ''} automatiquement
+                  {preSelectedCheques.every(c => c.category === 'DROITS_DOUANE') ? ' (Droits & Taxes Douane)' : ''}
+                </span>
+              </div>
+              <span className="text-[11px] bg-emerald-100 text-emerald-800 font-bold px-2.5 py-0.5 rounded-full border border-emerald-300">
+                Prêt pour l'impression du bordereau
+              </span>
+            </div>
+          )}
+
           <div className="flex items-center justify-between mb-2">
             <div className="text-slate-700 text-[11px] font-bold uppercase tracking-wider flex items-center gap-2">
               <span>Chèques inclus dans ce bordereau :</span>
@@ -316,6 +349,7 @@ export const BordereauModal: React.FC<BordereauModalProps> = ({
           <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
             {availableCheques.map(c => {
               const isSelected = selectedIds.includes(c.id);
+              const isFromFilter = preSelectedCheques && preSelectedCheques.some(p => p.id === c.id);
               return (
                 <button
                   key={c.id}
@@ -323,11 +357,15 @@ export const BordereauModal: React.FC<BordereauModalProps> = ({
                   onClick={() => toggleCheque(c.id)}
                   className={`px-2.5 py-1 rounded-lg text-xs font-mono transition-colors border cursor-pointer ${
                     isSelected
-                      ? 'bg-cyan-100 text-cyan-900 border-cyan-400 font-bold shadow-2xs'
+                      ? isFromFilter
+                        ? 'bg-emerald-100 text-emerald-950 border-emerald-500 font-bold shadow-2xs ring-1 ring-emerald-400'
+                        : 'bg-cyan-100 text-cyan-900 border-cyan-400 font-bold shadow-2xs'
                       : 'bg-white text-slate-600 border-slate-300 hover:text-slate-900 hover:border-slate-400'
                   }`}
+                  title={isFromFilter ? 'Chèque issu du filtre actif' : undefined}
                 >
                   {isSelected ? '✓ ' : ''}{c.chequeNumber} ({formatAmount(c.amount, c.currency)})
+                  {isFromFilter && <span className="ml-1 text-[9px] text-emerald-700 font-sans font-bold">★ Filtré</span>}
                 </button>
               );
             })}

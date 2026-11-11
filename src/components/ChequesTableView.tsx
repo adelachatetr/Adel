@@ -28,6 +28,7 @@ interface ChequesTableViewProps {
   onDeleteCheque: (id: string) => void;
   onUpdateStatus: (id: string, newStatus: ChequeStatus, comment?: string) => void;
   onGenerateBordereauForSelection: (selectedCheques: TransitCheque[]) => void;
+  onFilteredChequesChange?: (filtered: TransitCheque[], hasFilters: boolean) => void;
   selectedCurrency: string;
   initialFilter?: { type: string; value: string } | null;
 }
@@ -40,6 +41,7 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
   onDeleteCheque,
   onUpdateStatus,
   onGenerateBordereauForSelection,
+  onFilteredChequesChange,
   selectedCurrency,
   initialFilter
 }) => {
@@ -164,6 +166,16 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
     setDirectionFilter('ALL');
   };
 
+  // Automatically reset manual row selections whenever filters change so stale cheques don't contaminate the filtered view
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [searchTerm, statusFilter, categoryFilter, beneficiaryFilter, bankFilter, directionFilter]);
+
+  // Report filtered cheques up to parent so header buttons also stay in sync
+  useEffect(() => {
+    onFilteredChequesChange?.(filteredCheques, hasActiveFilters);
+  }, [filteredCheques, hasActiveFilters, onFilteredChequesChange]);
+
   // Bulk selection handling
   const toggleSelectAll = () => {
     if (selectedIds.length === filteredCheques.length) {
@@ -180,14 +192,20 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
   };
 
   const handlePrintBordereau = () => {
-    if (selectedIds.length > 0) {
-      const selected = cheques.filter(c => selectedIds.includes(c.id));
+    // If user has specific checkboxes selected that exist in the currently filtered list:
+    const activeSelectedInFilter = selectedIds.filter(id => filteredCheques.some(c => c.id === id));
+    
+    if (activeSelectedInFilter.length > 0) {
+      const selected = cheques.filter(c => activeSelectedInFilter.includes(c.id));
       onGenerateBordereauForSelection(selected);
+    } else if (hasActiveFilters && filteredCheques.length > 0) {
+      // Direct automatic printing of ALL filtered cheques (e.g. 2 cheques from Droits Douane)
+      onGenerateBordereauForSelection(filteredCheques);
+    } else if (filteredCheques.length > 0) {
+      // No filter active, send all current cheques
+      onGenerateBordereauForSelection(filteredCheques);
     } else {
-      const toSend = filteredCheques.length > 0 && filteredCheques.length <= 25 
-        ? filteredCheques 
-        : [];
-      onGenerateBordereauForSelection(toSend);
+      onGenerateBordereauForSelection([]);
     }
   };
 
@@ -226,19 +244,25 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
               onClick={handlePrintBordereau}
               className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm ${
                 selectedIds.length > 0
-                  ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-amber-600/30'
+                  ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-amber-600/30 ring-2 ring-amber-400/50'
+                  : hasActiveFilters && filteredCheques.length > 0
+                  ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-amber-600/30 ring-2 ring-amber-400/50'
                   : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 shadow-2xs'
               }`}
               title={
                 selectedIds.length > 0
                   ? `Imprimer le bordereau pour les ${selectedIds.length} chèque(s) sélectionné(s)`
+                  : hasActiveFilters && filteredCheques.length > 0
+                  ? `Imprimer automatiquement le bordereau pour les ${filteredCheques.length} chèque(s) filtré(s)`
                   : 'Générer et imprimer un bordereau de remise ou décharge'
               }
             >
-              <Printer className={`h-4 w-4 ${selectedIds.length > 0 ? 'text-white' : 'text-amber-600'}`} />
+              <Printer className={`h-4 w-4 ${selectedIds.length > 0 || (hasActiveFilters && filteredCheques.length > 0) ? 'text-white' : 'text-amber-600'}`} />
               <span>
                 {selectedIds.length > 0
-                  ? `Imprimer Bordereau (${selectedIds.length})`
+                  ? `Imprimer Bordereau (${selectedIds.length} sélectionné${selectedIds.length > 1 ? 's' : ''})`
+                  : hasActiveFilters && filteredCheques.length > 0
+                  ? `Imprimer les ${filteredCheques.length} chèque${filteredCheques.length > 1 ? 's' : ''} filtré${filteredCheques.length > 1 ? 's' : ''}`
                   : 'Imprimer Bordereau'}
               </span>
             </button>
@@ -514,14 +538,36 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
                 </button>
               </span>
             )}
+
+            {/* Quick Direct Print Button for Filtered Cheques */}
+            {filteredCheques.length > 0 && (
+              <button
+                onClick={handlePrintBordereau}
+                className="ml-auto inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer animate-fadeIn"
+                title={`Imprimer automatiquement le bordereau pour les ${filteredCheques.length} chèque(s) filtré(s)`}
+              >
+                <Printer className="h-3.5 w-3.5" />
+                <span>Imprimer les {filteredCheques.length} chèque{filteredCheques.length > 1 ? 's' : ''} filtré{filteredCheques.length > 1 ? 's' : ''}</span>
+              </button>
+            )}
           </div>
         )}
       </div>
 
       {/* Summary count and total */}
-      <div className="flex items-center justify-between px-1 text-xs text-slate-600 font-medium">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-slate-600 font-medium">
+        <div className="flex items-center gap-2.5">
           <span>{filteredCheques.length} chèque(s) trouvé(s)</span>
+          {hasActiveFilters && filteredCheques.length > 0 && (
+            <button
+              onClick={handlePrintBordereau}
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold border border-amber-200 transition-colors cursor-pointer text-[11px]"
+              title="Générer directement le bordereau d'émargement pour les chèques filtrés"
+            >
+              <Printer className="h-3 w-3 text-amber-700" />
+              <span>Imprimer cette liste ({filteredCheques.length})</span>
+            </button>
+          )}
           {selectedIds.length > 0 && (
             <span className="text-cyan-700 font-bold">({selectedIds.length} sélectionné(s))</span>
           )}

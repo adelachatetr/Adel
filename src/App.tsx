@@ -56,6 +56,8 @@ export default function App() {
 
   const [isBordereauModalOpen, setIsBordereauModalOpen] = useState(false);
   const [preSelectedForBordereau, setPreSelectedForBordereau] = useState<TransitCheque[]>([]);
+  const [activeFilteredCheques, setActiveFilteredCheques] = useState<TransitCheque[]>([]);
+  const [hasActiveChequeFilters, setHasActiveChequeFilters] = useState(false);
 
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isDatabaseModalOpen, setIsDatabaseModalOpen] = useState(false);
@@ -536,7 +538,11 @@ export default function App() {
           setIsDossierFormOpen(true);
         }}
         onOpenBordereauModal={() => {
-          setPreSelectedForBordereau([]);
+          if (activeTab === 'cheques' && hasActiveChequeFilters && activeFilteredCheques.length > 0) {
+            setPreSelectedForBordereau(activeFilteredCheques);
+          } else {
+            setPreSelectedForBordereau([]);
+          }
           setIsBordereauModalOpen(true);
         }}
         onOpenSettingsModal={() => setIsSettingsModalOpen(true)}
@@ -603,6 +609,10 @@ export default function App() {
             onGenerateBordereauForSelection={selected => {
               setPreSelectedForBordereau(selected);
               setIsBordereauModalOpen(true);
+            }}
+            onFilteredChequesChange={(filtered, hasFilters) => {
+              setActiveFilteredCheques(filtered);
+              setHasActiveChequeFilters(hasFilters);
             }}
             selectedCurrency={settings.defaultCurrency}
             initialFilter={activeFilter}
