@@ -287,7 +287,7 @@ export default function App() {
     const updated = cheques.filter(c => c.id !== id);
     setCheques(updated);
     saveStoredCheques(updated);
-    deleteServerCheque(id, session?.user?.fullName || 'Transit SCHB').then(res => {
+    deleteServerCheque(id, session?.user?.fullName || 'Transit SCHB', updated).then(res => {
       if (res && res.version) {
         serverVersionRef.current = res.version;
         setServerVersion(res.version);
@@ -462,7 +462,7 @@ export default function App() {
     const updated = dossiers.filter(d => d.id !== dossierId);
     setDossiers(updated);
     saveStoredDossiers(updated);
-    deleteServerDossier(dossierId, session?.user?.fullName || 'Transit SCHB').then(res => {
+    deleteServerDossier(dossierId, session?.user?.fullName || 'Transit SCHB', updated).then(res => {
       if (res && res.version) {
         serverVersionRef.current = res.version;
         setServerVersion(res.version);

@@ -152,6 +152,15 @@ function persistState(changes: Partial<DatabaseState>, actor?: string): Database
     // /tmp write fallback ignore
   }
 
+  try {
+    const projectDb = path.resolve(process.cwd(), 'data', 'database.json');
+    if (fs.existsSync(path.dirname(projectDb))) {
+      fs.writeFileSync(projectDb, JSON.stringify(next, null, 2), 'utf-8');
+    }
+  } catch {
+    // projectDb write fallback ignore
+  }
+
   return next;
 }
 
@@ -168,7 +177,13 @@ export default async function handler(req: any, res: any) {
       return res.end();
     }
 
-    const url = req.url || '';
+    // Extract actual request URL accounting for Vercel rewrites:
+    const rawUrl = (req.headers?.['x-matched-path'] as string) ||
+                   (req.headers?.['x-invoke-path'] as string) ||
+                   (req.headers?.['x-forwarded-uri'] as string) ||
+                   (req.headers?.['x-original-url'] as string) ||
+                   req.url || '';
+    const url = rawUrl.toLowerCase();
     const method = (req.method || 'GET').toUpperCase();
 
     // Parse body if string
@@ -238,7 +253,7 @@ export default async function handler(req: any, res: any) {
     // Route: /api/dossiers
     if (url.includes('/dossiers')) {
       const state = loadState();
-      if (method === 'POST') {
+      if (method === 'POST' && !url.includes('/delete') && body?.action !== 'DELETE') {
         const { dossier, actor } = body || {};
         if (!dossier || !dossier.id) {
           res.statusCode = 400;
@@ -252,10 +267,10 @@ export default async function handler(req: any, res: any) {
         res.statusCode = 200;
         return res.end(JSON.stringify({ success: true, version: updated.version, dossiers: updated.dossiers }));
       }
-      if (method === 'DELETE') {
-        const id = req.query?.id || url.split('/').pop()?.split('?')[0];
+      if (method === 'DELETE' || url.includes('/delete') || body?.action === 'DELETE') {
+        const id = req.query?.id || body?.id || body?.dossierId || rawUrl.split('/').pop()?.split('?')[0];
         const dossiers = state.dossiers.filter(d => d.id !== id);
-        const updated = persistState({ dossiers }, req.query?.actor as string);
+        const updated = persistState({ dossiers }, (req.query?.actor || body?.actor) as string);
         res.statusCode = 200;
         return res.end(JSON.stringify({ success: true, version: updated.version, dossiers: updated.dossiers }));
       }
@@ -264,7 +279,7 @@ export default async function handler(req: any, res: any) {
     // Route: /api/cheques
     if (url.includes('/cheques')) {
       const state = loadState();
-      if (method === 'POST') {
+      if (method === 'POST' && !url.includes('/delete') && body?.action !== 'DELETE') {
         const { cheque, actor } = body || {};
         if (!cheque || !cheque.id) {
           res.statusCode = 400;
@@ -284,10 +299,10 @@ export default async function handler(req: any, res: any) {
         res.statusCode = 200;
         return res.end(JSON.stringify({ success: true, version: updated.version, cheques: updated.cheques }));
       }
-      if (method === 'DELETE') {
-        const id = req.query?.id || url.split('/').pop()?.split('?')[0];
+      if (method === 'DELETE' || url.includes('/delete') || body?.action === 'DELETE') {
+        const id = req.query?.id || body?.id || body?.chequeId || rawUrl.split('/').pop()?.split('?')[0];
         const cheques = state.cheques.filter(c => c.id !== id);
-        const updated = persistState({ cheques }, req.query?.actor as string);
+        const updated = persistState({ cheques }, (req.query?.actor || body?.actor) as string);
         res.statusCode = 200;
         return res.end(JSON.stringify({ success: true, version: updated.version, cheques: updated.cheques }));
       }

@@ -162,6 +162,16 @@ async function startServer() {
     }
   });
 
+  app.post('/api/dossiers/delete', (req, res) => {
+    try {
+      const { id, actor } = req.body || {};
+      const state = db.deleteDossier(id, actor as string);
+      res.json({ success: true, version: state.version, dossiers: state.dossiers });
+    } catch (e: any) {
+      res.status(500).json({ success: false, error: e?.message });
+    }
+  });
+
   // Cheque API endpoints
   app.post('/api/cheques', (req, res) => {
     try {
@@ -180,6 +190,16 @@ async function startServer() {
     try {
       const { actor } = req.query;
       const state = db.deleteCheque(req.params.id, actor as string);
+      res.json({ success: true, version: state.version, cheques: state.cheques });
+    } catch (e: any) {
+      res.status(500).json({ success: false, error: e?.message });
+    }
+  });
+
+  app.post('/api/cheques/delete', (req, res) => {
+    try {
+      const { id, actor } = req.body || {};
+      const state = db.deleteCheque(id, actor as string);
       res.json({ success: true, version: state.version, cheques: state.cheques });
     } catch (e: any) {
       res.status(500).json({ success: false, error: e?.message });
