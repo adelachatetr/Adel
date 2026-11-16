@@ -1,26 +1,7 @@
 {
-  "version": 18,
-  "lastModified": "2026-11-05T11:58:29.789Z",
+  "version": 19,
+  "lastModified": "2026-11-12T14:43:44.005Z",
   "dossiers": [
-    {
-      "id": "dossier-0",
-      "dossierNumber": "FLSmidth Cement A/S",
-      "clientName": "BC-SCHB-2026-0135",
-      "clientContact": "+213 31 69 41 42 / transit@schb-gica.dz",
-      "regime": "IMPORT_DIRECT",
-      "blNumber": "MEDU7749102",
-      "declarationNumber": "DUM-2026-05110",
-      "vesselName": "CMA CGM ALGER",
-      "eta": "2026-10-02",
-      "berthingDate": "2026-10-03",
-      "bankReceptionDate": "2026-09-30",
-      "portOfDischarge": "Port de Djendjen / Skikda",
-      "goodsDescription": "Réfractaires pour four cimenterie & pièces broyeur",
-      "containerCount": 2,
-      "status": "RECEPTIONNE",
-      "openedDate": "2026-09-29",
-      "totalProvisionsReceived": 1800000
-    },
     {
       "id": "dossier-1",
       "dossierNumber": "TR-2026-0104",
@@ -606,6 +587,12 @@
     }
   ],
   "auditLogs": [
+    {
+      "timestamp": "2026-11-12T14:43:44.005Z",
+      "action": "SUPPRESSION_DOSSIER",
+      "user": "Système",
+      "details": "ID Dossier: dossier-0"
+    },
     {
       "timestamp": "2026-11-05T11:58:29.790Z",
       "action": "SUPPRESSION_DOSSIER",

@@ -36,7 +36,11 @@ import {
   saveServerDossier,
   deleteServerDossier,
   saveServerCheque,
-  deleteServerCheque
+  deleteServerCheque,
+  loadDeletedDossierIds,
+  loadDeletedChequeIds,
+  saveDeletedDossierId,
+  saveDeletedChequeId
 } from './utils/storage';
 
 export default function App() {
@@ -103,13 +107,29 @@ export default function App() {
       }
 
       if (serverData && serverData.success) {
-        const serverDossiers = serverData.dossiers || [];
-        const serverCheques = serverData.cheques || [];
+        const deletedDossierIds = loadDeletedDossierIds();
+        const deletedChequeIds = loadDeletedChequeIds();
+        const rawServerDossiers = serverData.dossiers || [];
+        const rawServerCheques = serverData.cheques || [];
+
+        const serverDossiers = rawServerDossiers.filter((d: any) => !deletedDossierIds.includes(d.id));
+        const serverCheques = rawServerCheques.filter((c: any) => !deletedChequeIds.includes(c.id));
 
         setDossiers(serverDossiers);
         setCheques(serverCheques);
         saveStoredDossiers(serverDossiers);
         saveStoredCheques(serverCheques);
+
+        // If server had any records that were locally deleted, purge them on the server immediately
+        if (rawServerDossiers.length !== serverDossiers.length || rawServerCheques.length !== serverCheques.length) {
+          pushServerDatabase({
+            dossiers: serverDossiers,
+            cheques: serverCheques,
+            deletedDossierIds,
+            deletedChequeIds,
+            actor: session?.user?.fullName || 'Transit SCHB'
+          }).catch(console.error);
+        }
 
         if (serverData.settings) {
           setSettings(serverData.settings);
@@ -159,13 +179,18 @@ export default function App() {
           if (serverData.version !== undefined && serverData.version !== serverVersionRef.current) {
             serverVersionRef.current = serverData.version;
             setServerVersion(serverData.version);
+            const deletedDossierIds = loadDeletedDossierIds();
+            const deletedChequeIds = loadDeletedChequeIds();
+
             if (Array.isArray(serverData.dossiers)) {
-              setDossiers(serverData.dossiers);
-              saveStoredDossiers(serverData.dossiers);
+              const cleanDossiers = serverData.dossiers.filter((d: any) => !deletedDossierIds.includes(d.id));
+              setDossiers(cleanDossiers);
+              saveStoredDossiers(cleanDossiers);
             }
             if (Array.isArray(serverData.cheques)) {
-              setCheques(serverData.cheques);
-              saveStoredCheques(serverData.cheques);
+              const cleanCheques = serverData.cheques.filter((c: any) => !deletedChequeIds.includes(c.id));
+              setCheques(cleanCheques);
+              saveStoredCheques(cleanCheques);
             }
             if (serverData.settings) {
               setSettings(serverData.settings);
@@ -284,14 +309,17 @@ export default function App() {
   };
 
   const handleDeleteCheque = (id: string) => {
-    const updated = cheques.filter(c => c.id !== id);
-    setCheques(updated);
-    saveStoredCheques(updated);
-    deleteServerCheque(id, session?.user?.fullName || 'Transit SCHB', updated).then(res => {
-      if (res && res.version) {
-        serverVersionRef.current = res.version;
-        setServerVersion(res.version);
-      }
+    saveDeletedChequeId(id);
+    setCheques(prev => {
+      const updated = prev.filter(c => c.id !== id);
+      saveStoredCheques(updated);
+      deleteServerCheque(id, session?.user?.fullName || 'Transit SCHB', updated).then(res => {
+        if (res && res.version) {
+          serverVersionRef.current = res.version;
+          setServerVersion(res.version);
+        }
+      });
+      return updated;
     });
     if (selectedChequeDetail?.id === id) {
       setSelectedChequeDetail(null);
@@ -459,14 +487,17 @@ export default function App() {
   };
 
   const handleDeleteDossier = (dossierId: string) => {
-    const updated = dossiers.filter(d => d.id !== dossierId);
-    setDossiers(updated);
-    saveStoredDossiers(updated);
-    deleteServerDossier(dossierId, session?.user?.fullName || 'Transit SCHB', updated).then(res => {
-      if (res && res.version) {
-        serverVersionRef.current = res.version;
-        setServerVersion(res.version);
-      }
+    saveDeletedDossierId(dossierId);
+    setDossiers(prev => {
+      const updated = prev.filter(d => d.id !== dossierId);
+      saveStoredDossiers(updated);
+      deleteServerDossier(dossierId, session?.user?.fullName || 'Transit SCHB', updated).then(res => {
+        if (res && res.version) {
+          serverVersionRef.current = res.version;
+          setServerVersion(res.version);
+        }
+      });
+      return updated;
     });
   };
 

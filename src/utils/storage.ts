@@ -4,6 +4,74 @@ import { INITIAL_CHEQUES, INITIAL_DOSSIERS } from '../data/mockTransitData';
 const CHEQUES_STORAGE_KEY = 'transit_cheques_data_v1';
 const DOSSIERS_STORAGE_KEY = 'transit_dossiers_data_v1';
 const SETTINGS_STORAGE_KEY = 'transit_settings_data_v1';
+const DELETED_DOSSIERS_STORAGE_KEY = 'transit_deleted_dossiers_v1';
+const DELETED_CHEQUES_STORAGE_KEY = 'transit_deleted_cheques_v1';
+
+export function loadDeletedDossierIds(): string[] {
+  try {
+    const raw = localStorage.getItem(DELETED_DOSSIERS_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveDeletedDossierId(id: string): void {
+  try {
+    const current = loadDeletedDossierIds();
+    if (!current.includes(id)) {
+      const updated = [...current, id];
+      localStorage.setItem(DELETED_DOSSIERS_STORAGE_KEY, JSON.stringify(updated));
+    }
+  } catch (e) {
+    console.error('Failed to save deleted dossier ID', e);
+  }
+}
+
+export function removeDeletedDossierId(id: string): void {
+  try {
+    const current = loadDeletedDossierIds();
+    const updated = current.filter(existingId => existingId !== id);
+    localStorage.setItem(DELETED_DOSSIERS_STORAGE_KEY, JSON.stringify(updated));
+  } catch (e) {
+    console.error('Failed to remove deleted dossier ID', e);
+  }
+}
+
+export function loadDeletedChequeIds(): string[] {
+  try {
+    const raw = localStorage.getItem(DELETED_CHEQUES_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveDeletedChequeId(id: string): void {
+  try {
+    const current = loadDeletedChequeIds();
+    if (!current.includes(id)) {
+      const updated = [...current, id];
+      localStorage.setItem(DELETED_CHEQUES_STORAGE_KEY, JSON.stringify(updated));
+    }
+  } catch (e) {
+    console.error('Failed to save deleted cheque ID', e);
+  }
+}
+
+export function removeDeletedChequeId(id: string): void {
+  try {
+    const current = loadDeletedChequeIds();
+    const updated = current.filter(existingId => existingId !== id);
+    localStorage.setItem(DELETED_CHEQUES_STORAGE_KEY, JSON.stringify(updated));
+  } catch (e) {
+    console.error('Failed to remove deleted cheque ID', e);
+  }
+}
 
 export interface AppSettings {
   defaultCurrency: string;
@@ -27,25 +95,29 @@ export const DEFAULT_SETTINGS: AppSettings = {
 
 export function loadStoredCheques(): TransitCheque[] {
   try {
+    const deletedIds = loadDeletedChequeIds();
     const raw = localStorage.getItem(CHEQUES_STORAGE_KEY);
     if (!raw) {
-      return INITIAL_CHEQUES;
+      return INITIAL_CHEQUES.filter(c => !deletedIds.includes(c.id));
     }
     const parsed: TransitCheque[] = JSON.parse(raw);
-    if (!Array.isArray(parsed) || parsed.length === 0) {
-      return INITIAL_CHEQUES;
+    if (!Array.isArray(parsed)) {
+      return INITIAL_CHEQUES.filter(c => !deletedIds.includes(c.id));
     }
-    return parsed.map(c => ({
-      ...c,
-      currency: 'DA',
-      bankName: (!c.bankName || !c.bankName.toUpperCase().includes('BEA'))
-        ? 'BEA (Banque Extérieure d\'Algérie)'
-        : c.bankName,
-      coursierName: c.coursierName === 'Noui Adel' ? 'Hamza Boulekroune' : c.coursierName
-    }));
+    return parsed
+      .filter(c => !deletedIds.includes(c.id))
+      .map(c => ({
+        ...c,
+        currency: 'DA',
+        bankName: (!c.bankName || !c.bankName.toUpperCase().includes('BEA'))
+          ? 'BEA (Banque Extérieure d\'Algérie)'
+          : c.bankName,
+        coursierName: c.coursierName === 'Noui Adel' ? 'Hamza Boulekroune' : c.coursierName
+      }));
   } catch (e) {
     console.error('Failed to load cheques from storage', e);
-    return INITIAL_CHEQUES;
+    const deletedIds = loadDeletedChequeIds();
+    return INITIAL_CHEQUES.filter(c => !deletedIds.includes(c.id));
   }
 }
 
@@ -59,18 +131,20 @@ export function saveStoredCheques(cheques: TransitCheque[]): void {
 
 export function loadStoredDossiers(): TransitDossier[] {
   try {
+    const deletedIds = loadDeletedDossierIds();
     const raw = localStorage.getItem(DOSSIERS_STORAGE_KEY);
     if (!raw) {
-      return INITIAL_DOSSIERS;
+      return INITIAL_DOSSIERS.filter(d => !deletedIds.includes(d.id));
     }
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) {
-      return INITIAL_DOSSIERS;
+      return INITIAL_DOSSIERS.filter(d => !deletedIds.includes(d.id));
     }
-    return parsed;
+    return parsed.filter((d: TransitDossier) => !deletedIds.includes(d.id));
   } catch (e) {
     console.error('Failed to load dossiers from storage', e);
-    return INITIAL_DOSSIERS;
+    const deletedIds = loadDeletedDossierIds();
+    return INITIAL_DOSSIERS.filter(d => !deletedIds.includes(d.id));
   }
 }
 
@@ -104,6 +178,8 @@ export function saveAppSettings(settings: AppSettings): void {
 }
 
 export function resetAllDataToDemo(): { cheques: TransitCheque[]; dossiers: TransitDossier[] } {
+  localStorage.removeItem(DELETED_DOSSIERS_STORAGE_KEY);
+  localStorage.removeItem(DELETED_CHEQUES_STORAGE_KEY);
   localStorage.setItem(CHEQUES_STORAGE_KEY, JSON.stringify(INITIAL_CHEQUES));
   localStorage.setItem(DOSSIERS_STORAGE_KEY, JSON.stringify(INITIAL_DOSSIERS));
   localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(DEFAULT_SETTINGS));
@@ -415,7 +491,12 @@ export async function fetchServerDatabase(): Promise<{
 }> {
   try {
     const url = getApiUrl(`/api/sync?t=${Date.now()}`);
-    const res = await fetch(url, { cache: 'no-store' });
+    const res = await fetch(url, {
+      cache: 'no-store',
+      headers: {
+        'X-Action-Path': '/api/sync'
+      }
+    });
     if (!res.ok) {
       // Fallback to local browser cache so the user is never blocked by a server hiccup
       const localDossiers = loadStoredDossiers();
@@ -433,18 +514,27 @@ export async function fetchServerDatabase(): Promise<{
     if (!parsed.ok || !parsed.data) {
       return { success: false, error: parsed.error || 'Réponse serveur invalide' };
     }
+    const deletedChequeIds = loadDeletedChequeIds();
+    const deletedDossierIds = loadDeletedDossierIds();
+
     const cheques = Array.isArray(parsed.data.cheques)
-      ? parsed.data.cheques.map((c: any) => ({
-          ...c,
-          bankName: (!c.bankName || !c.bankName.toUpperCase().includes('BEA'))
-            ? 'BEA (Banque Extérieure d\'Algérie)'
-            : c.bankName
-        }))
+      ? parsed.data.cheques
+          .filter((c: any) => !deletedChequeIds.includes(c.id))
+          .map((c: any) => ({
+            ...c,
+            bankName: (!c.bankName || !c.bankName.toUpperCase().includes('BEA'))
+              ? 'BEA (Banque Extérieure d\'Algérie)'
+              : c.bankName
+          }))
       : [];
+
+    const rawDossiers = Array.isArray(parsed.data.dossiers) ? parsed.data.dossiers : [];
+    const dossiers = rawDossiers.filter((d: any) => !deletedDossierIds.includes(d.id));
 
     return {
       success: true,
       ...parsed.data,
+      dossiers,
       cheques
     };
   } catch (e: any) {
@@ -468,13 +558,23 @@ export async function pushServerDatabase(payload: {
   settings?: AppSettings;
   users?: any[];
   actor?: string;
+  deletedDossierIds?: string[];
+  deletedChequeIds?: string[];
 }): Promise<{ success: boolean; version?: number; error?: string }> {
   try {
     const url = getApiUrl('/api/sync');
+    const enrichedPayload = {
+      ...payload,
+      deletedDossierIds: payload.deletedDossierIds || loadDeletedDossierIds(),
+      deletedChequeIds: payload.deletedChequeIds || loadDeletedChequeIds()
+    };
     const res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-Action-Path': '/api/sync'
+      },
+      body: JSON.stringify(enrichedPayload)
     });
     if (!res.ok) {
       return { success: false, error: `Erreur HTTP ${res.status}` };
@@ -497,10 +597,14 @@ export async function pushServerDatabase(payload: {
 
 export async function saveServerDossier(dossier: TransitDossier, actor?: string): Promise<{ success: boolean; version?: number; dossiers?: TransitDossier[] }> {
   try {
+    removeDeletedDossierId(dossier.id);
     const url = getApiUrl('/api/dossiers');
     const res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-Action-Path': '/api/dossiers'
+      },
       body: JSON.stringify({ dossier, actor })
     });
     if (!res.ok) return { success: false };
@@ -517,34 +621,57 @@ export async function deleteServerDossier(
   remainingDossiers?: TransitDossier[]
 ): Promise<{ success: boolean; version?: number; dossiers?: TransitDossier[] }> {
   try {
+    // 1. Mark in permanent client tombstone immediately
+    saveDeletedDossierId(dossierId);
+
+    // 2. Send DELETE and POST /api/dossiers/delete
     const url = getApiUrl(`/api/dossiers/${encodeURIComponent(dossierId)}?actor=${encodeURIComponent(actor || '')}`);
-    const res = await fetch(url, {
+    const deletePromise = fetch(url, {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: dossierId, actor })
-    });
-    
-    // Also explicitly sync remaining dossiers to ensure persistence across all environments
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-Action-Path': `/api/dossiers/${encodeURIComponent(dossierId)}`
+      },
+      body: JSON.stringify({ id: dossierId, actor, deletedDossierIds: loadDeletedDossierIds() })
+    }).catch(() => null);
+
+    // Also call POST /api/dossiers/delete for maximum compatibility
+    const postDeletePromise = fetch(getApiUrl('/api/dossiers/delete'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Action-Path': '/api/dossiers/delete'
+      },
+      body: JSON.stringify({ id: dossierId, actor, deletedDossierIds: loadDeletedDossierIds() })
+    }).catch(() => null);
+
+    // 3. Await state sync to guarantee persistence across cold starts
+    let syncRes = null;
     if (Array.isArray(remainingDossiers)) {
-      pushServerDatabase({ dossiers: remainingDossiers, actor }).catch(console.error);
+      syncRes = await pushServerDatabase({
+        dossiers: remainingDossiers,
+        deletedDossierIds: loadDeletedDossierIds(),
+        actor
+      });
     }
-    
-    const parsed = await safeParseJsonResponse(res);
-    return parsed.ok && parsed.data ? parsed.data : { success: true };
+
+    await Promise.allSettled([deletePromise, postDeletePromise]);
+    return { success: true, version: syncRes?.version };
   } catch (e) {
-    if (Array.isArray(remainingDossiers)) {
-      pushServerDatabase({ dossiers: remainingDossiers, actor }).catch(console.error);
-    }
     return { success: true };
   }
 }
 
 export async function saveServerCheque(cheque: TransitCheque, actor?: string): Promise<{ success: boolean; version?: number; cheques?: TransitCheque[] }> {
   try {
+    removeDeletedChequeId(cheque.id);
     const url = getApiUrl('/api/cheques');
     const res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-Action-Path': '/api/cheques'
+      },
       body: JSON.stringify({ cheque, actor })
     });
     if (!res.ok) return { success: false };
@@ -561,23 +688,39 @@ export async function deleteServerCheque(
   remainingCheques?: TransitCheque[]
 ): Promise<{ success: boolean; version?: number; cheques?: TransitCheque[] }> {
   try {
+    saveDeletedChequeId(chequeId);
+
     const url = getApiUrl(`/api/cheques/${encodeURIComponent(chequeId)}?actor=${encodeURIComponent(actor || '')}`);
-    const res = await fetch(url, {
+    const deletePromise = fetch(url, {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: chequeId, actor })
-    });
-    
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-Action-Path': `/api/cheques/${encodeURIComponent(chequeId)}`
+      },
+      body: JSON.stringify({ id: chequeId, actor, deletedChequeIds: loadDeletedChequeIds() })
+    }).catch(() => null);
+
+    const postDeletePromise = fetch(getApiUrl('/api/cheques/delete'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Action-Path': '/api/cheques/delete'
+      },
+      body: JSON.stringify({ id: chequeId, actor, deletedChequeIds: loadDeletedChequeIds() })
+    }).catch(() => null);
+
+    let syncRes = null;
     if (Array.isArray(remainingCheques)) {
-      pushServerDatabase({ cheques: remainingCheques, actor }).catch(console.error);
+      syncRes = await pushServerDatabase({
+        cheques: remainingCheques,
+        deletedChequeIds: loadDeletedChequeIds(),
+        actor
+      });
     }
 
-    const parsed = await safeParseJsonResponse(res);
-    return parsed.ok && parsed.data ? parsed.data : { success: true };
+    await Promise.allSettled([deletePromise, postDeletePromise]);
+    return { success: true, version: syncRes?.version };
   } catch (e) {
-    if (Array.isArray(remainingCheques)) {
-      pushServerDatabase({ cheques: remainingCheques, actor }).catch(console.error);
-    }
     return { success: true };
   }
 }

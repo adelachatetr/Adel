@@ -10,6 +10,8 @@ export interface DatabaseState {
   lastModified: string;
   dossiers: any[];
   cheques: any[];
+  deletedDossierIds?: string[];
+  deletedChequeIds?: string[];
   settings: any;
   users: any[];
   auditLogs: { timestamp: string; action: string; user?: string; details?: string }[];
@@ -172,14 +174,27 @@ class DatabaseManager {
   }
 
   public updateFullState(newState: Partial<DatabaseState>, actor?: string): DatabaseState {
-    const updatedDossiers = Array.isArray(newState.dossiers) ? newState.dossiers : this.state.dossiers;
+    const existingDeletedDossiers = this.state.deletedDossierIds || [];
+    const incomingDeletedDossiers = newState.deletedDossierIds || [];
+    const allDeletedDossierIds = Array.from(new Set([...existingDeletedDossiers, ...incomingDeletedDossiers]));
+
+    const existingDeletedCheques = this.state.deletedChequeIds || [];
+    const incomingDeletedCheques = newState.deletedChequeIds || [];
+    const allDeletedChequeIds = Array.from(new Set([...existingDeletedCheques, ...incomingDeletedCheques]));
+
+    const baseDossiers = Array.isArray(newState.dossiers) ? newState.dossiers : this.state.dossiers;
+    const updatedDossiers = baseDossiers.filter(d => !allDeletedDossierIds.includes(d.id));
+
     const rawCheques = Array.isArray(newState.cheques) ? newState.cheques : this.state.cheques;
-    const updatedCheques = rawCheques.map(c => ({
-      ...c,
-      bankName: (!c.bankName || !c.bankName.toUpperCase().includes('BEA'))
-        ? 'BEA (Banque Extérieure d\'Algérie)'
-        : c.bankName
-    }));
+    const updatedCheques = rawCheques
+      .filter(c => !allDeletedChequeIds.includes(c.id))
+      .map(c => ({
+        ...c,
+        bankName: (!c.bankName || !c.bankName.toUpperCase().includes('BEA'))
+          ? 'BEA (Banque Extérieure d\'Algérie)'
+          : c.bankName
+      }));
+
     const updatedSettings = (newState.settings && typeof newState.settings === 'object') ? { ...this.state.settings, ...newState.settings } : this.state.settings;
     
     let updatedUsers = this.state.users;
@@ -202,6 +217,8 @@ class DatabaseManager {
       ...newState,
       dossiers: updatedDossiers,
       cheques: updatedCheques,
+      deletedDossierIds: allDeletedDossierIds,
+      deletedChequeIds: allDeletedChequeIds,
       settings: updatedSettings,
       users: updatedUsers,
       version: (this.state.version || 0) + 1,
@@ -224,6 +241,7 @@ class DatabaseManager {
 
   // Dossier operations
   public saveDossier(dossier: any, actor?: string): DatabaseState {
+    const deletedDossierIds = (this.state.deletedDossierIds || []).filter(id => id !== dossier.id);
     const existingIndex = this.state.dossiers.findIndex(d => d.id === dossier.id);
     let updatedDossiers = [...this.state.dossiers];
     if (existingIndex >= 0) {
@@ -235,6 +253,7 @@ class DatabaseManager {
     this.state = {
       ...this.state,
       dossiers: updatedDossiers,
+      deletedDossierIds,
       version: (this.state.version || 0) + 1,
       lastModified: new Date().toISOString(),
       auditLogs: [
@@ -252,9 +271,11 @@ class DatabaseManager {
   }
 
   public deleteDossier(dossierId: string, actor?: string): DatabaseState {
+    const deletedDossierIds = Array.from(new Set([...(this.state.deletedDossierIds || []), dossierId]));
     this.state = {
       ...this.state,
       dossiers: this.state.dossiers.filter(d => d.id !== dossierId),
+      deletedDossierIds,
       version: (this.state.version || 0) + 1,
       lastModified: new Date().toISOString(),
       auditLogs: [
@@ -272,6 +293,7 @@ class DatabaseManager {
   }
 
   public saveCheque(cheque: any, actor?: string): DatabaseState {
+    const deletedChequeIds = (this.state.deletedChequeIds || []).filter(id => id !== cheque.id);
     const normalizedCheque = {
       ...cheque,
       bankName: (!cheque.bankName || !cheque.bankName.toUpperCase().includes('BEA'))
@@ -289,6 +311,7 @@ class DatabaseManager {
     this.state = {
       ...this.state,
       cheques: updatedCheques,
+      deletedChequeIds,
       version: (this.state.version || 0) + 1,
       lastModified: new Date().toISOString(),
       auditLogs: [
@@ -306,9 +329,11 @@ class DatabaseManager {
   }
 
   public deleteCheque(chequeId: string, actor?: string): DatabaseState {
+    const deletedChequeIds = Array.from(new Set([...(this.state.deletedChequeIds || []), chequeId]));
     this.state = {
       ...this.state,
       cheques: this.state.cheques.filter(c => c.id !== chequeId),
+      deletedChequeIds,
       version: (this.state.version || 0) + 1,
       lastModified: new Date().toISOString(),
       auditLogs: [

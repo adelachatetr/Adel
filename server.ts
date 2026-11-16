@@ -116,10 +116,12 @@ async function startServer() {
   // Full push sync (when client initializes or syncs local changes)
   app.post('/api/sync', (req, res) => {
     try {
-      const { dossiers, cheques, settings, users, actor } = req.body;
+      const { dossiers, cheques, settings, users, actor, deletedDossierIds, deletedChequeIds } = req.body;
       const updateData: any = {};
       if (Array.isArray(dossiers)) updateData.dossiers = dossiers;
       if (Array.isArray(cheques)) updateData.cheques = cheques;
+      if (Array.isArray(deletedDossierIds)) updateData.deletedDossierIds = deletedDossierIds;
+      if (Array.isArray(deletedChequeIds)) updateData.deletedChequeIds = deletedChequeIds;
       if (settings && typeof settings === 'object') updateData.settings = settings;
       if (Array.isArray(users)) updateData.users = users;
 

@@ -9,6 +9,8 @@ interface DatabaseState {
   lastModified: string;
   dossiers: any[];
   cheques: any[];
+  deletedDossierIds?: string[];
+  deletedChequeIds?: string[];
   settings: any;
   users: any[];
   auditLogs: any[];
@@ -83,7 +85,13 @@ const TMP_FILE = path.join('/tmp', 'schb_transit_database.json');
 let memoryState: DatabaseState | null = null;
 
 function loadState(): DatabaseState {
-  if (memoryState) return memoryState;
+  if (memoryState) {
+    const deletedD = memoryState.deletedDossierIds || [];
+    const deletedC = memoryState.deletedChequeIds || [];
+    memoryState.dossiers = (memoryState.dossiers || []).filter(d => !deletedD.includes(d.id));
+    memoryState.cheques = (memoryState.cheques || []).filter(c => !deletedC.includes(c.id));
+    return memoryState;
+  }
 
   // 1. Try reading from /tmp on serverless container
   try {
@@ -91,6 +99,10 @@ function loadState(): DatabaseState {
       const raw = fs.readFileSync(TMP_FILE, 'utf-8');
       const parsed = JSON.parse(raw);
       if (parsed && Array.isArray(parsed.dossiers)) {
+        const deletedD = parsed.deletedDossierIds || [];
+        const deletedC = parsed.deletedChequeIds || [];
+        parsed.dossiers = parsed.dossiers.filter((d: any) => !deletedD.includes(d.id));
+        parsed.cheques = (parsed.cheques || []).filter((c: any) => !deletedC.includes(c.id));
         memoryState = parsed;
         return memoryState!;
       }
@@ -106,6 +118,10 @@ function loadState(): DatabaseState {
       const raw = fs.readFileSync(projectDb, 'utf-8');
       const parsed = JSON.parse(raw);
       if (parsed && Array.isArray(parsed.dossiers)) {
+        const deletedD = parsed.deletedDossierIds || [];
+        const deletedC = parsed.deletedChequeIds || [];
+        parsed.dossiers = parsed.dossiers.filter((d: any) => !deletedD.includes(d.id));
+        parsed.cheques = (parsed.cheques || []).filter((c: any) => !deletedC.includes(c.id));
         memoryState = parsed;
         return memoryState!;
       }
@@ -120,6 +136,8 @@ function loadState(): DatabaseState {
     lastModified: new Date().toISOString(),
     dossiers: [],
     cheques: [],
+    deletedDossierIds: [],
+    deletedChequeIds: [],
     settings: DEFAULT_SETTINGS,
     users: DEFAULT_USERS,
     auditLogs: []
@@ -130,9 +148,30 @@ function loadState(): DatabaseState {
 
 function persistState(changes: Partial<DatabaseState>, actor?: string): DatabaseState {
   const current = loadState();
+
+  const allDeletedDossiers = Array.from(new Set([
+    ...(current.deletedDossierIds || []),
+    ...(changes.deletedDossierIds || [])
+  ]));
+
+  const allDeletedCheques = Array.from(new Set([
+    ...(current.deletedChequeIds || []),
+    ...(changes.deletedChequeIds || [])
+  ]));
+
+  const baseDossiers = Array.isArray(changes.dossiers) ? changes.dossiers : current.dossiers;
+  const filteredDossiers = baseDossiers.filter(d => !allDeletedDossiers.includes(d.id));
+
+  const baseCheques = Array.isArray(changes.cheques) ? changes.cheques : current.cheques;
+  const filteredCheques = baseCheques.filter(c => !allDeletedCheques.includes(c.id));
+
   const next: DatabaseState = {
     ...current,
     ...changes,
+    dossiers: filteredDossiers,
+    cheques: filteredCheques,
+    deletedDossierIds: allDeletedDossiers,
+    deletedChequeIds: allDeletedCheques,
     version: (current.version || 0) + 1,
     lastModified: new Date().toISOString()
   };
@@ -169,7 +208,7 @@ export default async function handler(req: any, res: any) {
     // Always set CORS and JSON headers
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cache-Control, Pragma');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cache-Control, Pragma, X-Action-Path');
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
     if (req.method === 'OPTIONS') {
@@ -177,8 +216,10 @@ export default async function handler(req: any, res: any) {
       return res.end();
     }
 
-    // Extract actual request URL accounting for Vercel rewrites:
-    const rawUrl = (req.headers?.['x-matched-path'] as string) ||
+    // Extract actual request URL accounting for Vercel rewrites and custom X-Action-Path header:
+    const headerPath = (req.headers?.['x-action-path'] as string) || '';
+    const rawUrl = headerPath ||
+                   (req.headers?.['x-matched-path'] as string) ||
                    (req.headers?.['x-invoke-path'] as string) ||
                    (req.headers?.['x-forwarded-uri'] as string) ||
                    (req.headers?.['x-original-url'] as string) ||
@@ -269,8 +310,10 @@ export default async function handler(req: any, res: any) {
       }
       if (method === 'DELETE' || url.includes('/delete') || body?.action === 'DELETE') {
         const id = req.query?.id || body?.id || body?.dossierId || rawUrl.split('/').pop()?.split('?')[0];
-        const dossiers = state.dossiers.filter(d => d.id !== id);
-        const updated = persistState({ dossiers }, (req.query?.actor || body?.actor) as string);
+        const incomingDeleted = Array.isArray(body?.deletedDossierIds) ? body.deletedDossierIds : [];
+        const deletedDossierIds = Array.from(new Set([...(state.deletedDossierIds || []), id, ...incomingDeleted].filter(Boolean)));
+        const dossiers = state.dossiers.filter(d => d.id !== id && !deletedDossierIds.includes(d.id));
+        const updated = persistState({ dossiers, deletedDossierIds }, (req.query?.actor || body?.actor) as string);
         res.statusCode = 200;
         return res.end(JSON.stringify({ success: true, version: updated.version, dossiers: updated.dossiers }));
       }
@@ -295,14 +338,17 @@ export default async function handler(req: any, res: any) {
         const idx = cheques.findIndex(c => c.id === normalizedCheque.id);
         if (idx >= 0) cheques[idx] = { ...cheques[idx], ...normalizedCheque };
         else cheques.unshift(normalizedCheque);
-        const updated = persistState({ cheques }, actor);
+        const deletedChequeIds = (state.deletedChequeIds || []).filter(id => id !== cheque.id);
+        const updated = persistState({ cheques, deletedChequeIds }, actor);
         res.statusCode = 200;
         return res.end(JSON.stringify({ success: true, version: updated.version, cheques: updated.cheques }));
       }
       if (method === 'DELETE' || url.includes('/delete') || body?.action === 'DELETE') {
         const id = req.query?.id || body?.id || body?.chequeId || rawUrl.split('/').pop()?.split('?')[0];
-        const cheques = state.cheques.filter(c => c.id !== id);
-        const updated = persistState({ cheques }, (req.query?.actor || body?.actor) as string);
+        const incomingDeleted = Array.isArray(body?.deletedChequeIds) ? body.deletedChequeIds : [];
+        const deletedChequeIds = Array.from(new Set([...(state.deletedChequeIds || []), id, ...incomingDeleted].filter(Boolean)));
+        const cheques = state.cheques.filter(c => c.id !== id && !deletedChequeIds.includes(c.id));
+        const updated = persistState({ cheques, deletedChequeIds }, (req.query?.actor || body?.actor) as string);
         res.statusCode = 200;
         return res.end(JSON.stringify({ success: true, version: updated.version, cheques: updated.cheques }));
       }
@@ -312,8 +358,14 @@ export default async function handler(req: any, res: any) {
     const state = loadState();
 
     if (method === 'POST') {
-      const { dossiers, cheques, settings, users, actor } = body || {};
+      const { dossiers, cheques, settings, users, actor, deletedDossierIds, deletedChequeIds } = body || {};
       const updates: any = {};
+      if (Array.isArray(deletedDossierIds)) {
+        updates.deletedDossierIds = Array.from(new Set([...(state.deletedDossierIds || []), ...deletedDossierIds]));
+      }
+      if (Array.isArray(deletedChequeIds)) {
+        updates.deletedChequeIds = Array.from(new Set([...(state.deletedChequeIds || []), ...deletedChequeIds]));
+      }
       if (Array.isArray(dossiers)) updates.dossiers = dossiers;
       if (Array.isArray(cheques)) {
         updates.cheques = cheques.map(c => ({

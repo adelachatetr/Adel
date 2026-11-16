@@ -7,7 +7,9 @@ import {
   Filter,
   Trash2,
   Printer,
-  CheckCircle
+  CheckCircle,
+  AlertTriangle,
+  X
 } from 'lucide-react';
 import { TransitDossier, TransitCheque, DossierStatus } from '../types/transit';
 import { formatAmount, formatShortDate, CATEGORY_LABELS, STATUS_CONFIG, DOSSIER_STATUS_CONFIG } from '../utils/storage';
@@ -42,6 +44,8 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | DossierStatus>('ALL');
   const [selectedDossierId, setSelectedDossierId] = useState<string | null>(dossiers[0]?.id || null);
+  const [dossierPendingDelete, setDossierPendingDelete] = useState<TransitDossier | null>(null);
+  const [chequePendingDelete, setChequePendingDelete] = useState<TransitCheque | null>(null);
 
   const filteredDossiers = dossiers.filter(d => {
     if (statusFilter !== 'ALL' && d.status !== statusFilter) return false;
