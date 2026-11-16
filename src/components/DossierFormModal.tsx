@@ -23,6 +23,7 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
   const [clientName, setClientName] = useState('');
   const [clientContact, setClientContact] = useState('');
   const [regime, setRegime] = useState<TransitDossier['regime']>('IMPORT_DIRECT');
+  const [transportDocType, setTransportDocType] = useState<'BL' | 'LTA'>('BL');
   const [blNumber, setBlNumber] = useState('');
   const [declarationNumber, setDeclarationNumber] = useState('');
   const [vesselName, setVesselName] = useState('');
@@ -41,6 +42,7 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
       setClientName(editingDossier.clientName);
       setClientContact(editingDossier.clientContact || '');
       setRegime(editingDossier.regime);
+      setTransportDocType(editingDossier.transportDocType || 'BL');
       setBlNumber(editingDossier.blNumber);
       setDeclarationNumber(editingDossier.declarationNumber || '');
       setVesselName(editingDossier.vesselName || '');
@@ -57,6 +59,7 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
       setClientName('');
       setClientContact('');
       setRegime('IMPORT_DIRECT');
+      setTransportDocType('BL');
       setBlNumber('');
       setDeclarationNumber('');
       setVesselName('');
@@ -78,7 +81,7 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
     setFormError(null);
 
     if (!dossierNumber.trim() || !clientName.trim() || !blNumber.trim()) {
-      setFormError('Veuillez renseigner au moins le Nom Fournisseur, le N° de Bon de Commande et le N° de B/L.');
+      setFormError(`Veuillez renseigner au moins le Nom Fournisseur, le N° de Bon de Commande et le N° de ${transportDocType === 'LTA' ? 'LTA' : 'B/L'}.`);
       return;
     }
 
@@ -87,6 +90,7 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
       clientName: clientName.trim(),
       clientContact: clientContact.trim() || undefined,
       regime,
+      transportDocType,
       blNumber: blNumber.trim(),
       declarationNumber: declarationNumber.trim() || undefined,
       vesselName: vesselName.trim() || undefined,
@@ -170,19 +174,30 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-700 font-semibold mb-1">
-                N° B/L Connaissement ou LTA <span className="text-rose-500">*</span>
+                Document Transport (B/L ou LTA) <span className="text-rose-500">*</span>
               </label>
-              <input
-                type="text"
-                required
-                value={blNumber}
-                onChange={e => setBlNumber(e.target.value)}
-                placeholder="ex: MEDU83910283"
-                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-mono font-bold focus:border-cyan-600"
-              />
+              <div className="flex gap-1.5">
+                <select
+                  value={transportDocType}
+                  onChange={e => setTransportDocType(e.target.value as 'BL' | 'LTA')}
+                  className="bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-2.5 text-slate-900 font-bold focus:border-cyan-600 cursor-pointer shrink-0"
+                  title="Choisir B/L Connaissement ou LTA"
+                >
+                  <option value="BL">B/L Connaissement</option>
+                  <option value="LTA">LTA</option>
+                </select>
+                <input
+                  type="text"
+                  required
+                  value={blNumber}
+                  onChange={e => setBlNumber(e.target.value)}
+                  placeholder={transportDocType === 'LTA' ? 'ex: N° LTA 124-88109234' : 'ex: N° B/L MEDU83910283'}
+                  className="w-full min-w-0 bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-mono font-bold focus:border-cyan-600"
+                />
+              </div>
             </div>
 
             <div>
@@ -202,41 +217,44 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-700 font-semibold mb-1">
-                Navire / Compagnie Maritime
+                {transportDocType === 'LTA' ? 'Compagnie Aérienne / N° Vol' : 'Navire / Compagnie Maritime'}
               </label>
               <input
                 type="text"
                 value={vesselName}
                 onChange={e => setVesselName(e.target.value)}
-                placeholder="ex: MSC LEANNE V.402"
+                placeholder={transportDocType === 'LTA' ? 'ex: AIR ALGÉRIE CARGO / AH1002' : 'ex: MSC LEANNE V.402'}
                 className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-medium focus:border-cyan-600"
               />
             </div>
 
             <div>
               <label className="block text-slate-700 font-semibold mb-1">
-                Port de Débarquement (Algérie)
+                Port et Aéroport de Débarquement
               </label>
               <select
                 value={portOfDischarge}
                 onChange={e => setPortOfDischarge(e.target.value)}
                 className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-medium focus:border-cyan-600 cursor-pointer"
               >
-                {[
-                  'Port de Skikda',
-                  'Port de Djendjen',
-                  'Port d\'Annaba',
-                  'Port de Béjaïa',
-                  'Port d\'Alger',
-                  'Port d\'Oran',
-                  'Port d\'Arzew',
-                  'Port de Mostaganem',
-                  'Port de Ghazaouet',
-                  'Port de Ténès',
-                  'Port de Dellys'
-                ].map(p => (
-                  <option key={p} value={p}>{p}</option>
-                ))}
+                <optgroup label="Ports d'Algérie">
+                  <option value="Port de Skikda">Port de Skikda</option>
+                  <option value="Port de Djendjen">Port de Djendjen</option>
+                  <option value="Port d'Annaba">Port d'Annaba</option>
+                  <option value="Port de Béjaïa">Port de Béjaïa</option>
+                  <option value="Port d'Alger">Port d'Alger</option>
+                  <option value="Port d'Oran">Port d'Oran</option>
+                  <option value="Port d'Arzew">Port d'Arzew</option>
+                  <option value="Port de Mostaganem">Port de Mostaganem</option>
+                  <option value="Port de Ghazaouet">Port de Ghazaouet</option>
+                  <option value="Port de Ténès">Port de Ténès</option>
+                  <option value="Port de Dellys">Port de Dellys</option>
+                </optgroup>
+                <optgroup label="Aéroports d'Algérie">
+                  <option value="Aéroport de Constantine">Aéroport de Constantine</option>
+                  <option value="Aéroport d'Annaba">Aéroport d'Annaba</option>
+                  <option value="Aéroport d'Alger">Aéroport d'Alger</option>
+                </optgroup>
                 {portOfDischarge && ![
                   'Port de Skikda',
                   'Port de Djendjen',
@@ -248,7 +266,10 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
                   'Port de Mostaganem',
                   'Port de Ghazaouet',
                   'Port de Ténès',
-                  'Port de Dellys'
+                  'Port de Dellys',
+                  'Aéroport de Constantine',
+                  'Aéroport d\'Annaba',
+                  'Aéroport d\'Alger'
                 ].includes(portOfDischarge) && (
                   <option value={portOfDischarge}>{portOfDischarge}</option>
                 )}

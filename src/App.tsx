@@ -438,6 +438,7 @@ export default function App() {
         clientName: data.clientName || 'BC-SCHB',
         clientContact: data.clientContact,
         regime: data.regime || 'IMPORT_DIRECT',
+        transportDocType: data.transportDocType || 'BL',
         blNumber: data.blNumber || 'BL-AUTO',
         declarationNumber: data.declarationNumber,
         vesselName: data.vesselName,

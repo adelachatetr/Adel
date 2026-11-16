@@ -56,26 +56,38 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
       .toLowerCase()
       .trim();
 
-  const PORT_PRESETS = [
-    { key: 'skikda', label: 'Port de Skikda' },
-    { key: 'djendjen', label: 'Port de Djendjen' },
-    { key: 'annaba', label: 'Port d\'Annaba' },
-    { key: 'bejaia', label: 'Port de Béjaïa' },
-    { key: 'alger', label: 'Port d\'Alger' },
-    { key: 'oran', label: 'Port d\'Oran' },
-    { key: 'arzew', label: 'Port d\'Arzew' },
-    { key: 'mostaganem', label: 'Port de Mostaganem' },
-    { key: 'ghazaouet', label: 'Port de Ghazaouet' },
-    { key: 'tenes', label: 'Port de Ténès' },
-    { key: 'dellys', label: 'Port de Dellys' }
+  const PORT_OPTIONS = [
+    { key: 'skikda', label: 'Port de Skikda', type: 'PORT' as const },
+    { key: 'djendjen', label: 'Port de Djendjen', type: 'PORT' as const },
+    { key: 'annaba', label: 'Port d\'Annaba', type: 'PORT' as const },
+    { key: 'bejaia', label: 'Port de Béjaïa', type: 'PORT' as const },
+    { key: 'alger', label: 'Port d\'Alger', type: 'PORT' as const },
+    { key: 'oran', label: 'Port d\'Oran', type: 'PORT' as const },
+    { key: 'arzew', label: 'Port d\'Arzew', type: 'PORT' as const },
+    { key: 'mostaganem', label: 'Port de Mostaganem', type: 'PORT' as const },
+    { key: 'ghazaouet', label: 'Port de Ghazaouet', type: 'PORT' as const },
+    { key: 'tenes', label: 'Port de Ténès', type: 'PORT' as const },
+    { key: 'dellys', label: 'Port de Dellys', type: 'PORT' as const }
   ];
 
-  const matchesPort = (portOfDischarge: string | undefined, selectedPort: string) => {
-    if (selectedPort === 'ALL') return true;
+  const AIRPORT_OPTIONS = [
+    { key: 'aeroport_constantine', city: 'constantine', label: 'Aéroport de Constantine', type: 'AIRPORT' as const },
+    { key: 'aeroport_annaba', city: 'annaba', label: 'Aéroport d\'Annaba', type: 'AIRPORT' as const },
+    { key: 'aeroport_alger', city: 'alger', label: 'Aéroport d\'Alger', type: 'AIRPORT' as const }
+  ];
+
+  const matchesPort = (portOfDischarge: string | undefined, selectedKey: string) => {
+    if (selectedKey === 'ALL') return true;
     const normPort = normalizeText(portOfDischarge);
-    const normSelected = normalizeText(selectedPort);
     if (!normPort) return false;
-    return normPort.includes(normSelected);
+
+    const airportMatch = AIRPORT_OPTIONS.find(a => a.key === selectedKey);
+    if (airportMatch) {
+      return normPort.includes('aeroport') && normPort.includes(airportMatch.city);
+    }
+
+    const normSelected = normalizeText(selectedKey);
+    return normPort.includes(normSelected) && !normPort.includes('aeroport');
   };
 
   const filteredDossiers = dossiers.filter(d => {
@@ -174,12 +186,12 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
               </select>
             </div>
 
-            {/* Port de Débarquement Filter (Ports d'Algérie uniquement) */}
+            {/* Port et Aéroport de Débarquement Filter */}
             <div className="space-y-1.5 pt-1 border-t border-slate-100">
               <div className="flex items-center justify-between gap-2">
                 <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
                   <Anchor className="h-3.5 w-3.5 text-cyan-700" />
-                  <span>Port de Débarquement (Algérie)</span>
+                  <span>Port et Aéroport de Débarquement</span>
                 </label>
                 {(portFilter !== 'ALL' || statusFilter !== 'ALL' || searchTerm.trim() !== '') && (
                   <button
@@ -200,20 +212,32 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                 value={portFilter}
                 onChange={e => setPortFilter(e.target.value)}
                 className="w-full bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-2 text-xs text-slate-800 font-semibold focus:outline-none focus:bg-white focus:border-cyan-600 cursor-pointer"
-                title="Filtrer par Port de Débarquement (Algérie)"
+                title="Filtrer par Port et Aéroport de Débarquement"
               >
-                <option value="ALL">Tous les Ports d'Algérie ({dossiers.length})</option>
-                {PORT_PRESETS.map(port => {
-                  const count = dossiers.filter(d => matchesPort(d.portOfDischarge, port.key)).length;
-                  return (
-                    <option key={port.key} value={port.key}>
-                      {port.label} ({count})
-                    </option>
-                  );
-                })}
+                <option value="ALL">Tous les Ports et Aéroports ({dossiers.length})</option>
+                <optgroup label="Ports d'Algérie">
+                  {PORT_OPTIONS.map(port => {
+                    const count = dossiers.filter(d => matchesPort(d.portOfDischarge, port.key)).length;
+                    return (
+                      <option key={port.key} value={port.key}>
+                        {port.label} ({count})
+                      </option>
+                    );
+                  })}
+                </optgroup>
+                <optgroup label="Aéroports d'Algérie">
+                  {AIRPORT_OPTIONS.map(airport => {
+                    const count = dossiers.filter(d => matchesPort(d.portOfDischarge, airport.key)).length;
+                    return (
+                      <option key={airport.key} value={airport.key}>
+                        {airport.label} ({count})
+                      </option>
+                    );
+                  })}
+                </optgroup>
               </select>
 
-              {/* Quick clickable port filter buttons */}
+              {/* Quick clickable port & airport filter buttons */}
               <div className="flex flex-wrap gap-1 pt-0.5">
                 {[
                   { key: 'ALL', label: 'Tous' },
@@ -222,7 +246,10 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                   { key: 'bejaia', label: 'Béjaïa' },
                   { key: 'alger', label: 'Alger' },
                   { key: 'oran', label: 'Oran' },
-                  { key: 'djendjen', label: 'Djendjen' }
+                  { key: 'djendjen', label: 'Djendjen' },
+                  { key: 'aeroport_constantine', label: '✈ Constantine' },
+                  { key: 'aeroport_annaba', label: '✈ Annaba' },
+                  { key: 'aeroport_alger', label: '✈ Alger' }
                 ].map(item => {
                   const isActive = portFilter === item.key;
                   const count = item.key === 'ALL'
@@ -333,10 +360,12 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                     </div>
 
                     <div className="text-[11px] text-slate-500 mt-1 flex items-center justify-between gap-2 font-medium flex-wrap">
-                      <span className="font-mono">B/L: {dossier.blNumber}</span>
+                      <span className="font-mono">
+                        {dossier.transportDocType === 'LTA' ? 'LTA' : 'B/L'}: {dossier.blNumber}
+                      </span>
                       {dossier.portOfDischarge && (
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-50 text-cyan-900 border border-cyan-200 font-semibold truncate max-w-[160px]" title={dossier.portOfDischarge}>
-                          ⚓ {dossier.portOfDischarge}
+                          {normalizeText(dossier.portOfDischarge).includes('aeroport') ? '✈' : '⚓'} {dossier.portOfDischarge}
                         </span>
                       )}
                     </div>
@@ -400,7 +429,7 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                       );
                     })()}
                     <span className="text-xs text-cyan-700 font-mono font-bold">
-                      · B/L {selectedDossier.blNumber}
+                      · {selectedDossier.transportDocType === 'LTA' ? 'LTA' : 'B/L'} {selectedDossier.blNumber}
                     </span>
                     {selectedDossier.declarationNumber && (
                       <span className="text-xs text-emerald-700 font-mono font-bold">
@@ -415,8 +444,14 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                     </span>
                   </h2>
                   <div className="text-xs text-slate-500 mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 font-medium">
-                    <span>Port : <strong>{selectedDossier.portOfDischarge}</strong></span>
-                    {selectedDossier.vesselName && <span>Navire : <strong>{selectedDossier.vesselName}</strong></span>}
+                    <span>
+                      {normalizeText(selectedDossier.portOfDischarge).includes('aeroport') ? 'Aéroport' : 'Port'} : <strong>{selectedDossier.portOfDischarge}</strong>
+                    </span>
+                    {selectedDossier.vesselName && (
+                      <span>
+                        {selectedDossier.transportDocType === 'LTA' ? 'Vol / Cie' : 'Navire'} : <strong>{selectedDossier.vesselName}</strong>
+                      </span>
+                    )}
                     <span>Marchandise : {selectedDossier.goodsDescription}</span>
                     {selectedDossier.berthingDate && (
                       <span className="text-cyan-900 font-bold bg-cyan-50 px-2 py-0.5 rounded-md border border-cyan-200 flex items-center gap-1">

@@ -320,7 +320,9 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
           {/* Dossier Information Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs my-3">
             <div>
-              <span className="text-slate-500 block text-[10px] uppercase font-bold">N° Connaissement (B/L)</span>
+              <span className="text-slate-500 block text-[10px] uppercase font-bold">
+                {dossier.transportDocType === 'LTA' ? 'N° LTA (Transport Aérien)' : 'N° Connaissement (B/L)'}
+              </span>
               <span className="font-mono font-bold text-slate-900">{dossier.blNumber}</span>
             </div>
             <div>
@@ -328,7 +330,7 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
               <span className="font-mono font-bold text-emerald-800">{dossier.declarationNumber || 'En cours'}</span>
             </div>
             <div>
-              <span className="text-slate-500 block text-[10px] uppercase font-bold">Port Débarquement</span>
+              <span className="text-slate-500 block text-[10px] uppercase font-bold">Port / Aéroport Débarquement</span>
               <span className="font-semibold text-slate-900">{dossier.portOfDischarge}</span>
             </div>
             <div>

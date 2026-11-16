@@ -86,6 +86,7 @@ export interface TransitDossier {
   clientName: string;
   clientContact?: string;
   regime: 'IMPORT_DIRECT' | 'EXPORT' | 'TRANSIT_SOUS_DOUANE' | 'ADMISSION_TEMPORAIRE' | 'ENTREPOT';
+  transportDocType?: 'BL' | 'LTA'; // Choix entre B/L Connaissement ou LTA
   blNumber: string;            // Bill of Lading (Connaissement) ou LTA (Lettre de Transport Aérien)
   declarationNumber?: string;  // N° Déclaration en Douane (DUM / DAU / Sommier)
   vesselName?: string;         // Nom du navire ou N° de vol
