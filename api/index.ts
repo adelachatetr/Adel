@@ -76,7 +76,7 @@ const DEFAULT_SETTINGS = {
   companyName: 'TRANSIT SCHB',
   agencyCity: 'Constantine / Hamma Bouziane & Ports',
   agencyPhone: '+213 (0) 31 88 99 00',
-  defaultBankName: 'BEA (Banque Extérieure d\'Algérie)',
+  defaultBankName: 'BEA Constantine (Banque Extérieure d\'Algérie)',
   bankAgency: 'Agence Constantine - 002',
   bankRib: '002 00012 1234567890 44'
 };
@@ -330,8 +330,8 @@ export default async function handler(req: any, res: any) {
         }
         const normalizedCheque = {
           ...cheque,
-          bankName: (!cheque.bankName || !cheque.bankName.toUpperCase().includes('BEA'))
-            ? 'BEA (Banque Extérieure d\'Algérie)'
+          bankName: (!cheque.bankName || !cheque.bankName.toUpperCase().includes('BEA') || cheque.bankName === 'BEA (Banque Extérieure d\'Algérie)')
+            ? 'BEA Constantine (Banque Extérieure d\'Algérie)'
             : cheque.bankName
         };
         const cheques = [...state.cheques];
@@ -370,8 +370,8 @@ export default async function handler(req: any, res: any) {
       if (Array.isArray(cheques)) {
         updates.cheques = cheques.map(c => ({
           ...c,
-          bankName: (!c.bankName || !c.bankName.toUpperCase().includes('BEA'))
-            ? 'BEA (Banque Extérieure d\'Algérie)'
+          bankName: (!c.bankName || !c.bankName.toUpperCase().includes('BEA') || c.bankName === 'BEA (Banque Extérieure d\'Algérie)')
+            ? 'BEA Constantine (Banque Extérieure d\'Algérie)'
             : c.bankName
         }));
       }

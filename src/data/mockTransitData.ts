@@ -113,7 +113,7 @@ export const INITIAL_CHEQUES: TransitCheque[] = [
   {
     id: 'chq-001',
     chequeNumber: 'CHQ-804192',
-    bankName: 'BEA (Banque Extérieure d\'Algérie)',
+    bankName: 'BEA Constantine (Banque Extérieure d\'Algérie)',
     direction: 'EMIS',
     category: 'CAUTION_CONTENEUR',
     amount: 500000,
@@ -151,7 +151,7 @@ export const INITIAL_CHEQUES: TransitCheque[] = [
   {
     id: 'chq-002',
     chequeNumber: 'CHQ-804193',
-    bankName: 'BEA (Banque Extérieure d\'Algérie)',
+    bankName: 'BEA Constantine (Banque Extérieure d\'Algérie)',
     direction: 'EMIS',
     category: 'DROITS_DOUANE',
     amount: 1420500,
@@ -176,7 +176,7 @@ export const INITIAL_CHEQUES: TransitCheque[] = [
   {
     id: 'chq-003',
     chequeNumber: 'CHQ-804194',
-    bankName: 'BEA (Banque Extérieure d\'Algérie)',
+    bankName: 'BEA Constantine (Banque Extérieure d\'Algérie)',
     direction: 'EMIS',
     category: 'FRAIS_MARITIMES',
     amount: 185000,
@@ -200,7 +200,7 @@ export const INITIAL_CHEQUES: TransitCheque[] = [
   {
     id: 'chq-004',
     chequeNumber: 'CHQ-509121',
-    bankName: 'BEA (Banque Extérieure d\'Algérie)',
+    bankName: 'BEA Constantine (Banque Extérieure d\'Algérie)',
     direction: 'EMIS',
     category: 'CAUTION_CONTENEUR',
     amount: 450000,
@@ -232,7 +232,7 @@ export const INITIAL_CHEQUES: TransitCheque[] = [
   {
     id: 'chq-005',
     chequeNumber: 'CHQ-509122',
-    bankName: 'BEA (Banque Extérieure d\'Algérie)',
+    bankName: 'BEA Constantine (Banque Extérieure d\'Algérie)',
     direction: 'EMIS',
     category: 'MANUTENTION_PORT',
     amount: 182000,
@@ -255,7 +255,7 @@ export const INITIAL_CHEQUES: TransitCheque[] = [
   {
     id: 'chq-006',
     chequeNumber: 'CHQ-992104',
-    bankName: 'BEA (Banque Extérieure d\'Algérie)',
+    bankName: 'BEA Constantine (Banque Extérieure d\'Algérie)',
     direction: 'EMIS',
     category: 'CAUTION_CONTENEUR',
     amount: 1200000,
@@ -288,7 +288,7 @@ export const INITIAL_CHEQUES: TransitCheque[] = [
   {
     id: 'chq-007',
     chequeNumber: 'CHQ-992105',
-    bankName: 'BEA (Banque Extérieure d\'Algérie)',
+    bankName: 'BEA Constantine (Banque Extérieure d\'Algérie)',
     direction: 'EMIS',
     category: 'TRANSPORT_TRACTION',
     amount: 350000,
@@ -311,7 +311,7 @@ export const INITIAL_CHEQUES: TransitCheque[] = [
   {
     id: 'chq-008',
     chequeNumber: 'CHQ-CLIENT-778',
-    bankName: 'BEA (Banque Extérieure d\'Algérie)',
+    bankName: 'BEA Constantine (Banque Extérieure d\'Algérie)',
     direction: 'RECU',
     category: 'AVANCE_PROVISION',
     amount: 3000000,
@@ -332,7 +332,7 @@ export const INITIAL_CHEQUES: TransitCheque[] = [
   {
     id: 'chq-009',
     chequeNumber: 'CHQ-331094',
-    bankName: 'BEA (Banque Extérieure d\'Algérie)',
+    bankName: 'BEA Constantine (Banque Extérieure d\'Algérie)',
     direction: 'EMIS',
     category: 'DROITS_DOUANE',
     amount: 645000,
@@ -353,7 +353,7 @@ export const INITIAL_CHEQUES: TransitCheque[] = [
   {
     id: 'chq-010',
     chequeNumber: 'CHQ-104882',
-    bankName: 'BEA (Banque Extérieure d\'Algérie)',
+    bankName: 'BEA Constantine (Banque Extérieure d\'Algérie)',
     direction: 'EMIS',
     category: 'CAUTION_CONTENEUR',
     amount: 520000,
@@ -405,12 +405,9 @@ export const SHIPPING_LINES = [
 ];
 
 export const MAJOR_BANKS = [
-  'BEA (Banque Extérieure d\'Algérie)',
+  'BEA Constantine (Banque Extérieure d\'Algérie)',
   'BEA - Agence Constantine (002)',
-  'BEA - Agence Hamma Bouziane',
-  'BEA - Agence Port Skikda',
-  'BEA - Agence Port Djendjen',
-  'BEA - Agence Port Alger'
+  'BEA - Agence Hamma Bouziane (Constantine)'
 ];
 
 export const TRANSIT_AGENTS = [

@@ -27,7 +27,7 @@ const DEFAULT_SETTINGS = {
   companyName: 'TRANSIT SCHB',
   agencyCity: 'Constantine / Hamma Bouziane & Ports',
   agencyPhone: '+213 (0) 31 88 99 00',
-  defaultBankName: 'BEA (Banque Extérieure d\'Algérie)',
+  defaultBankName: 'BEA Constantine (Banque Extérieure d\'Algérie)',
   bankAgency: 'Agence Constantine - 002',
   bankRib: '002 00012 1234567890 44'
 };
@@ -109,8 +109,8 @@ class DatabaseManager {
           console.log(`[Database] Loaded from ${this.dbPath} (${parsed.dossiers.length} dossiers, ${parsed.cheques.length} cheques)`);
           parsed.cheques = parsed.cheques.map((c: any) => ({
             ...c,
-            bankName: (!c.bankName || !c.bankName.toUpperCase().includes('BEA'))
-              ? 'BEA (Banque Extérieure d\'Algérie)'
+            bankName: (!c.bankName || !c.bankName.toUpperCase().includes('BEA') || c.bankName === 'BEA (Banque Extérieure d\'Algérie)')
+              ? 'BEA Constantine (Banque Extérieure d\'Algérie)'
               : c.bankName
           }));
           return parsed;
@@ -190,8 +190,8 @@ class DatabaseManager {
       .filter(c => !allDeletedChequeIds.includes(c.id))
       .map(c => ({
         ...c,
-        bankName: (!c.bankName || !c.bankName.toUpperCase().includes('BEA'))
-          ? 'BEA (Banque Extérieure d\'Algérie)'
+        bankName: (!c.bankName || !c.bankName.toUpperCase().includes('BEA') || c.bankName === 'BEA (Banque Extérieure d\'Algérie)')
+          ? 'BEA Constantine (Banque Extérieure d\'Algérie)'
           : c.bankName
       }));
 
@@ -296,8 +296,8 @@ class DatabaseManager {
     const deletedChequeIds = (this.state.deletedChequeIds || []).filter(id => id !== cheque.id);
     const normalizedCheque = {
       ...cheque,
-      bankName: (!cheque.bankName || !cheque.bankName.toUpperCase().includes('BEA'))
-        ? 'BEA (Banque Extérieure d\'Algérie)'
+      bankName: (!cheque.bankName || !cheque.bankName.toUpperCase().includes('BEA') || cheque.bankName === 'BEA (Banque Extérieure d\'Algérie)')
+        ? 'BEA Constantine (Banque Extérieure d\'Algérie)'
         : cheque.bankName
     };
     const existingIndex = this.state.cheques.findIndex(c => c.id === normalizedCheque.id);

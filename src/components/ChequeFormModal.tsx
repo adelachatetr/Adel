@@ -58,11 +58,11 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
       const nature: ChequeNature = editingCheque.chequeNature || 'ORDINAIRE';
       setChequeNature(nature);
       setChequeNumber(editingCheque.chequeNumber);
-      setBankName(
-        editingCheque.bankName && editingCheque.bankName.toUpperCase().includes('BEA')
-          ? editingCheque.bankName
-          : (defaultBankName || MAJOR_BANKS[0])
-      );
+      const rawBank = editingCheque.bankName || '';
+      const mappedBank = rawBank === 'BEA (Banque Extérieure d\'Algérie)'
+        ? MAJOR_BANKS[0]
+        : (MAJOR_BANKS.includes(rawBank) ? rawBank : MAJOR_BANKS[0]);
+      setBankName(mappedBank);
       setDirection(editingCheque.direction);
       setCategory(editingCheque.category);
       setAmount(
@@ -191,7 +191,7 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
       chequeNature,
       bankName: (bankName && bankName.toUpperCase().includes('BEA'))
         ? bankName.trim()
-        : 'BEA (Banque Extérieure d\'Algérie)',
+        : 'BEA Constantine (Banque Extérieure d\'Algérie)',
       direction,
       category,
       amount: parsedAmount,
@@ -290,10 +290,10 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-slate-700 font-semibold text-xs">
-                  Banque Tirée (BEA Uniquement) <span className="text-rose-500">*</span>
+                  Banque Tirée (BEA Constantine) <span className="text-rose-500">*</span>
                 </label>
                 <span className="text-[10px] bg-blue-100 text-blue-900 font-extrabold px-2 py-0.5 rounded border border-blue-200 tracking-wider">
-                  BEA EXCLUSIVE
+                  BEA CONSTANTINE
                 </span>
               </div>
               <select

@@ -278,7 +278,7 @@ export default function App() {
         id: `chq-${Date.now()}`,
         chequeNumber: data.chequeNumber || `CHQ-${Math.floor(100000 + Math.random() * 900000)}`,
         chequeNature: initialNature,
-        bankName: data.bankName || settings.defaultBankName || 'BEA (Banque Extérieure d\'Algérie)',
+        bankName: data.bankName || settings.defaultBankName || 'BEA Constantine (Banque Extérieure d\'Algérie)',
         direction: data.direction || 'EMIS',
         category: data.category || 'CAUTION_CONTENEUR',
         amount: initialAmount,

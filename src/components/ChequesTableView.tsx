@@ -338,7 +338,7 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
           <div className="flex flex-col gap-1">
             <label className="text-[11px] font-bold text-slate-600 flex items-center gap-1">
               <Landmark className="h-3.5 w-3.5 text-blue-700" />
-              <span>Banque Tirée (BEA)</span>
+              <span>Banque Tirée (BEA Constantine)</span>
             </label>
             <select
               value={bankFilter}
@@ -408,7 +408,7 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
                 if (beaBank) {
                   setBankFilter(bankFilter === beaBank ? 'ALL' : beaBank);
                 } else {
-                  setBankFilter(bankFilter === "BEA (Banque Extérieure d'Algérie)" ? 'ALL' : "BEA (Banque Extérieure d'Algérie)");
+                  setBankFilter(bankFilter === "BEA Constantine (Banque Extérieure d'Algérie)" ? 'ALL' : "BEA Constantine (Banque Extérieure d'Algérie)");
                 }
               }}
               className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
@@ -416,10 +416,10 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
                   ? 'bg-blue-600 text-white shadow-xs'
                   : 'bg-blue-50 text-blue-800 hover:bg-blue-100 border border-blue-200'
               }`}
-              title="Filtrer uniquement les chèques tirés sur la BEA"
+              title="Filtrer uniquement les chèques tirés sur la BEA Constantine"
             >
               <Landmark className="h-3 w-3" />
-              <span>Banque BEA</span>
+              <span>BEA Constantine</span>
               {uniqueBanks.find(([b]) => b.toLowerCase().includes('bea')) && (
                 <span className="text-[10px] bg-white/20 px-1 rounded">
                   {uniqueBanks.find(([b]) => b.toLowerCase().includes('bea'))?.[1]}
