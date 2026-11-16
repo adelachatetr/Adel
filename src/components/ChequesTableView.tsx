@@ -15,7 +15,6 @@ import {
   Building2,
   Tag,
   X,
-  Landmark,
   AlertTriangle
 } from 'lucide-react';
 import { TransitCheque, ChequeStatus, ChequeCategory, ChequeDirection, ChequeNature } from '../types/transit';
@@ -56,11 +55,10 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
   const [beneficiaryFilter, setBeneficiaryFilter] = useState<string>(
     initialFilter?.type === 'beneficiary' ? initialFilter.value : 'ALL'
   );
-  const [bankFilter, setBankFilter] = useState<string>(
-    initialFilter?.type === 'bank' ? initialFilter.value : 'ALL'
-  );
   const [directionFilter, setDirectionFilter] = useState<ChequeDirection | 'ALL'>('ALL');
-  const [natureFilter, setNatureFilter] = useState<ChequeNature | 'ALL'>('ALL');
+  const [natureFilter, setNatureFilter] = useState<ChequeNature | 'ALL'>(
+    initialFilter?.type === 'nature' ? (initialFilter.value as ChequeNature) : 'ALL'
+  );
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [quickStatusMenuId, setQuickStatusMenuId] = useState<string | null>(null);
   const [chequePendingDelete, setChequePendingDelete] = useState<TransitCheque | null>(null);
@@ -71,7 +69,7 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
       if (initialFilter.type === 'status') setStatusFilter(initialFilter.value as any);
       if (initialFilter.type === 'category') setCategoryFilter(initialFilter.value as any);
       if (initialFilter.type === 'beneficiary') setBeneficiaryFilter(initialFilter.value);
-      if (initialFilter.type === 'bank') setBankFilter(initialFilter.value);
+      if (initialFilter.type === 'nature') setNatureFilter(initialFilter.value as ChequeNature);
     }
   }, [initialFilter]);
 
@@ -80,18 +78,6 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
     const map = new Map<string, number>();
     cheques.forEach(c => {
       const b = c.beneficiary?.trim();
-      if (b) {
-        map.set(b, (map.get(b) || 0) + 1);
-      }
-    });
-    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0], 'fr'));
-  }, [cheques]);
-
-  // Unique banks list with cheque count
-  const uniqueBanks = useMemo(() => {
-    const map = new Map<string, number>();
-    cheques.forEach(c => {
-      const b = c.bankName?.trim();
       if (b) {
         map.set(b, (map.get(b) || 0) + 1);
       }
@@ -140,11 +126,6 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
         return false;
       }
 
-      // Bank filter
-      if (bankFilter !== 'ALL' && c.bankName !== bankFilter) {
-        return false;
-      }
-
       // Direction filter
       if (directionFilter !== 'ALL' && c.direction !== directionFilter) {
         return false;
@@ -157,14 +138,13 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
 
       return true;
     });
-  }, [cheques, searchTerm, statusFilter, categoryFilter, beneficiaryFilter, bankFilter, directionFilter, natureFilter]);
+  }, [cheques, searchTerm, statusFilter, categoryFilter, beneficiaryFilter, directionFilter, natureFilter]);
 
   // Active filters count
   const hasActiveFilters = searchTerm !== '' || 
     statusFilter !== 'ALL' || 
     categoryFilter !== 'ALL' || 
     beneficiaryFilter !== 'ALL' || 
-    bankFilter !== 'ALL' || 
     directionFilter !== 'ALL' ||
     natureFilter !== 'ALL';
 
@@ -173,7 +153,6 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
     setStatusFilter('ALL');
     setCategoryFilter('ALL');
     setBeneficiaryFilter('ALL');
-    setBankFilter('ALL');
     setDirectionFilter('ALL');
     setNatureFilter('ALL');
   };
@@ -181,7 +160,7 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
   // Automatically reset manual row selections whenever filters change so stale cheques don't contaminate the filtered view
   useEffect(() => {
     setSelectedIds([]);
-  }, [searchTerm, statusFilter, categoryFilter, beneficiaryFilter, bankFilter, directionFilter, natureFilter]);
+  }, [searchTerm, statusFilter, categoryFilter, beneficiaryFilter, directionFilter, natureFilter]);
 
   // Report filtered cheques up to parent so header buttons also stay in sync
   useEffect(() => {
@@ -334,23 +313,26 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
             </select>
           </div>
 
-          {/* 3. Filtre par Agence BEA */}
+          {/* 3. Filtre par Nature de chèque */}
           <div className="flex flex-col gap-1">
             <label className="text-[11px] font-bold text-slate-600 flex items-center gap-1">
-              <Landmark className="h-3.5 w-3.5 text-blue-700" />
-              <span>Banque Tirée (BEA Constantine)</span>
+              <FileText className="h-3.5 w-3.5 text-cyan-700" />
+              <span>Nature de chèque</span>
             </label>
             <select
-              value={bankFilter}
-              onChange={e => setBankFilter(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 font-semibold focus:outline-none focus:border-cyan-600 focus:bg-white truncate"
+              value={natureFilter}
+              onChange={e => setNatureFilter(e.target.value as ChequeNature | 'ALL')}
+              className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 font-semibold focus:outline-none focus:border-cyan-600 focus:bg-white cursor-pointer truncate"
             >
-              <option value="ALL">Toutes les agences BEA ({uniqueBanks.length})</option>
-              {uniqueBanks.map(([bName, count]) => (
-                <option key={bName} value={bName}>
-                  {bName} ({count})
-                </option>
-              ))}
+              <option value="ALL">Toutes natures de chèque ({cheques.length})</option>
+              {(Object.entries(CHEQUE_NATURE_LABELS) as [ChequeNature, typeof CHEQUE_NATURE_LABELS['ORDINAIRE']][]).map(([key, val]) => {
+                const count = cheques.filter(c => (c.chequeNature || 'ORDINAIRE') === key).length;
+                return (
+                  <option key={key} value={key}>
+                    {val.label} ({count})
+                  </option>
+                );
+              })}
             </select>
           </div>
 
@@ -396,35 +378,40 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
           </div>
         </div>
 
-        {/* Quick Pills for Nature & Fast BEA Filter */}
+        {/* Quick Pills for Nature & Fast Filter */}
         <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs">
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-[11px] text-slate-500 font-bold uppercase mr-1">Accès rapide :</span>
             
-            {/* Quick Bank BEA button */}
+            {/* Quick Nature de chèque buttons */}
             <button
-              onClick={() => {
-                const beaBank = uniqueBanks.find(([b]) => b.toLowerCase().includes('bea'))?.[0];
-                if (beaBank) {
-                  setBankFilter(bankFilter === beaBank ? 'ALL' : beaBank);
-                } else {
-                  setBankFilter(bankFilter === "BEA Constantine (Banque Extérieure d'Algérie)" ? 'ALL' : "BEA Constantine (Banque Extérieure d'Algérie)");
-                }
-              }}
+              onClick={() => setNatureFilter(natureFilter === 'ORDINAIRE' ? 'ALL' : 'ORDINAIRE')}
               className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
-                bankFilter.toLowerCase().includes('bea')
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'bg-blue-50 text-blue-800 hover:bg-blue-100 border border-blue-200'
+                natureFilter === 'ORDINAIRE'
+                  ? 'bg-slate-800 text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-300'
               }`}
-              title="Filtrer uniquement les chèques tirés sur la BEA Constantine"
+              title="Filtrer les chèques ordinaires"
             >
-              <Landmark className="h-3 w-3" />
-              <span>BEA Constantine</span>
-              {uniqueBanks.find(([b]) => b.toLowerCase().includes('bea')) && (
-                <span className="text-[10px] bg-white/20 px-1 rounded">
-                  {uniqueBanks.find(([b]) => b.toLowerCase().includes('bea'))?.[1]}
-                </span>
-              )}
+              <span>Chèque ordinaire</span>
+              <span className={`text-[10px] px-1 rounded ${natureFilter === 'ORDINAIRE' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                {cheques.filter(c => (c.chequeNature || 'ORDINAIRE') === 'ORDINAIRE').length}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setNatureFilter(natureFilter === 'VISE' ? 'ALL' : 'VISE')}
+              className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
+                natureFilter === 'VISE'
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : 'bg-indigo-50 text-indigo-800 hover:bg-indigo-100 border border-indigo-200'
+              }`}
+              title="Filtrer les chèques visés"
+            >
+              <span>Chèque visé</span>
+              <span className={`text-[10px] px-1 rounded ${natureFilter === 'VISE' ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-900'}`}>
+                {cheques.filter(c => c.chequeNature === 'VISE').length}
+              </span>
             </button>
 
             {/* Nature quick buttons */}
@@ -514,7 +501,7 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
             
             {natureFilter !== 'ALL' && (
               <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-950 px-2 py-0.5 rounded-full text-[11px] font-semibold border border-amber-300">
-                Type: {CHEQUE_NATURE_LABELS[natureFilter]?.label || natureFilter}
+                Nature de chèque: {CHEQUE_NATURE_LABELS[natureFilter]?.label || natureFilter}
                 <button onClick={() => setNatureFilter('ALL')} className="hover:text-black">
                   <X className="h-3 w-3" />
                 </button>
@@ -523,7 +510,7 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
 
             {categoryFilter !== 'ALL' && (
               <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full text-[11px] font-semibold border border-amber-200">
-                Nature: {CATEGORY_LABELS[categoryFilter]?.short || categoryFilter}
+                Catégorie: {CATEGORY_LABELS[categoryFilter]?.short || categoryFilter}
                 <button onClick={() => setCategoryFilter('ALL')} className="hover:text-black">
                   <X className="h-3 w-3" />
                 </button>
@@ -534,15 +521,6 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
               <span className="inline-flex items-center gap-1 bg-cyan-100 text-cyan-900 px-2 py-0.5 rounded-full text-[11px] font-semibold border border-cyan-200">
                 Bénéficiaire: {beneficiaryFilter}
                 <button onClick={() => setBeneficiaryFilter('ALL')} className="hover:text-black">
-                  <X className="h-3 w-3" />
-                </button>
-              </span>
-            )}
-
-            {bankFilter !== 'ALL' && (
-              <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-900 px-2 py-0.5 rounded-full text-[11px] font-semibold border border-blue-200">
-                Banque: {bankFilter}
-                <button onClick={() => setBankFilter('ALL')} className="hover:text-black">
                   <X className="h-3 w-3" />
                 </button>
               </span>
