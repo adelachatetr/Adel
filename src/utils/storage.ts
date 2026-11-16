@@ -221,7 +221,7 @@ export function formatShortDate(dateStr?: string): string {
 // Helpers for Nature de chèque
 export const CHEQUE_NATURE_LABELS: Record<ChequeNature, { label: string; short: string; bgClass: string; textClass: string; borderClass: string }> = {
   ORDINAIRE: {
-    label: 'Chèque ordinaire',
+    label: 'Chèque Ordinaire',
     short: 'Ordinaire',
     bgClass: 'bg-slate-100',
     textClass: 'text-slate-700',
@@ -235,8 +235,8 @@ export const CHEQUE_NATURE_LABELS: Record<ChequeNature, { label: string; short: 
     borderClass: 'border-indigo-200'
   },
   A_BLANC: {
-    label: 'Chèque à blanc',
-    short: 'À blanc',
+    label: 'Chèque à Blanc',
+    short: 'À Blanc',
     bgClass: 'bg-amber-50',
     textClass: 'text-amber-900',
     borderClass: 'border-amber-300'
@@ -429,7 +429,7 @@ export function exportChequesToCSV(cheques: TransitCheque[]): void {
   ];
 
   const rows = cheques.map(c => [
-    `"${CHEQUE_NATURE_LABELS[c.chequeNature || 'ORDINAIRE']?.label || 'Chèque ordinaire'}"`,
+    `"${CHEQUE_NATURE_LABELS[c.chequeNature || 'ORDINAIRE']?.label || 'Chèque Ordinaire'}"`,
     `"${c.chequeNumber || ''}"`,
     `"${c.direction === 'EMIS' ? 'Émis (Débours)' : 'Reçu (Client)'}"`,
     `"${STATUS_CONFIG[c.status]?.label || c.status}"`,

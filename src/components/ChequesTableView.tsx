@@ -393,7 +393,7 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
               }`}
               title="Filtrer les chèques ordinaires"
             >
-              <span>Chèque ordinaire</span>
+              <span>Chèque Ordinaire</span>
               <span className={`text-[10px] px-1 rounded ${natureFilter === 'ORDINAIRE' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'}`}>
                 {cheques.filter(c => (c.chequeNature || 'ORDINAIRE') === 'ORDINAIRE').length}
               </span>
@@ -475,7 +475,7 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
               }`}
               title="Afficher les chèques à blanc (en attente de facture)"
             >
-              <span>Chèques à blanc</span>
+              <span>Chèques à Blanc</span>
               <span className={`text-[10px] px-1 rounded ${natureFilter === 'A_BLANC' ? 'bg-white/20 text-white' : 'bg-amber-200/70 text-amber-950'}`}>
                 {cheques.filter(c => c.chequeNature === 'A_BLANC').length}
               </span>

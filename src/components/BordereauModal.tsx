@@ -455,7 +455,7 @@ export const BordereauModal: React.FC<BordereauModalProps> = ({
                 ) : (
                   chequesToPrint.map((chq, index) => {
                     const cat = CATEGORY_LABELS[chq.category];
-                    const natureLabel = CHEQUE_NATURE_LABELS[chq.chequeNature || 'ORDINAIRE']?.label || 'Chèque ordinaire';
+                    const natureLabel = CHEQUE_NATURE_LABELS[chq.chequeNature || 'ORDINAIRE']?.label || 'Chèque Ordinaire';
                     const isBlankPending = chq.chequeNature === 'A_BLANC' && chq.amount === 0;
                     return (
                       <tr key={chq.id} className="text-slate-800">
