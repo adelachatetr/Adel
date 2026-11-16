@@ -326,8 +326,8 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
               <span className="font-mono font-bold text-slate-900">{dossier.blNumber}</span>
             </div>
             <div>
-              <span className="text-slate-500 block text-[10px] uppercase font-bold">Déclaration Douane</span>
-              <span className="font-mono font-bold text-emerald-800">{dossier.declarationNumber || 'En cours'}</span>
+              <span className="text-slate-500 block text-[10px] uppercase font-bold">Nature De Demande</span>
+              <span className="font-bold text-emerald-800">{dossier.demandNature || 'B/C'}</span>
             </div>
             <div>
               <span className="text-slate-500 block text-[10px] uppercase font-bold">Port / Aéroport Débarquement</span>

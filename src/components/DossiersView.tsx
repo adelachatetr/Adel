@@ -99,6 +99,7 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
       normalizeText(d.dossierNumber).includes(q) ||
       normalizeText(d.clientName).includes(q) ||
       normalizeText(d.blNumber).includes(q) ||
+      normalizeText(d.demandNature).includes(q) ||
       normalizeText(d.declarationNumber).includes(q) ||
       normalizeText(d.deliveryMode).includes(q) ||
       normalizeText(d.vesselName).includes(q) ||
@@ -434,11 +435,9 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                     <span className="text-xs text-cyan-700 font-mono font-bold">
                       · {selectedDossier.transportDocType === 'LTA' ? 'LTA' : 'B/L'} {selectedDossier.blNumber}
                     </span>
-                    {selectedDossier.declarationNumber && (
-                      <span className="text-xs text-emerald-700 font-mono font-bold">
-                        · Douane {selectedDossier.declarationNumber}
-                      </span>
-                    )}
+                    <span className="text-xs text-emerald-700 font-bold">
+                      · Nature De Demande : {selectedDossier.demandNature || 'B/C'}
+                    </span>
                   </div>
                   <h2 className="text-sm font-bold text-slate-800 mt-1.5 flex items-center gap-2 flex-wrap">
                     <span className="text-xs text-slate-500 font-semibold uppercase">N° Bon de Commande :</span>

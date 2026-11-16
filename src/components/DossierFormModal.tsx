@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, FolderPlus, Check, Trash2, Printer, Anchor, Landmark, AlertCircle } from 'lucide-react';
-import { TransitDossier, DossierStatus, DeliveryMode } from '../types/transit';
+import { TransitDossier, DossierStatus, DeliveryMode, DemandNature } from '../types/transit';
 
 interface DossierFormModalProps {
   isOpen: boolean;
@@ -25,7 +25,7 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
   const [bcAmountEur, setBcAmountEur] = useState<string>('');
   const [transportDocType, setTransportDocType] = useState<'BL' | 'LTA'>('BL');
   const [blNumber, setBlNumber] = useState('');
-  const [declarationNumber, setDeclarationNumber] = useState('');
+  const [demandNature, setDemandNature] = useState<DemandNature>('B/C');
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>('CFR');
   const [eta, setEta] = useState('');
   const [berthingDate, setBerthingDate] = useState('');
@@ -50,7 +50,7 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
       );
       setTransportDocType(editingDossier.transportDocType || 'BL');
       setBlNumber(editingDossier.blNumber);
-      setDeclarationNumber(editingDossier.declarationNumber || '');
+      setDemandNature(editingDossier.demandNature || 'B/C');
       const existingMode = editingDossier.deliveryMode
         || (['CFR', 'FOB', 'CPL'].includes((editingDossier.vesselName || '').toUpperCase())
           ? (editingDossier.vesselName!.toUpperCase() as DeliveryMode)
@@ -71,7 +71,7 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
       setBcAmountEur('');
       setTransportDocType('BL');
       setBlNumber('');
-      setDeclarationNumber('');
+      setDemandNature('B/C');
       setDeliveryMode('CFR');
       setEta('');
       setBerthingDate('');
@@ -109,7 +109,7 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
       bcAmountEur: parsedEuro,
       transportDocType,
       blNumber: blNumber.trim(),
-      declarationNumber: declarationNumber.trim() || undefined,
+      demandNature,
       deliveryMode,
       vesselName: deliveryMode,
       eta: eta || undefined,
@@ -124,7 +124,7 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-xs">
-      <div className="bg-white border border-slate-300 rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl">
+      <div className="bg-white border border-slate-300 rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl">
         <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80 rounded-t-2xl">
           <div className="flex items-center gap-2">
             <FolderPlus className="h-5 w-5 text-cyan-600" />
@@ -181,56 +181,57 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
             </div>
           </div>
 
-          <div>
-            <label className="block text-slate-700 font-semibold mb-1">
-              N° DE BON DE COMMANDE <span className="text-rose-500">*</span>
-            </label>
-            <input
-              type="text"
-              required
-              value={clientName}
-              onChange={e => setClientName(e.target.value)}
-              placeholder="ex: BC-2026-04192 / BON DE COMMANDE SCHB"
-              className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-bold font-mono focus:border-cyan-600"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="sm:col-span-2">
               <label className="block text-slate-700 font-semibold mb-1">
-                Document Transport (B/L ou LTA) <span className="text-rose-500">*</span>
+                N° DE BON DE COMMANDE <span className="text-rose-500">*</span>
               </label>
-              <div className="flex gap-1.5">
-                <select
-                  value={transportDocType}
-                  onChange={e => setTransportDocType(e.target.value as 'BL' | 'LTA')}
-                  className="bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-2.5 text-slate-900 font-bold focus:border-cyan-600 cursor-pointer shrink-0"
-                  title="Choisir B/L Connaissement ou LTA"
-                >
-                  <option value="BL">B/L Connaissement</option>
-                  <option value="LTA">LTA</option>
-                </select>
-                <input
-                  type="text"
-                  required
-                  value={blNumber}
-                  onChange={e => setBlNumber(e.target.value)}
-                  placeholder={transportDocType === 'LTA' ? 'ex: N° LTA 124-88109234' : 'ex: N° B/L MEDU83910283'}
-                  className="w-full min-w-0 bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-mono font-bold focus:border-cyan-600"
-                />
-              </div>
+              <input
+                type="text"
+                required
+                value={clientName}
+                onChange={e => setClientName(e.target.value)}
+                placeholder="ex: BC-2026-04192 / BON DE COMMANDE SCHB"
+                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-bold font-mono focus:border-cyan-600"
+              />
             </div>
 
             <div>
               <label className="block text-slate-700 font-semibold mb-1">
-                N° Déclaration en Douane (DUM/DAU)
+                Nature De Demande
               </label>
+              <select
+                value={demandNature}
+                onChange={e => setDemandNature(e.target.value as DemandNature)}
+                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-bold focus:border-cyan-600 cursor-pointer"
+              >
+                <option value="B/C">B/C</option>
+                <option value="Contrat">Contrat</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-slate-700 font-semibold mb-1">
+              Document Transport (B/L ou LTA) <span className="text-rose-500">*</span>
+            </label>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <select
+                value={transportDocType}
+                onChange={e => setTransportDocType(e.target.value as 'BL' | 'LTA')}
+                className="bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-slate-900 font-bold focus:border-cyan-600 cursor-pointer shrink-0 sm:w-48"
+                title="Choisir B/L Connaissement ou LTA"
+              >
+                <option value="BL">B/L Connaissement</option>
+                <option value="LTA">LTA</option>
+              </select>
               <input
                 type="text"
-                value={declarationNumber}
-                onChange={e => setDeclarationNumber(e.target.value)}
-                placeholder="ex: DUM-2026-04192"
-                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-mono font-bold focus:border-cyan-600"
+                required
+                value={blNumber}
+                onChange={e => setBlNumber(e.target.value)}
+                placeholder={transportDocType === 'LTA' ? 'ex: N° LTA 124-88109234' : 'ex: N° B/L MEDU83910283'}
+                className="flex-1 w-full min-w-0 bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-mono font-bold focus:border-cyan-600"
               />
             </div>
           </div>

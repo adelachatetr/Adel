@@ -85,6 +85,8 @@ export type DossierStatus =
 
 export type DeliveryMode = 'CFR' | 'FOB' | 'CPL';
 
+export type DemandNature = 'B/C' | 'Contrat';
+
 export interface TransitDossier {
   id: string;
   dossierNumber: string;
@@ -94,7 +96,8 @@ export interface TransitDossier {
   bcAmountEur?: number;        // Montant du Bon de Commande en EURO (€)
   transportDocType?: 'BL' | 'LTA'; // Choix entre B/L Connaissement ou LTA
   blNumber: string;            // Bill of Lading (Connaissement) ou LTA (Lettre de Transport Aérien)
-  declarationNumber?: string;  // N° Déclaration en Douane (DUM / DAU / Sommier)
+  demandNature?: DemandNature; // Nature De Demande : B/C ou Contrat
+  declarationNumber?: string;  // Référence héritée Déclaration en Douane
   deliveryMode?: DeliveryMode; // Mode de livraison : CFR, FOB, CPL
   vesselName?: string;         // Référence héritée / mode de livraison
   eta?: string;                // Date arrivée prévue

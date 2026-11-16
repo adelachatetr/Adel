@@ -461,6 +461,7 @@ export default function App() {
         bcAmountEur: data.bcAmountEur,
         transportDocType: data.transportDocType || 'BL',
         blNumber: data.blNumber || 'BL-AUTO',
+        demandNature: data.demandNature || 'B/C',
         declarationNumber: data.declarationNumber,
         deliveryMode: data.deliveryMode || 'CFR',
         vesselName: data.deliveryMode || data.vesselName,
