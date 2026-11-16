@@ -219,10 +219,24 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
               </label>
               <input
                 type="text"
+                list="algerian-ports-list"
                 value={portOfDischarge}
                 onChange={e => setPortOfDischarge(e.target.value)}
+                placeholder="ex: Port de Skikda, Annaba, Béjaïa, Alger, Oran..."
                 className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-medium focus:border-cyan-600"
               />
+              <datalist id="algerian-ports-list">
+                <option value="Port de Skikda" />
+                <option value="Port d'Annaba" />
+                <option value="Port de Béjaïa" />
+                <option value="Port d'Alger" />
+                <option value="Port d'Oran" />
+                <option value="Port de Djendjen" />
+                <option value="Port de Mostaganem" />
+                <option value="Port de Ghazaouet" />
+                <option value="Aéroport d'Alger (Houari Boumediene)" />
+                <option value="Aéroport de Constantine (Mohamed Boudiaf)" />
+              </datalist>
             </div>
           </div>
 

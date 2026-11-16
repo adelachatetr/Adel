@@ -9,7 +9,8 @@ import {
   Printer,
   CheckCircle,
   AlertTriangle,
-  X
+  X,
+  Anchor
 } from 'lucide-react';
 import { TransitDossier, TransitCheque, DossierStatus } from '../types/transit';
 import { formatAmount, formatShortDate, CATEGORY_LABELS, STATUS_CONFIG, DOSSIER_STATUS_CONFIG } from '../utils/storage';
@@ -43,24 +44,66 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | DossierStatus>('ALL');
+  const [portFilter, setPortFilter] = useState<string>('ALL');
   const [selectedDossierId, setSelectedDossierId] = useState<string | null>(dossiers[0]?.id || null);
   const [dossierPendingDelete, setDossierPendingDelete] = useState<TransitDossier | null>(null);
   const [chequePendingDelete, setChequePendingDelete] = useState<TransitCheque | null>(null);
 
+  const normalizeText = (val?: string) =>
+    (val || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+
+  const PORT_PRESETS = [
+    { key: 'skikda', label: 'Port de Skikda' },
+    { key: 'annaba', label: 'Port d\'Annaba' },
+    { key: 'bejaia', label: 'Port de Béjaïa' },
+    { key: 'alger', label: 'Port d\'Alger' },
+    { key: 'oran', label: 'Port d\'Oran' },
+    { key: 'djendjen', label: 'Port de Djendjen' },
+    { key: 'mostaganem', label: 'Port de Mostaganem' },
+    { key: 'ghazaouet', label: 'Port de Ghazaouet' },
+    { key: 'aeroport', label: 'Aéroport (Fret Aérien)' }
+  ];
+
+  // Extra custom ports present in dossiers that don't match presets
+  const customPorts = Array.from(
+    new Set(
+      dossiers
+        .map(d => (d.portOfDischarge || '').trim())
+        .filter(Boolean)
+    )
+  ).filter(port => {
+    const norm = normalizeText(port);
+    return !PORT_PRESETS.some(p => norm.includes(p.key));
+  });
+
+  const matchesPort = (portOfDischarge: string | undefined, selectedPort: string) => {
+    if (selectedPort === 'ALL') return true;
+    const normPort = normalizeText(portOfDischarge);
+    const normSelected = normalizeText(selectedPort);
+    if (!normPort) return false;
+    return normPort.includes(normSelected);
+  };
+
   const filteredDossiers = dossiers.filter(d => {
     if (statusFilter !== 'ALL' && d.status !== statusFilter) return false;
+    if (!matchesPort(d.portOfDischarge, portFilter)) return false;
     if (!searchTerm.trim()) return true;
-    const q = searchTerm.toLowerCase();
+    const q = normalizeText(searchTerm);
     return (
-      d.dossierNumber.toLowerCase().includes(q) ||
-      d.clientName.toLowerCase().includes(q) ||
-      d.blNumber.toLowerCase().includes(q) ||
-      (d.declarationNumber || '').toLowerCase().includes(q) ||
-      (d.vesselName || '').toLowerCase().includes(q)
+      normalizeText(d.dossierNumber).includes(q) ||
+      normalizeText(d.clientName).includes(q) ||
+      normalizeText(d.blNumber).includes(q) ||
+      normalizeText(d.declarationNumber).includes(q) ||
+      normalizeText(d.vesselName).includes(q) ||
+      normalizeText(d.portOfDischarge).includes(q)
     );
   });
 
-  const selectedDossier = dossiers.find(d => d.id === selectedDossierId) || filteredDossiers[0];
+  const selectedDossier = filteredDossiers.find(d => d.id === selectedDossierId) || filteredDossiers[0];
 
   // Cheques attached to the selected dossier
   const attachedCheques = selectedDossier 
@@ -112,119 +155,220 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left column: Dossiers List (4 cols) */}
         <div className="lg:col-span-4 space-y-3">
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1">
-              <Search className="h-4 w-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Chercher dossier, B/L, client..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-cyan-600 font-medium"
-              />
+          <div className="bg-white border border-slate-200 rounded-2xl p-3 shadow-2xs space-y-2.5">
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="h-4 w-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Chercher dossier, B/L, BC, port..."
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-cyan-600 font-medium"
+                />
+              </div>
+              <select
+                value={statusFilter}
+                onChange={e => setStatusFilter(e.target.value as any)}
+                className="bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-2 text-xs text-slate-800 font-semibold focus:outline-none focus:bg-white focus:border-cyan-600 cursor-pointer shrink-0"
+                title="Filtrer par statut dossier"
+              >
+                <option value="ALL">Statuts ({dossiers.length})</option>
+                <option value="RECEPTIONNE">Réceptionné</option>
+                <option value="OUVERT">Ouvert</option>
+                <option value="EN_DEDOUANEMENT">En Dédouanement</option>
+                <option value="BON_A_DELIVRER">BAD</option>
+                <option value="TRANSMIS_POUR_PAIEMENT">Transmis pour paiement</option>
+                <option value="SORTI_PORT">Sorti Port</option>
+                <option value="SOLDE_ARCHIVE">Soldé</option>
+              </select>
             </div>
-            <select
-              value={statusFilter}
-              onChange={e => setStatusFilter(e.target.value as any)}
-              className="bg-white border border-slate-300 rounded-xl px-2.5 py-2 text-xs text-slate-800 font-semibold focus:outline-none focus:border-cyan-600 cursor-pointer shrink-0"
-              title="Filtrer par statut dossier"
-            >
-              <option value="ALL">Tous ({dossiers.length})</option>
-              <option value="RECEPTIONNE">Réceptionné</option>
-              <option value="OUVERT">Ouvert</option>
-              <option value="EN_DEDOUANEMENT">En Dédouanement</option>
-              <option value="BON_A_DELIVRER">BAD</option>
-              <option value="TRANSMIS_POUR_PAIEMENT">Transmis pour paiement</option>
-              <option value="SORTI_PORT">Sorti Port</option>
-              <option value="SOLDE_ARCHIVE">Soldé</option>
-            </select>
+
+            {/* Port / Aéroport de Débarquement Filter */}
+            <div className="space-y-1.5 pt-1 border-t border-slate-100">
+              <div className="flex items-center justify-between gap-2">
+                <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
+                  <Anchor className="h-3.5 w-3.5 text-cyan-700" />
+                  <span>Port / Aéroport de Débarquement</span>
+                </label>
+                {(portFilter !== 'ALL' || statusFilter !== 'ALL' || searchTerm.trim() !== '') && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPortFilter('ALL');
+                      setStatusFilter('ALL');
+                      setSearchTerm('');
+                    }}
+                    className="text-[10px] font-bold text-cyan-700 hover:text-cyan-900 underline cursor-pointer"
+                  >
+                    Réinitialiser ({filteredDossiers.length}/{dossiers.length})
+                  </button>
+                )}
+              </div>
+
+              <select
+                value={portFilter}
+                onChange={e => setPortFilter(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-2 text-xs text-slate-800 font-semibold focus:outline-none focus:bg-white focus:border-cyan-600 cursor-pointer"
+                title="Filtrer par Port ou Aéroport de Débarquement"
+              >
+                <option value="ALL">Tous les Ports / Aéroports ({dossiers.length})</option>
+                {PORT_PRESETS.map(port => {
+                  const count = dossiers.filter(d => matchesPort(d.portOfDischarge, port.key)).length;
+                  return (
+                    <option key={port.key} value={port.key}>
+                      {port.label} ({count})
+                    </option>
+                  );
+                })}
+                {customPorts.map(cp => {
+                  const count = dossiers.filter(d => matchesPort(d.portOfDischarge, cp)).length;
+                  return (
+                    <option key={cp} value={cp}>
+                      {cp} ({count})
+                    </option>
+                  );
+                })}
+              </select>
+
+              {/* Quick clickable port filter buttons */}
+              <div className="flex flex-wrap gap-1 pt-0.5">
+                {[
+                  { key: 'ALL', label: 'Tous' },
+                  { key: 'skikda', label: 'Skikda' },
+                  { key: 'annaba', label: 'Annaba' },
+                  { key: 'bejaia', label: 'Béjaïa' },
+                  { key: 'alger', label: 'Alger' },
+                  { key: 'oran', label: 'Oran' },
+                  { key: 'djendjen', label: 'Djendjen' }
+                ].map(item => {
+                  const isActive = portFilter === item.key;
+                  const count = item.key === 'ALL'
+                    ? dossiers.length
+                    : dossiers.filter(d => matchesPort(d.portOfDischarge, item.key)).length;
+                  return (
+                    <button
+                      key={item.key}
+                      type="button"
+                      onClick={() => setPortFilter(item.key)}
+                      className={`px-2 py-0.5 rounded-md text-[10px] font-bold border transition-colors cursor-pointer ${
+                        isActive
+                          ? 'bg-cyan-600 text-white border-cyan-600 shadow-2xs'
+                          : 'bg-white text-slate-600 border-slate-200 hover:border-cyan-400 hover:text-cyan-800'
+                      }`}
+                    >
+                      {item.label} <span className={isActive ? 'text-cyan-100' : 'text-slate-400'}>({count})</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
           <div className="space-y-2 max-h-[650px] overflow-y-auto pr-1">
-            {filteredDossiers.map(dossier => {
-              const isSelected = selectedDossier?.id === dossier.id;
-              const dossierCheques = cheques.filter(c => c.dossierNumber.toLowerCase() === dossier.dossierNumber.toLowerCase());
-              const debours = dossierCheques.filter(c => c.direction === 'EMIS').reduce((s, c) => s + c.amount, 0);
-              const statusCfg = DOSSIER_STATUS_CONFIG[dossier.status] || {
-                label: dossier.status,
-                textClass: 'text-slate-700 font-semibold',
-                bgClass: 'bg-slate-100',
-                borderClass: 'border-slate-200'
-              };
-
-              return (
-                <div
-                  key={dossier.id}
-                  onClick={() => setSelectedDossierId(dossier.id)}
-                  className={`p-4 rounded-xl border transition-all cursor-pointer ${
-                    isSelected
-                      ? 'bg-white border-cyan-600 shadow-md shadow-cyan-600/10 ring-1 ring-cyan-600'
-                      : 'bg-white border-slate-200 hover:border-slate-300 shadow-xs'
-                  }`}
+            {filteredDossiers.length === 0 ? (
+              <div className="bg-white border border-slate-200 rounded-xl p-6 text-center space-y-2 shadow-2xs">
+                <Anchor className="h-6 w-6 text-slate-300 mx-auto" />
+                <p className="text-xs font-semibold text-slate-600">
+                  Aucun dossier trouvé pour ce port ou filtre.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPortFilter('ALL');
+                    setStatusFilter('ALL');
+                    setSearchTerm('');
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-cyan-50 hover:bg-cyan-100 text-cyan-800 text-xs font-bold border border-cyan-200 cursor-pointer"
                 >
-                  <div className="flex items-center justify-between gap-1">
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-cyan-800 block">Fournisseur</span>
-                      <span className="text-xs font-bold text-slate-900">
-                        {dossier.dossierNumber}
+                  Afficher tous les dossiers
+                </button>
+              </div>
+            ) : (
+              filteredDossiers.map(dossier => {
+                const isSelected = selectedDossier?.id === dossier.id;
+                const dossierCheques = cheques.filter(c => c.dossierNumber.toLowerCase() === dossier.dossierNumber.toLowerCase());
+                const debours = dossierCheques.filter(c => c.direction === 'EMIS').reduce((s, c) => s + c.amount, 0);
+                const statusCfg = DOSSIER_STATUS_CONFIG[dossier.status] || {
+                  label: dossier.status,
+                  textClass: 'text-slate-700 font-semibold',
+                  bgClass: 'bg-slate-100',
+                  borderClass: 'border-slate-200'
+                };
+
+                return (
+                  <div
+                    key={dossier.id}
+                    onClick={() => setSelectedDossierId(dossier.id)}
+                    className={`p-4 rounded-xl border transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-white border-cyan-600 shadow-md shadow-cyan-600/10 ring-1 ring-cyan-600'
+                        : 'bg-white border-slate-200 hover:border-slate-300 shadow-xs'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-1">
+                      <div>
+                        <span className="text-[10px] uppercase font-bold text-cyan-800 block">Fournisseur</span>
+                        <span className="text-xs font-bold text-slate-900">
+                          {dossier.dossierNumber}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                        <span className={`text-[10px] px-2 py-0.5 rounded-md font-semibold border ${statusCfg.bgClass} ${statusCfg.textClass} ${statusCfg.borderClass}`}>
+                          {statusCfg.label}
+                        </span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 font-semibold border border-slate-200">
+                          {dossier.regime.replace('_', ' ')}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onPrintDossier(dossier);
+                          }}
+                          className="p-1 rounded-md text-slate-400 hover:text-cyan-700 hover:bg-cyan-50 transition-colors cursor-pointer"
+                          title="Imprimer la fiche de ce dossier"
+                        >
+                          <Printer className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDossierPendingDelete(dossier);
+                          }}
+                          className="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                          title="Supprimer ce dossier"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="text-xs font-bold text-slate-800 mt-2 truncate flex items-center gap-1.5" title={dossier.clientName}>
+                      <span className="text-[10px] text-slate-500 font-medium">N° BC:</span>
+                      <span className="font-mono text-cyan-800 font-bold">{dossier.clientName}</span>
+                    </div>
+
+                    <div className="text-[11px] text-slate-500 mt-1 flex items-center justify-between gap-2 font-medium flex-wrap">
+                      <span className="font-mono">B/L: {dossier.blNumber}</span>
+                      {dossier.portOfDischarge && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-50 text-cyan-900 border border-cyan-200 font-semibold truncate max-w-[160px]" title={dossier.portOfDischarge}>
+                          ⚓ {dossier.portOfDischarge}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 text-xs">
+                      <span className="text-slate-500 font-medium">{dossierCheques.length} chèque(s)</span>
+                      <span className="font-mono text-slate-900 font-bold">
+                        {formatAmount(debours, selectedCurrency)}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1.5 flex-wrap justify-end">
-                      <span className={`text-[10px] px-2 py-0.5 rounded-md font-semibold border ${statusCfg.bgClass} ${statusCfg.textClass} ${statusCfg.borderClass}`}>
-                        {statusCfg.label}
-                      </span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 font-semibold border border-slate-200">
-                        {dossier.regime.replace('_', ' ')}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onPrintDossier(dossier);
-                        }}
-                        className="p-1 rounded-md text-slate-400 hover:text-cyan-700 hover:bg-cyan-50 transition-colors cursor-pointer"
-                        title="Imprimer la fiche de ce dossier"
-                      >
-                        <Printer className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const count = dossierCheques.length;
-                          const confirmMsg = count > 0
-                            ? `Êtes-vous sûr de vouloir supprimer définitivement le dossier du fournisseur ${dossier.dossierNumber} (BC: ${dossier.clientName}) ?\n\nAttention : ce dossier contient ${count} chèque(s) rattaché(s). Cette action est irréversible.`
-                            : `Êtes-vous sûr de vouloir supprimer définitivement le dossier du fournisseur ${dossier.dossierNumber} (BC: ${dossier.clientName}) ?\n\nCette action est irréversible.`;
-                          if (window.confirm(confirmMsg)) {
-                            onDeleteDossier(dossier.id);
-                          }
-                        }}
-                        className="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-                        title="Supprimer ce dossier"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
                   </div>
-
-                  <div className="text-xs font-bold text-slate-800 mt-2 truncate flex items-center gap-1.5" title={dossier.clientName}>
-                    <span className="text-[10px] text-slate-500 font-medium">N° BC:</span>
-                    <span className="font-mono text-cyan-800 font-bold">{dossier.clientName}</span>
-                  </div>
-
-                  <div className="text-[11px] text-slate-500 mt-1 flex items-center gap-1.5 font-mono font-medium">
-                    <span>B/L: {dossier.blNumber}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 text-xs">
-                    <span className="text-slate-500 font-medium">{dossierCheques.length} chèque(s)</span>
-                    <span className="font-mono text-slate-900 font-bold">
-                      {formatAmount(debours, selectedCurrency)}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
 
@@ -329,15 +473,7 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
 
                   <button
                     type="button"
-                    onClick={() => {
-                      const count = attachedCheques.length;
-                      const confirmMsg = count > 0
-                        ? `Êtes-vous sûr de vouloir supprimer définitivement le dossier ${selectedDossier.dossierNumber} (${selectedDossier.clientName}) ?\n\nAttention : ce dossier contient ${count} chèque(s) rattaché(s). Cette action est irréversible.`
-                        : `Êtes-vous sûr de vouloir supprimer définitivement le dossier ${selectedDossier.dossierNumber} (${selectedDossier.clientName}) ?\n\nCette action est irréversible.`;
-                      if (window.confirm(confirmMsg)) {
-                        onDeleteDossier(selectedDossier.id);
-                      }
-                    }}
+                    onClick={() => setDossierPendingDelete(selectedDossier)}
                     className="px-3 py-1.5 rounded-xl bg-white hover:bg-rose-50 text-rose-600 hover:text-rose-700 text-xs font-semibold flex items-center gap-1.5 border border-slate-300 hover:border-rose-300 transition-colors shadow-2xs cursor-pointer"
                     title="Supprimer définitivement ce dossier"
                   >
@@ -453,9 +589,7 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              if (window.confirm(`Supprimer le chèque n° ${chq.chequeNumber} (${formatAmount(chq.amount, chq.currency)}) du dossier ${selectedDossier.dossierNumber} ?\n\nCette action est irréversible (à utiliser en cas d'erreur de saisie).`)) {
-                                onDeleteCheque(chq.id);
-                              }
+                              setChequePendingDelete(chq);
                             }}
                             className="px-2.5 py-1.5 rounded-lg bg-white hover:bg-rose-50 text-slate-400 hover:text-rose-600 border border-slate-200 hover:border-rose-300 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
                             title="Supprimer ce chèque en cas d'erreur"
@@ -473,10 +607,108 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
           </div>
         ) : (
           <div className="lg:col-span-8 bg-white border border-slate-200 rounded-2xl p-12 text-center text-slate-400 text-xs italic">
-            Sélectionnez un dossier à gauche pour consulter son historique complet.
+            {filteredDossiers.length === 0
+              ? 'Aucun dossier ne correspond aux critères de recherche ou de port sélectionnés.'
+              : 'Sélectionnez un dossier à gauche pour consulter son historique complet.'}
           </div>
         )}
       </div>
+
+      {/* Modal de confirmation de suppression de dossier */}
+      {dossierPendingDelete && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-rose-50 text-rose-600 border border-rose-200">
+                  <AlertTriangle className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">Supprimer le dossier</h3>
+                  <p className="text-xs text-slate-500 font-medium">Confirmation requise</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDossierPendingDelete(null)}
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="text-xs text-slate-700 leading-relaxed">
+              Êtes-vous sûr de vouloir supprimer définitivement le dossier <strong>{dossierPendingDelete.dossierNumber}</strong> (BC: <span className="font-mono font-bold">{dossierPendingDelete.clientName}</span>) ? Cette action est irréversible.
+            </p>
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setDossierPendingDelete(null)}
+                className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold cursor-pointer"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onDeleteDossier(dossierPendingDelete.id);
+                  setDossierPendingDelete(null);
+                }}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold cursor-pointer shadow-sm"
+              >
+                Supprimer définitivement
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmation de suppression de chèque */}
+      {chequePendingDelete && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-rose-50 text-rose-600 border border-rose-200">
+                  <AlertTriangle className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">Supprimer le chèque</h3>
+                  <p className="text-xs text-slate-500 font-medium">Confirmation requise</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setChequePendingDelete(null)}
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="text-xs text-slate-700 leading-relaxed">
+              Êtes-vous sûr de vouloir supprimer définitivement le chèque n° <strong className="font-mono">{chequePendingDelete.chequeNumber}</strong> ({formatAmount(chequePendingDelete.amount, chequePendingDelete.currency)}) ?
+            </p>
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setChequePendingDelete(null)}
+                className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold cursor-pointer"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onDeleteCheque(chequePendingDelete.id);
+                  setChequePendingDelete(null);
+                }}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold cursor-pointer shadow-sm"
+              >
+                Supprimer définitivement
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
