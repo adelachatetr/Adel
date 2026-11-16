@@ -334,8 +334,8 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
               <span className="font-semibold text-slate-900">{dossier.portOfDischarge}</span>
             </div>
             <div>
-              <span className="text-slate-500 block text-[10px] uppercase font-bold">Navire</span>
-              <span className="font-semibold text-slate-900">{dossier.vesselName || 'Non spécifié'}</span>
+              <span className="text-slate-500 block text-[10px] uppercase font-bold">Mode de livraison</span>
+              <span className="font-semibold text-slate-900 font-mono">{dossier.deliveryMode || dossier.vesselName || 'Non spécifié'}</span>
             </div>
             <div>
               <span className="text-slate-500 block text-[10px] uppercase font-bold">Conteneurs Déclarés</span>

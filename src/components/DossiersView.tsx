@@ -100,6 +100,7 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
       normalizeText(d.clientName).includes(q) ||
       normalizeText(d.blNumber).includes(q) ||
       normalizeText(d.declarationNumber).includes(q) ||
+      normalizeText(d.deliveryMode).includes(q) ||
       normalizeText(d.vesselName).includes(q) ||
       normalizeText(d.portOfDischarge).includes(q)
     );
@@ -447,9 +448,9 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                     <span>
                       {normalizeText(selectedDossier.portOfDischarge).includes('aeroport') ? 'Aéroport' : 'Port'} : <strong>{selectedDossier.portOfDischarge}</strong>
                     </span>
-                    {selectedDossier.vesselName && (
+                    {(selectedDossier.deliveryMode || selectedDossier.vesselName) && (
                       <span>
-                        {selectedDossier.transportDocType === 'LTA' ? 'Vol / Cie' : 'Navire'} : <strong>{selectedDossier.vesselName}</strong>
+                        Mode de livraison : <strong className="font-mono">{selectedDossier.deliveryMode || selectedDossier.vesselName}</strong>
                       </span>
                     )}
                     <span>Marchandise : {selectedDossier.goodsDescription}</span>

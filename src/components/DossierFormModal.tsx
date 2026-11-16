@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, FolderPlus, Check, Trash2, Printer, Anchor, Landmark, Calendar, AlertCircle } from 'lucide-react';
-import { TransitDossier, DossierStatus } from '../types/transit';
+import { X, FolderPlus, Check, Trash2, Printer, Anchor, Landmark, AlertCircle } from 'lucide-react';
+import { TransitDossier, DossierStatus, DeliveryMode } from '../types/transit';
 
 interface DossierFormModalProps {
   isOpen: boolean;
@@ -26,7 +26,7 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
   const [transportDocType, setTransportDocType] = useState<'BL' | 'LTA'>('BL');
   const [blNumber, setBlNumber] = useState('');
   const [declarationNumber, setDeclarationNumber] = useState('');
-  const [vesselName, setVesselName] = useState('');
+  const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>('CFR');
   const [eta, setEta] = useState('');
   const [berthingDate, setBerthingDate] = useState('');
   const [bankReceptionDate, setBankReceptionDate] = useState('');
@@ -35,8 +35,10 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
   const [containerCount, setContainerCount] = useState<number>(1);
   const [status, setStatus] = useState<DossierStatus>('OUVERT');
   const [formError, setFormError] = useState<string | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   useEffect(() => {
+    setConfirmingDelete(false);
     if (editingDossier) {
       setDossierNumber(editingDossier.dossierNumber);
       setClientName(editingDossier.clientName);
@@ -45,7 +47,11 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
       setTransportDocType(editingDossier.transportDocType || 'BL');
       setBlNumber(editingDossier.blNumber);
       setDeclarationNumber(editingDossier.declarationNumber || '');
-      setVesselName(editingDossier.vesselName || '');
+      const existingMode = editingDossier.deliveryMode
+        || (['CFR', 'FOB', 'CPL'].includes((editingDossier.vesselName || '').toUpperCase())
+          ? (editingDossier.vesselName!.toUpperCase() as DeliveryMode)
+          : 'CFR');
+      setDeliveryMode(existingMode);
       setEta(editingDossier.eta || '');
       setBerthingDate(editingDossier.berthingDate || '');
       setBankReceptionDate(editingDossier.bankReceptionDate || '');
@@ -62,7 +68,7 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
       setTransportDocType('BL');
       setBlNumber('');
       setDeclarationNumber('');
-      setVesselName('');
+      setDeliveryMode('CFR');
       setEta('');
       setBerthingDate('');
       setBankReceptionDate('');
@@ -93,7 +99,8 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
       transportDocType,
       blNumber: blNumber.trim(),
       declarationNumber: declarationNumber.trim() || undefined,
-      vesselName: vesselName.trim() || undefined,
+      deliveryMode,
+      vesselName: deliveryMode,
       eta: eta || undefined,
       berthingDate: berthingDate || undefined,
       bankReceptionDate: bankReceptionDate || undefined,
@@ -217,15 +224,17 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-700 font-semibold mb-1">
-                {transportDocType === 'LTA' ? 'Compagnie Aérienne / N° Vol' : 'Navire / Compagnie Maritime'}
+                Mode de livraison
               </label>
-              <input
-                type="text"
-                value={vesselName}
-                onChange={e => setVesselName(e.target.value)}
-                placeholder={transportDocType === 'LTA' ? 'ex: AIR ALGÉRIE CARGO / AH1002' : 'ex: MSC LEANNE V.402'}
-                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-medium focus:border-cyan-600"
-              />
+              <select
+                value={deliveryMode}
+                onChange={e => setDeliveryMode(e.target.value as DeliveryMode)}
+                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-bold focus:border-cyan-600 cursor-pointer"
+              >
+                <option value="CFR">CFR</option>
+                <option value="FOB">FOB</option>
+                <option value="CPL">CPL</option>
+              </select>
             </div>
 
             <div>
@@ -457,20 +466,39 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
               )}
 
               {editingDossier && onDelete && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (window.confirm(`Supprimer définitivement le dossier ${editingDossier.dossierNumber} (${editingDossier.clientName}) ?\n\nCette action est irréversible.`)) {
-                      onDelete(editingDossier.id);
-                      onClose();
-                    }
-                  }}
-                  className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl border border-rose-200 flex items-center gap-1.5 transition-colors cursor-pointer"
-                  title="Supprimer ce dossier"
-                >
-                  <Trash2 className="h-4 w-4 text-rose-600" />
-                  <span>Supprimer</span>
-                </button>
+                confirmingDelete ? (
+                  <div className="flex items-center gap-1.5 bg-rose-50 border border-rose-200 rounded-xl px-2.5 py-1.5">
+                    <span className="text-[11px] font-bold text-rose-800">Confirmer ?</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onDelete(editingDossier.id);
+                        setConfirmingDelete(false);
+                        onClose();
+                      }}
+                      className="px-2 py-0.5 bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold rounded-lg cursor-pointer"
+                    >
+                      Supprimer
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmingDelete(false)}
+                      className="px-2 py-0.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-[11px] font-semibold rounded-lg cursor-pointer"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmingDelete(true)}
+                    className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl border border-rose-200 flex items-center gap-1.5 transition-colors cursor-pointer"
+                    title="Supprimer ce dossier"
+                  >
+                    <Trash2 className="h-4 w-4 text-rose-600" />
+                    <span>Supprimer</span>
+                  </button>
+                )
               )}
             </div>
 

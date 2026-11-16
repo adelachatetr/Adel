@@ -83,6 +83,8 @@ export type DossierStatus =
   | 'SORTI_PORT'                // Marchandise sortie du port / livrée
   | 'SOLDE_ARCHIVE';            // Dossier financièrement soldé & archivé
 
+export type DeliveryMode = 'CFR' | 'FOB' | 'CPL';
+
 export interface TransitDossier {
   id: string;
   dossierNumber: string;
@@ -92,7 +94,8 @@ export interface TransitDossier {
   transportDocType?: 'BL' | 'LTA'; // Choix entre B/L Connaissement ou LTA
   blNumber: string;            // Bill of Lading (Connaissement) ou LTA (Lettre de Transport Aérien)
   declarationNumber?: string;  // N° Déclaration en Douane (DUM / DAU / Sommier)
-  vesselName?: string;         // Nom du navire ou N° de vol
+  deliveryMode?: DeliveryMode; // Mode de livraison : CFR, FOB, CPL
+  vesselName?: string;         // Référence héritée / mode de livraison
   eta?: string;                // Date arrivée prévue
   berthingDate?: string;       // Date d'accostage du navire au port
   bankReceptionDate?: string;  // Date de réception du dossier par la banque
