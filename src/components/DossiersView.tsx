@@ -13,7 +13,7 @@ import {
   Anchor
 } from 'lucide-react';
 import { TransitDossier, TransitCheque, DossierStatus } from '../types/transit';
-import { formatAmount, formatShortDate, CATEGORY_LABELS, STATUS_CONFIG, DOSSIER_STATUS_CONFIG, CHEQUE_NATURE_LABELS } from '../utils/storage';
+import { formatAmount, formatEuroAmount, formatShortDate, CATEGORY_LABELS, STATUS_CONFIG, DOSSIER_STATUS_CONFIG, CHEQUE_NATURE_LABELS } from '../utils/storage';
 
 interface DossiersViewProps {
   dossiers: TransitDossier[];
@@ -327,9 +327,11 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                         <span className={`text-[10px] px-2 py-0.5 rounded-md font-semibold border ${statusCfg.bgClass} ${statusCfg.textClass} ${statusCfg.borderClass}`}>
                           {statusCfg.label}
                         </span>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 font-semibold border border-slate-200">
-                          {dossier.regime.replace('_', ' ')}
-                        </span>
+                        {dossier.bcAmountEur !== undefined && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-900 font-mono font-bold border border-blue-200">
+                            {formatEuroAmount(dossier.bcAmountEur)}
+                          </span>
+                        )}
                         <button
                           type="button"
                           onClick={(e) => {
@@ -443,6 +445,11 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                     <span className="font-mono text-cyan-900 font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-300">
                       {selectedDossier.clientName}
                     </span>
+                    {selectedDossier.bcAmountEur !== undefined && (
+                      <span className="font-mono text-blue-900 font-bold bg-blue-50 px-2 py-0.5 rounded border border-blue-200 text-xs">
+                        Montant BC : {formatEuroAmount(selectedDossier.bcAmountEur)}
+                      </span>
+                    )}
                   </h2>
                   <div className="text-xs text-slate-500 mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 font-medium">
                     <span>

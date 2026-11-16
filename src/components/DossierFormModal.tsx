@@ -22,7 +22,7 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
   const [dossierNumber, setDossierNumber] = useState('');
   const [clientName, setClientName] = useState('');
   const [clientContact, setClientContact] = useState('');
-  const [regime, setRegime] = useState<TransitDossier['regime']>('IMPORT_DIRECT');
+  const [bcAmountEur, setBcAmountEur] = useState<string>('');
   const [transportDocType, setTransportDocType] = useState<'BL' | 'LTA'>('BL');
   const [blNumber, setBlNumber] = useState('');
   const [declarationNumber, setDeclarationNumber] = useState('');
@@ -43,7 +43,11 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
       setDossierNumber(editingDossier.dossierNumber);
       setClientName(editingDossier.clientName);
       setClientContact(editingDossier.clientContact || '');
-      setRegime(editingDossier.regime);
+      setBcAmountEur(
+        editingDossier.bcAmountEur !== undefined && editingDossier.bcAmountEur !== null
+          ? editingDossier.bcAmountEur.toString()
+          : ''
+      );
       setTransportDocType(editingDossier.transportDocType || 'BL');
       setBlNumber(editingDossier.blNumber);
       setDeclarationNumber(editingDossier.declarationNumber || '');
@@ -64,7 +68,7 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
       setDossierNumber('');
       setClientName('');
       setClientContact('');
-      setRegime('IMPORT_DIRECT');
+      setBcAmountEur('');
       setTransportDocType('BL');
       setBlNumber('');
       setDeclarationNumber('');
@@ -91,11 +95,18 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
       return;
     }
 
+    const rawEuro = bcAmountEur.trim().replace(',', '.');
+    const parsedEuro = rawEuro === '' ? undefined : parseFloat(rawEuro);
+    if (parsedEuro !== undefined && (isNaN(parsedEuro) || parsedEuro < 0)) {
+      setFormError('Veuillez saisir un Montant BC EURO valide.');
+      return;
+    }
+
     onSave({
       dossierNumber: dossierNumber.trim(),
       clientName: clientName.trim(),
       clientContact: clientContact.trim() || undefined,
-      regime,
+      bcAmountEur: parsedEuro,
       transportDocType,
       blNumber: blNumber.trim(),
       declarationNumber: declarationNumber.trim() || undefined,
@@ -151,19 +162,22 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
 
             <div>
               <label className="block text-slate-700 font-semibold mb-1">
-                Régime Douanier
+                Montant BC EURO
               </label>
-              <select
-                value={regime}
-                onChange={e => setRegime(e.target.value as any)}
-                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-medium focus:border-cyan-600"
-              >
-                <option value="IMPORT_DIRECT">Importation Directe (Mise à la consommation)</option>
-                <option value="EXPORT">Exportation Définitive</option>
-                <option value="TRANSIT_SOUS_DOUANE">Transit sous douane (Acquit D15/Passavant)</option>
-                <option value="ADMISSION_TEMPORAIRE">Admission Temporaire (AT)</option>
-                <option value="ENTREPOT">Entrepôt sous douane</option>
-              </select>
+              <div className="flex gap-1.5">
+                <input
+                  type="number"
+                  step="any"
+                  min="0"
+                  value={bcAmountEur}
+                  onChange={e => setBcAmountEur(e.target.value)}
+                  placeholder="0.00"
+                  className="w-full min-w-0 bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-mono font-bold focus:border-cyan-600"
+                />
+                <div className="px-2.5 bg-slate-100 border border-slate-300 rounded-xl text-slate-800 font-mono font-extrabold flex items-center justify-center text-xs select-none shrink-0">
+                  EUR
+                </div>
+              </div>
             </div>
           </div>
 

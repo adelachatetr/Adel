@@ -195,6 +195,14 @@ export function formatAmount(amount: number, currency: string = 'DA'): string {
   return `${formatted}\u00A0${currency}`;
 }
 
+export function formatEuroAmount(amount: number): string {
+  const formatted = new Intl.NumberFormat('fr-FR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount).replace(/\s/g, '\u00A0');
+  return `${formatted}\u00A0€`;
+}
+
 export function formatShortDate(dateStr?: string): string {
   if (!dateStr) return '—';
   try {

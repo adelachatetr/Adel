@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Printer, X, Download } from 'lucide-react';
 import { TransitDossier, TransitCheque } from '../types/transit';
-import { formatAmount, formatShortDate, CATEGORY_LABELS, STATUS_CONFIG, DOSSIER_STATUS_CONFIG, CHEQUE_NATURE_LABELS } from '../utils/storage';
+import { formatAmount, formatEuroAmount, formatShortDate, CATEGORY_LABELS, STATUS_CONFIG, DOSSIER_STATUS_CONFIG, CHEQUE_NATURE_LABELS } from '../utils/storage';
 import { GICA_LOGO_BASE64 } from '../data/logoData';
 
 interface DossierPrintModalProps {
@@ -313,7 +313,7 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
               <span>·</span>
               <span>Statut : <strong className="text-slate-900">{statusCfg.label}</strong></span>
               <span>·</span>
-              <span>Régime : <strong className="text-slate-900">{dossier.regime.replace('_', ' ')}</strong></span>
+              <span>Montant BC EURO : <strong className="text-slate-900 font-mono">{dossier.bcAmountEur !== undefined ? formatEuroAmount(dossier.bcAmountEur) : 'Non renseigné'}</strong></span>
             </div>
           </div>
 

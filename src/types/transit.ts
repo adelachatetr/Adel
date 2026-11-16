@@ -90,7 +90,8 @@ export interface TransitDossier {
   dossierNumber: string;
   clientName: string;
   clientContact?: string;
-  regime: 'IMPORT_DIRECT' | 'EXPORT' | 'TRANSIT_SOUS_DOUANE' | 'ADMISSION_TEMPORAIRE' | 'ENTREPOT';
+  regime?: 'IMPORT_DIRECT' | 'EXPORT' | 'TRANSIT_SOUS_DOUANE' | 'ADMISSION_TEMPORAIRE' | 'ENTREPOT';
+  bcAmountEur?: number;        // Montant du Bon de Commande en EURO (€)
   transportDocType?: 'BL' | 'LTA'; // Choix entre B/L Connaissement ou LTA
   blNumber: string;            // Bill of Lading (Connaissement) ou LTA (Lettre de Transport Aérien)
   declarationNumber?: string;  // N° Déclaration en Douane (DUM / DAU / Sommier)
