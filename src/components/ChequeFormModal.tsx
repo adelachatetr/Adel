@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, Check, Container, FileText } from 'lucide-react';
-import { TransitCheque, TransitDossier, ChequeDirection, ChequeCategory, ChequeStatus } from '../types/transit';
+import { X, Check, Container, FileText, AlertCircle } from 'lucide-react';
+import { TransitCheque, TransitDossier, ChequeDirection, ChequeCategory, ChequeStatus, ChequeNature } from '../types/transit';
 import { SHIPPING_LINES, MAJOR_BANKS, TRANSIT_AGENTS } from '../data/mockTransitData';
 
 interface ChequeFormModalProps {
@@ -26,6 +26,7 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
   preselectedDossierNumber,
   preselectedClientName
 }) => {
+  const [chequeNature, setChequeNature] = useState<ChequeNature>('ORDINAIRE');
   const [chequeNumber, setChequeNumber] = useState('');
   const [bankName, setBankName] = useState(defaultBankName || MAJOR_BANKS[0]);
   const [direction, setDirection] = useState<ChequeDirection>('EMIS');
@@ -40,6 +41,7 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
   const [coursierName, setCoursierName] = useState(TRANSIT_AGENTS[0]);
   const [status, setStatus] = useState<ChequeStatus>('EMIS');
   const [observations, setObservations] = useState('');
+  const [formError, setFormError] = useState<string | null>(null);
 
   // Container specific fields
   const [isContainerCaution, setIsContainerCaution] = useState(true);
@@ -51,7 +53,10 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
   const [depotLocation, setDepotLocation] = useState('');
 
   useEffect(() => {
+    setFormError(null);
     if (editingCheque) {
+      const nature: ChequeNature = editingCheque.chequeNature || 'ORDINAIRE';
+      setChequeNature(nature);
       setChequeNumber(editingCheque.chequeNumber);
       setBankName(
         editingCheque.bankName && editingCheque.bankName.toUpperCase().includes('BEA')
@@ -60,7 +65,11 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
       );
       setDirection(editingCheque.direction);
       setCategory(editingCheque.category);
-      setAmount(editingCheque.amount.toString());
+      setAmount(
+        nature === 'A_BLANC' && (editingCheque.amount === 0 || !editingCheque.amount)
+          ? '0.00'
+          : editingCheque.amount.toString()
+      );
       setCurrency(editingCheque.currency || defaultCurrency);
       setDossierNumber(editingCheque.dossierNumber);
       setClientName(editingCheque.clientName);
@@ -83,6 +92,7 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
       }
     } else {
       // New form reset
+      setChequeNature('ORDINAIRE');
       setChequeNumber(`CHQ-${Math.floor(100000 + Math.random() * 900000)}`);
       setBankName(MAJOR_BANKS[0]);
       setDirection('EMIS');
@@ -112,7 +122,7 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
       setFranchiseDays(14);
       setDepotLocation('Terminal à Conteneurs Port');
     }
-  }, [editingCheque, isOpen, preselectedDossierNumber, preselectedClientName, defaultCurrency, dossiers]);
+  }, [editingCheque, isOpen, preselectedDossierNumber, preselectedClientName, defaultCurrency, defaultBankName, dossiers]);
 
   // When dossier changes, auto-fill client
   const handleDossierChange = (dossierNum: string) => {
@@ -145,16 +155,40 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
     }
   };
 
+  const handleChequeNatureChange = (nature: ChequeNature) => {
+    setChequeNature(nature);
+    setFormError(null);
+    if (nature === 'A_BLANC') {
+      setAmount('0.00');
+    } else if (amount === '0.00' || amount === '0') {
+      setAmount('');
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const parsedAmount = parseFloat(amount);
-    if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      alert('Veuillez saisir un montant valide');
+    setFormError(null);
+
+    const normalizedRaw = amount.trim().replace(',', '.');
+    const parsedAmount = normalizedRaw === ''
+      ? (chequeNature === 'A_BLANC' ? 0 : NaN)
+      : parseFloat(normalizedRaw);
+
+    if (chequeNature === 'A_BLANC') {
+      if (isNaN(parsedAmount) || parsedAmount < 0) {
+        setFormError('Pour un chèque à blanc, le montant doit être 0.00 DA ou un montant positif.');
+        return;
+      }
+    } else if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      setFormError('Veuillez saisir un montant valide supérieur à 0 DA.');
       return;
     }
 
+    const finalChequeNumber = chequeNumber.trim() || `CHQ-${Math.floor(100000 + Math.random() * 900000)}`;
+
     const payload: Partial<TransitCheque> = {
-      chequeNumber: chequeNumber.trim(),
+      chequeNumber: finalChequeNumber,
+      chequeNature,
       bankName: (bankName && bankName.toUpperCase().includes('BEA'))
         ? bankName.trim()
         : 'BEA (Banque Extérieure d\'Algérie)',
@@ -219,21 +253,38 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-4 text-xs">
+          {formError && (
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-2 text-rose-800 font-semibold text-xs">
+              <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
+              <span>{formError}</span>
+            </div>
+          )}
           
           {/* Section 1: Identification du chèque & flux */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="block text-slate-700 font-semibold mb-1">
-                N° de Chèque <span className="text-rose-500">*</span>
+                Nature de chèque <span className="text-rose-500">*</span>
               </label>
-              <input
-                type="text"
-                required
-                value={chequeNumber}
-                onChange={e => setChequeNumber(e.target.value)}
-                placeholder="ex: CHQ-804192"
-                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-mono font-bold focus:outline-none focus:border-cyan-600"
-              />
+              <select
+                value={chequeNature}
+                onChange={e => handleChequeNatureChange(e.target.value as ChequeNature)}
+                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-bold focus:outline-none focus:border-cyan-600 cursor-pointer"
+              >
+                <option value="ORDINAIRE">Chèque ordinaire</option>
+                <option value="VISE">Chèque visé</option>
+                <option value="A_BLANC">Chèque à blanc</option>
+              </select>
+              <div className="mt-1.5 flex items-center gap-1.5">
+                <span className="text-[10px] font-semibold text-slate-500 whitespace-nowrap">Réf. chèque :</span>
+                <input
+                  type="text"
+                  value={chequeNumber}
+                  onChange={e => setChequeNumber(e.target.value)}
+                  placeholder="ex: CHQ-804192"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-[11px] text-slate-800 font-mono font-semibold focus:outline-none focus:border-cyan-600 focus:bg-white"
+                />
+              </div>
             </div>
 
             <div>
@@ -274,23 +325,43 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
           {/* Section 2: Montant & Nature de la dépense */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="sm:col-span-2">
-              <label className="block text-slate-700 font-semibold mb-1">
-                Montant du Chèque <span className="text-rose-500">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-slate-700 font-semibold">
+                  Montant du Chèque {chequeNature !== 'A_BLANC' && <span className="text-rose-500">*</span>}
+                </label>
+                {chequeNature === 'A_BLANC' && (
+                  <span className="text-[10px] bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded border border-amber-300">
+                    Chèque à blanc · 0.00 par défaut
+                  </span>
+                )}
+              </div>
               <div className="flex gap-2">
                 <input
                   type="number"
                   step="any"
-                  required
+                  min={chequeNature === 'A_BLANC' ? '0' : '0.01'}
+                  required={chequeNature !== 'A_BLANC'}
                   placeholder="0.00"
                   value={amount}
-                  onChange={e => setAmount(e.target.value)}
-                  className="flex-1 bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-mono font-bold text-sm focus:outline-none focus:border-cyan-600"
+                  onChange={e => {
+                    setAmount(e.target.value);
+                    if (formError) setFormError(null);
+                  }}
+                  className={`flex-1 bg-white border rounded-xl p-2.5 text-slate-900 font-mono font-bold text-sm focus:outline-none focus:border-cyan-600 ${
+                    chequeNature === 'A_BLANC' ? 'border-amber-300 bg-amber-50/30' : 'border-slate-300'
+                  }`}
                 />
                 <div className="w-24 bg-slate-100 border border-slate-300 rounded-xl px-3 py-2.5 text-slate-900 font-mono font-extrabold flex items-center justify-center text-center text-xs select-none">
                   DA
                 </div>
               </div>
+              {chequeNature === 'A_BLANC' && (
+                <p className="text-[11px] text-amber-800 font-medium mt-1">
+                  {editingCheque
+                    ? 'Saisissez le montant définitif ci-dessus dès réception des factures.'
+                    : 'Le montant reste à 0.00 à l\'émission. Dès réception des factures, modifiez ce chèque pour saisir le montant.'}
+                </p>
+              )}
             </div>
 
             <div>

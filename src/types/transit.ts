@@ -1,5 +1,7 @@
 export type ChequeDirection = 'EMIS' | 'RECU';
 
+export type ChequeNature = 'ORDINAIRE' | 'VISE' | 'A_BLANC';
+
 export type ChequeCategory = 
   | 'CAUTION_CONTENEUR'    // Consignation conteneur maritime (caution à récupérer)
   | 'DROITS_DOUANE'        // Droits et taxes Trésor Public / Douane
@@ -51,6 +53,7 @@ export interface ChequeAuditLog {
 export interface TransitCheque {
   id: string;
   chequeNumber: string;
+  chequeNature?: ChequeNature;
   bankName: string;
   direction: ChequeDirection;
   category: ChequeCategory;

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Printer, X, Download } from 'lucide-react';
 import { TransitDossier, TransitCheque } from '../types/transit';
-import { formatAmount, formatShortDate, CATEGORY_LABELS, STATUS_CONFIG, DOSSIER_STATUS_CONFIG } from '../utils/storage';
+import { formatAmount, formatShortDate, CATEGORY_LABELS, STATUS_CONFIG, DOSSIER_STATUS_CONFIG, CHEQUE_NATURE_LABELS } from '../utils/storage';
 import { GICA_LOGO_BASE64 } from '../data/logoData';
 
 interface DossierPrintModalProps {
@@ -400,7 +400,7 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
               <thead>
                 <tr className="border-y-2 border-slate-900 bg-slate-100 font-bold text-slate-800">
                   <th className="py-2 px-2 border-r border-slate-200">N°</th>
-                  <th className="py-2 px-2 border-r border-slate-200">N° Chèque & Banque</th>
+                  <th className="py-2 px-2 border-r border-slate-200">Nature de chèque & Banque</th>
                   <th className="py-2 px-2 border-r border-slate-200">Nature de la Dépense</th>
                   <th className="py-2 px-2 border-r border-slate-200">Bénéficiaire</th>
                   <th className="py-2 px-2 border-r border-slate-200">Déclarant / Coursier</th>
@@ -419,13 +419,16 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
                   attachedCheques.map((chq, index) => {
                     const cat = CATEGORY_LABELS[chq.category];
                     const chqStatusCfg = STATUS_CONFIG[chq.status] || STATUS_CONFIG.BROUILLON;
+                    const natureLabel = CHEQUE_NATURE_LABELS[chq.chequeNature || 'ORDINAIRE']?.label || 'Chèque ordinaire';
+                    const isBlankPending = chq.chequeNature === 'A_BLANC' && chq.amount === 0;
                     return (
                       <tr key={chq.id} className="text-slate-800">
                         <td className="py-2 px-2 border-r border-slate-200 font-mono text-[11px]">
                           {index + 1}
                         </td>
-                        <td className="py-2 px-2 border-r border-slate-200 font-mono font-bold">
-                          {chq.chequeNumber}
+                        <td className="py-2 px-2 border-r border-slate-200">
+                          <div className="font-bold text-slate-900 text-[11px]">{natureLabel}</div>
+                          <div className="font-mono text-[10px] text-slate-600">{chq.chequeNumber}</div>
                           <div className="text-[10px] font-sans font-normal text-slate-500">{chq.bankName}</div>
                         </td>
                         <td className="py-2 px-2 border-r border-slate-200 font-medium">
@@ -448,7 +451,7 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
                           </span>
                         </td>
                         <td className="py-2 px-3 text-right font-mono font-bold whitespace-nowrap text-slate-900">
-                          {formatAmount(chq.amount, chq.currency)}
+                          {isBlankPending ? `0,00\u00A0${chq.currency}` : formatAmount(chq.amount, chq.currency)}
                         </td>
                       </tr>
                     );

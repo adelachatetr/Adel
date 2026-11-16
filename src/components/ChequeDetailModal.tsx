@@ -11,7 +11,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { TransitCheque, ChequeStatus } from '../types/transit';
-import { formatAmount, formatShortDate, STATUS_CONFIG, CATEGORY_LABELS } from '../utils/storage';
+import { formatAmount, formatShortDate, STATUS_CONFIG, CATEGORY_LABELS, CHEQUE_NATURE_LABELS } from '../utils/storage';
 
 interface ChequeDetailModalProps {
   cheque: TransitCheque | null;
@@ -31,11 +31,14 @@ export const ChequeDetailModal: React.FC<ChequeDetailModalProps> = ({
   onDeleteCheque
 }) => {
   const [newComment, setNewComment] = useState('');
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   if (!cheque) return null;
 
   const statusCfg = STATUS_CONFIG[cheque.status] || STATUS_CONFIG.BROUILLON;
   const catCfg = CATEGORY_LABELS[cheque.category];
+  const natureCfg = CHEQUE_NATURE_LABELS[cheque.chequeNature || 'ORDINAIRE'];
+  const isBlankPending = cheque.chequeNature === 'A_BLANC' && cheque.amount === 0;
   const container = cheque.containerInfo;
 
   const handleAddComment = (e: React.FormEvent) => {
@@ -55,8 +58,11 @@ export const ChequeDetailModal: React.FC<ChequeDetailModalProps> = ({
               <FileText className="h-5 w-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-base font-bold text-slate-900">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`text-xs px-2.5 py-0.5 rounded-md border font-bold ${natureCfg.bgClass} ${natureCfg.textClass} ${natureCfg.borderClass}`}>
+                  {natureCfg.label}
+                </span>
+                <span className="font-mono text-sm font-bold text-slate-700">
                   {cheque.chequeNumber}
                 </span>
                 <span className={`text-xs px-2.5 py-0.5 rounded-md border font-medium ${statusCfg.bgClass} ${statusCfg.textClass} ${statusCfg.borderClass}`}>
@@ -107,11 +113,29 @@ export const ChequeDetailModal: React.FC<ChequeDetailModalProps> = ({
           
           {/* Main Info Strip */}
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-            <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+            <div className={`p-3.5 rounded-xl border ${isBlankPending ? 'bg-amber-50/70 border-amber-300' : 'bg-slate-50 border-slate-200'}`}>
               <span className="text-[11px] text-slate-500 font-semibold">Montant du Titre</span>
-              <div className="text-lg font-bold font-mono text-slate-900 mt-0.5">
-                {formatAmount(cheque.amount, cheque.currency)}
-              </div>
+              {isBlankPending ? (
+                <div className="mt-0.5 space-y-1">
+                  <div className="text-lg font-bold font-mono text-amber-800">
+                    0,00&nbsp;{cheque.currency}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      onEdit(cheque);
+                    }}
+                    className="px-2 py-0.5 rounded-md bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-bold cursor-pointer transition-colors"
+                  >
+                    Facture reçue ? Saisir le montant
+                  </button>
+                </div>
+              ) : (
+                <div className="text-lg font-bold font-mono text-slate-900 mt-0.5">
+                  {formatAmount(cheque.amount, cheque.currency)}
+                </div>
+              )}
             </div>
 
             <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
@@ -272,20 +296,39 @@ export const ChequeDetailModal: React.FC<ChequeDetailModalProps> = ({
                 </button>
 
                 {onDeleteCheque && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (window.confirm(`Supprimer définitivement le chèque ${cheque.chequeNumber} (${formatAmount(cheque.amount, cheque.currency)}) ?\n\nÀ utiliser en cas d'erreur de saisie. Cette action est irréversible.`)) {
-                        onDeleteCheque(cheque.id);
-                        onClose();
-                      }
-                    }}
-                    className="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
-                    title="Supprimer ce chèque en cas d'erreur"
-                  >
-                    <Trash2 className="h-3.5 w-3.5 text-rose-600" />
-                    <span>Supprimer (Erreur)</span>
-                  </button>
+                  confirmingDelete ? (
+                    <div className="flex items-center gap-1.5 bg-rose-50 border border-rose-300 rounded-xl px-2.5 py-1">
+                      <span className="text-[11px] font-bold text-rose-800">Confirmer ?</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onDeleteCheque(cheque.id);
+                          setConfirmingDelete(false);
+                          onClose();
+                        }}
+                        className="px-2 py-0.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold cursor-pointer"
+                      >
+                        Oui, supprimer
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmingDelete(false)}
+                        className="px-2 py-0.5 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-[11px] font-semibold cursor-pointer"
+                      >
+                        Annuler
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmingDelete(true)}
+                      className="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                      title="Supprimer ce chèque en cas d'erreur"
+                    >
+                      <Trash2 className="h-3.5 w-3.5 text-rose-600" />
+                      <span>Supprimer (Erreur)</span>
+                    </button>
+                  )
                 )}
               </div>
             </div>

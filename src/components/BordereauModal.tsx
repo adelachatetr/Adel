@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Printer, X, Download, FileText, CheckCircle2, Building2 } from 'lucide-react';
 import { TransitCheque } from '../types/transit';
-import { formatAmount, formatShortDate, CATEGORY_LABELS } from '../utils/storage';
+import { formatAmount, formatShortDate, CATEGORY_LABELS, CHEQUE_NATURE_LABELS } from '../utils/storage';
 import { TRANSIT_AGENTS } from '../data/mockTransitData';
 import { GICA_LOGO_BASE64 } from '../data/logoData';
 
@@ -364,7 +364,7 @@ export const BordereauModal: React.FC<BordereauModalProps> = ({
                   }`}
                   title={isFromFilter ? 'Chèque issu du filtre actif' : undefined}
                 >
-                  {isSelected ? '✓ ' : ''}{c.chequeNumber} ({formatAmount(c.amount, c.currency)})
+                  {isSelected ? '✓ ' : ''}{CHEQUE_NATURE_LABELS[c.chequeNature || 'ORDINAIRE']?.label || 'Chèque'} · {c.chequeNumber} ({c.chequeNature === 'A_BLANC' && c.amount === 0 ? `0,00 ${c.currency}` : formatAmount(c.amount, c.currency)})
                   {isFromFilter && <span className="ml-1 text-[9px] text-emerald-700 font-sans font-bold">★ Filtré</span>}
                 </button>
               );
@@ -438,7 +438,7 @@ export const BordereauModal: React.FC<BordereauModalProps> = ({
               <thead>
                 <tr className="border-y-2 border-slate-900 bg-slate-100 font-bold text-slate-800">
                   <th className="py-2 px-2 border-r border-slate-200">N°</th>
-                  <th className="py-2 px-2 border-r border-slate-200">N° Chèque & Banque</th>
+                  <th className="py-2 px-2 border-r border-slate-200">Nature de chèque & Banque</th>
                   <th className="py-2 px-2 border-r border-slate-200">Fournisseur / N° BC</th>
                   <th className="py-2 px-2 border-r border-slate-200">Bénéficiaire & Motif</th>
                   <th className="py-2 px-2 border-r border-slate-200">Réf. Conteneurs / B/L</th>
@@ -455,13 +455,16 @@ export const BordereauModal: React.FC<BordereauModalProps> = ({
                 ) : (
                   chequesToPrint.map((chq, index) => {
                     const cat = CATEGORY_LABELS[chq.category];
+                    const natureLabel = CHEQUE_NATURE_LABELS[chq.chequeNature || 'ORDINAIRE']?.label || 'Chèque ordinaire';
+                    const isBlankPending = chq.chequeNature === 'A_BLANC' && chq.amount === 0;
                     return (
                       <tr key={chq.id} className="text-slate-800">
                         <td className="py-2 px-2 border-r border-slate-200 font-mono text-[11px]">
                           {index + 1}
                         </td>
-                        <td className="py-2 px-2 border-r border-slate-200 font-mono font-bold">
-                          {chq.chequeNumber}
+                        <td className="py-2 px-2 border-r border-slate-200">
+                          <div className="font-bold text-slate-900 text-[11px]">{natureLabel}</div>
+                          <div className="font-mono text-[10px] text-slate-600">{chq.chequeNumber}</div>
                           <div className="text-[10px] font-sans font-normal text-slate-600">{chq.bankName}</div>
                         </td>
                         <td className="py-2 px-2 border-r border-slate-200">
@@ -485,7 +488,7 @@ export const BordereauModal: React.FC<BordereauModalProps> = ({
                           )}
                         </td>
                         <td className="py-2 px-2 text-right font-mono font-bold whitespace-nowrap">
-                          {formatAmount(chq.amount, chq.currency)}
+                          {isBlankPending ? `0,00\u00A0${chq.currency} (À blanc)` : formatAmount(chq.amount, chq.currency)}
                         </td>
                       </tr>
                     );

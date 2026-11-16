@@ -1,4 +1,4 @@
-import { TransitCheque, TransitDossier, ChequeStatus, ChequeCategory, ChequeDirection, DossierStatus } from '../types/transit';
+import { TransitCheque, TransitDossier, ChequeStatus, ChequeCategory, ChequeDirection, ChequeNature, DossierStatus } from '../types/transit';
 import { INITIAL_CHEQUES, INITIAL_DOSSIERS } from '../data/mockTransitData';
 
 const CHEQUES_STORAGE_KEY = 'transit_cheques_data_v1';
@@ -210,6 +210,31 @@ export function formatShortDate(dateStr?: string): string {
   }
 }
 
+// Helpers for Nature de chèque
+export const CHEQUE_NATURE_LABELS: Record<ChequeNature, { label: string; short: string; bgClass: string; textClass: string; borderClass: string }> = {
+  ORDINAIRE: {
+    label: 'Chèque ordinaire',
+    short: 'Ordinaire',
+    bgClass: 'bg-slate-100',
+    textClass: 'text-slate-700',
+    borderClass: 'border-slate-300'
+  },
+  VISE: {
+    label: 'Chèque visé',
+    short: 'Visé',
+    bgClass: 'bg-indigo-50',
+    textClass: 'text-indigo-800',
+    borderClass: 'border-indigo-200'
+  },
+  A_BLANC: {
+    label: 'Chèque à blanc',
+    short: 'À blanc',
+    bgClass: 'bg-amber-50',
+    textClass: 'text-amber-900',
+    borderClass: 'border-amber-300'
+  }
+};
+
 // Helpers for Category info
 export const CATEGORY_LABELS: Record<ChequeCategory, { label: string; short: string; color: string }> = {
   CAUTION_CONTENEUR: {
@@ -374,7 +399,8 @@ export const DOSSIER_STATUS_CONFIG: Record<DossierStatus, { label: string; textC
 
 export function exportChequesToCSV(cheques: TransitCheque[]): void {
   const headers = [
-    'N° Chèque',
+    'Nature de chèque',
+    'Réf. Chèque',
     'Direction',
     'Statut',
     'Catégorie',
@@ -395,6 +421,7 @@ export function exportChequesToCSV(cheques: TransitCheque[]): void {
   ];
 
   const rows = cheques.map(c => [
+    `"${CHEQUE_NATURE_LABELS[c.chequeNature || 'ORDINAIRE']?.label || 'Chèque ordinaire'}"`,
     `"${c.chequeNumber || ''}"`,
     `"${c.direction === 'EMIS' ? 'Émis (Débours)' : 'Reçu (Client)'}"`,
     `"${STATUS_CONFIG[c.status]?.label || c.status}"`,

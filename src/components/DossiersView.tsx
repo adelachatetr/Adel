@@ -13,7 +13,7 @@ import {
   Anchor
 } from 'lucide-react';
 import { TransitDossier, TransitCheque, DossierStatus } from '../types/transit';
-import { formatAmount, formatShortDate, CATEGORY_LABELS, STATUS_CONFIG, DOSSIER_STATUS_CONFIG } from '../utils/storage';
+import { formatAmount, formatShortDate, CATEGORY_LABELS, STATUS_CONFIG, DOSSIER_STATUS_CONFIG, CHEQUE_NATURE_LABELS } from '../utils/storage';
 
 interface DossiersViewProps {
   dossiers: TransitDossier[];
@@ -560,6 +560,8 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                   {attachedCheques.map(chq => {
                     const statusCfg = STATUS_CONFIG[chq.status] || STATUS_CONFIG.BROUILLON;
                     const catCfg = CATEGORY_LABELS[chq.category];
+                    const natureCfg = CHEQUE_NATURE_LABELS[chq.chequeNature || 'ORDINAIRE'];
+                    const isBlankPending = chq.chequeNature === 'A_BLANC' && chq.amount === 0;
 
                     return (
                       <div
@@ -569,7 +571,10 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                       >
                         <div className="flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-mono text-xs font-bold text-slate-900">
+                            <span className={`text-[10px] px-2 py-0.5 rounded-md border font-bold ${natureCfg.bgClass} ${natureCfg.textClass} ${natureCfg.borderClass}`}>
+                              {natureCfg.label}
+                            </span>
+                            <span className="font-mono text-xs font-bold text-slate-700">
                               {chq.chequeNumber}
                             </span>
                             <span className="text-xs text-slate-600 font-medium">
@@ -593,11 +598,13 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
 
                         <div className="flex items-center gap-3 self-end sm:self-center">
                           <div className="text-right">
-                            <div className="text-sm font-mono font-bold text-slate-900">
-                              {formatAmount(chq.amount, chq.currency)}
+                            <div className={`text-sm font-mono font-bold ${isBlankPending ? 'text-amber-800' : 'text-slate-900'}`}>
+                              {isBlankPending ? `0,00\u00A0${chq.currency}` : formatAmount(chq.amount, chq.currency)}
                             </div>
                             <div className="text-[11px] text-slate-400 font-medium">
-                              {chq.coursierName ? `Coursier: ${chq.coursierName}` : 'Non remis'}
+                              {isBlankPending
+                                ? 'En attente de facture'
+                                : (chq.coursierName ? `Coursier: ${chq.coursierName}` : 'Non remis')}
                             </div>
                           </div>
 

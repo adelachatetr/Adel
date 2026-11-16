@@ -15,10 +15,11 @@ import {
   Building2,
   Tag,
   X,
-  Landmark
+  Landmark,
+  AlertTriangle
 } from 'lucide-react';
-import { TransitCheque, ChequeStatus, ChequeCategory, ChequeDirection } from '../types/transit';
-import { formatAmount, formatShortDate, STATUS_CONFIG, CATEGORY_LABELS } from '../utils/storage';
+import { TransitCheque, ChequeStatus, ChequeCategory, ChequeDirection, ChequeNature } from '../types/transit';
+import { formatAmount, formatShortDate, STATUS_CONFIG, CATEGORY_LABELS, CHEQUE_NATURE_LABELS } from '../utils/storage';
 
 interface ChequesTableViewProps {
   cheques: TransitCheque[];
@@ -59,8 +60,10 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
     initialFilter?.type === 'bank' ? initialFilter.value : 'ALL'
   );
   const [directionFilter, setDirectionFilter] = useState<ChequeDirection | 'ALL'>('ALL');
+  const [natureFilter, setNatureFilter] = useState<ChequeNature | 'ALL'>('ALL');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [quickStatusMenuId, setQuickStatusMenuId] = useState<string | null>(null);
+  const [chequePendingDelete, setChequePendingDelete] = useState<TransitCheque | null>(null);
 
   // Sync initial filter if changed from external navigation
   useEffect(() => {
@@ -102,6 +105,8 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
       // Text search
       if (searchTerm.trim()) {
         const q = searchTerm.toLowerCase();
+        const natureLabel = (CHEQUE_NATURE_LABELS[c.chequeNature || 'ORDINAIRE']?.label || '').toLowerCase();
+        const matchNature = natureLabel.includes(q);
         const matchNumber = c.chequeNumber.toLowerCase().includes(q);
         const matchDossier = c.dossierNumber.toLowerCase().includes(q);
         const matchClient = c.clientName.toLowerCase().includes(q);
@@ -111,7 +116,7 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
         const matchContainer = (c.containerInfo?.containerNumbers || []).some(cn => cn.toLowerCase().includes(q));
         const matchEIR = (c.containerInfo?.interchangeNumber || '').toLowerCase().includes(q);
 
-        if (!matchNumber && !matchDossier && !matchClient && !matchBeneficiary && !matchBank && !matchCoursier && !matchContainer && !matchEIR) {
+        if (!matchNature && !matchNumber && !matchDossier && !matchClient && !matchBeneficiary && !matchBank && !matchCoursier && !matchContainer && !matchEIR) {
           return false;
         }
       }
@@ -145,9 +150,14 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
         return false;
       }
 
+      // Cheque Nature filter (ordinaire / visé / à blanc)
+      if (natureFilter !== 'ALL' && (c.chequeNature || 'ORDINAIRE') !== natureFilter) {
+        return false;
+      }
+
       return true;
     });
-  }, [cheques, searchTerm, statusFilter, categoryFilter, beneficiaryFilter, bankFilter, directionFilter]);
+  }, [cheques, searchTerm, statusFilter, categoryFilter, beneficiaryFilter, bankFilter, directionFilter, natureFilter]);
 
   // Active filters count
   const hasActiveFilters = searchTerm !== '' || 
@@ -155,7 +165,8 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
     categoryFilter !== 'ALL' || 
     beneficiaryFilter !== 'ALL' || 
     bankFilter !== 'ALL' || 
-    directionFilter !== 'ALL';
+    directionFilter !== 'ALL' ||
+    natureFilter !== 'ALL';
 
   const resetAllFilters = () => {
     setSearchTerm('');
@@ -164,12 +175,13 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
     setBeneficiaryFilter('ALL');
     setBankFilter('ALL');
     setDirectionFilter('ALL');
+    setNatureFilter('ALL');
   };
 
   // Automatically reset manual row selections whenever filters change so stale cheques don't contaminate the filtered view
   useEffect(() => {
     setSelectedIds([]);
-  }, [searchTerm, statusFilter, categoryFilter, beneficiaryFilter, bankFilter, directionFilter]);
+  }, [searchTerm, statusFilter, categoryFilter, beneficiaryFilter, bankFilter, directionFilter, natureFilter]);
 
   // Report filtered cheques up to parent so header buttons also stay in sync
   useEffect(() => {
@@ -223,7 +235,7 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
             <Search className="h-4 w-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Rechercher par N° chèque, N° dossier, bénéficiaire, banque (BEA...), client, conteneur..."
+              placeholder="Rechercher par nature (ordinaire, visé, à blanc), N° chèque, fournisseur, bénéficiaire, banque..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-cyan-600 focus:bg-white transition-all font-medium"
@@ -466,6 +478,21 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
             >
               Port / Magasinage
             </button>
+
+            <button
+              onClick={() => setNatureFilter(natureFilter === 'A_BLANC' ? 'ALL' : 'A_BLANC')}
+              className={`px-2.5 py-1 rounded-md text-xs font-bold transition-colors cursor-pointer flex items-center gap-1 ${
+                natureFilter === 'A_BLANC'
+                  ? 'bg-amber-600 text-white shadow-xs'
+                  : 'bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100'
+              }`}
+              title="Afficher les chèques à blanc (en attente de facture)"
+            >
+              <span>Chèques à blanc</span>
+              <span className={`text-[10px] px-1 rounded ${natureFilter === 'A_BLANC' ? 'bg-white/20 text-white' : 'bg-amber-200/70 text-amber-950'}`}>
+                {cheques.filter(c => c.chequeNature === 'A_BLANC').length}
+              </span>
+            </button>
           </div>
 
           {/* Reset button if any filter is active */}
@@ -485,6 +512,15 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
           <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-100 text-xs">
             <span className="text-[11px] text-slate-500 font-medium">Filtres actifs :</span>
             
+            {natureFilter !== 'ALL' && (
+              <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-950 px-2 py-0.5 rounded-full text-[11px] font-semibold border border-amber-300">
+                Type: {CHEQUE_NATURE_LABELS[natureFilter]?.label || natureFilter}
+                <button onClick={() => setNatureFilter('ALL')} className="hover:text-black">
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            )}
+
             {categoryFilter !== 'ALL' && (
               <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full text-[11px] font-semibold border border-amber-200">
                 Nature: {CATEGORY_LABELS[categoryFilter]?.short || categoryFilter}
@@ -620,7 +656,7 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
                     )}
                   </button>
                 </th>
-                <th className="py-3 px-3 font-bold text-slate-700">N° Chèque & Banque</th>
+                <th className="py-3 px-3 font-bold text-slate-700">Nature de chèque & Banque</th>
                 <th className="py-3 px-3 font-bold text-slate-700">Fournisseur / N° BC</th>
                 <th className="py-3 px-3 font-bold text-slate-700">Bénéficiaire & Nature</th>
                 <th className="py-3 px-3 font-bold text-slate-700">Montant</th>
@@ -642,6 +678,8 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
                 filteredCheques.map(chq => {
                   const statusCfg = STATUS_CONFIG[chq.status] || STATUS_CONFIG.BROUILLON;
                   const catCfg = CATEGORY_LABELS[chq.category];
+                  const natureCfg = CHEQUE_NATURE_LABELS[chq.chequeNature || 'ORDINAIRE'];
+                  const isBlankPending = chq.chequeNature === 'A_BLANC' && chq.amount === 0;
                   const isSelected = selectedIds.includes(chq.id);
 
                   return (
@@ -665,13 +703,18 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
                         </button>
                       </td>
 
-                      {/* Cheque Number & Bank */}
+                      {/* Nature de chèque, Ref & Bank */}
                       <td className="py-3 px-3">
                         <div 
                           onClick={() => onOpenChequeDetail(chq)}
-                          className="font-mono font-bold text-slate-900 hover:text-cyan-700 cursor-pointer flex items-center gap-1.5"
+                          className="cursor-pointer flex flex-wrap items-center gap-1.5"
                         >
-                          <span>{chq.chequeNumber}</span>
+                          <span className={`text-[11px] px-2 py-0.5 rounded-md border font-bold ${natureCfg.bgClass} ${natureCfg.textClass} ${natureCfg.borderClass}`}>
+                            {natureCfg.label}
+                          </span>
+                          <span className="font-mono text-[11px] font-bold text-slate-600 hover:text-cyan-700">
+                            {chq.chequeNumber}
+                          </span>
                           {chq.direction === 'RECU' && (
                             <span className="text-[10px] bg-teal-100 text-teal-800 px-1.5 py-0.2 rounded font-sans border border-teal-300 font-bold">
                               Reçu
@@ -715,12 +758,34 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
 
                       {/* Amount */}
                       <td className="py-3 px-3">
-                        <div className="font-mono font-bold text-slate-900 text-sm">
-                          {formatAmount(chq.amount, chq.currency)}
-                        </div>
-                        <div className="text-[11px] text-slate-400 font-medium">
-                          Émis le {formatShortDate(chq.dateEmission)}
-                        </div>
+                        {isBlankPending ? (
+                          <div>
+                            <div className="font-mono font-bold text-amber-800 text-sm">
+                              0,00&nbsp;{chq.currency}
+                            </div>
+                            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                              <span className="text-[10px] text-amber-800 font-semibold">
+                                En attente facture
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => onEditCheque(chq)}
+                                className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 font-bold cursor-pointer transition-colors"
+                              >
+                                Saisir montant
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="font-mono font-bold text-slate-900 text-sm">
+                              {formatAmount(chq.amount, chq.currency)}
+                            </div>
+                            <div className="text-[11px] text-slate-400 font-medium">
+                              Émis le {formatShortDate(chq.dateEmission)}
+                            </div>
+                          </>
+                        )}
                       </td>
 
                       {/* Coursier / Déclarant */}
@@ -878,11 +943,7 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
                           </button>
 
                           <button
-                            onClick={() => {
-                              if (confirm(`Êtes-vous sûr de vouloir supprimer le chèque ${chq.chequeNumber} ?`)) {
-                                onDeleteCheque(chq.id);
-                              }
-                            }}
+                            onClick={() => setChequePendingDelete(chq)}
                             className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
                             title="Supprimer"
                           >
@@ -898,6 +959,57 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
           </table>
         </div>
       </div>
+
+      {/* Modal de confirmation de suppression de chèque */}
+      {chequePendingDelete && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-rose-50 text-rose-600 border border-rose-200">
+                  <AlertTriangle className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">Supprimer le chèque</h3>
+                  <p className="text-xs text-slate-500 font-medium">Confirmation requise</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setChequePendingDelete(null)}
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="text-xs text-slate-700 leading-relaxed">
+              Êtes-vous sûr de vouloir supprimer définitivement le chèque{' '}
+              <strong>{CHEQUE_NATURE_LABELS[chequePendingDelete.chequeNature || 'ORDINAIRE']?.label}</strong>{' '}
+              (<span className="font-mono font-bold">{chequePendingDelete.chequeNumber}</span> ·{' '}
+              {formatAmount(chequePendingDelete.amount, chequePendingDelete.currency)}) ?
+            </p>
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setChequePendingDelete(null)}
+                className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold cursor-pointer"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onDeleteCheque(chequePendingDelete.id);
+                  setChequePendingDelete(null);
+                }}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold cursor-pointer shadow-sm"
+              >
+                Supprimer définitivement
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

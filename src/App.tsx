@@ -235,16 +235,30 @@ export default function App() {
       // Update existing
       updatedCheques = cheques.map(item => {
         if (item.id === editingCheque.id) {
+          const prevAmount = Number(item.amount) || 0;
+          const nextAmount = data.amount !== undefined ? Number(data.amount) : prevAmount;
+          const nextNature = data.chequeNature || item.chequeNature || 'ORDINAIRE';
+          const isBlankInvoiceUpdate =
+            (item.chequeNature === 'A_BLANC' || nextNature === 'A_BLANC') &&
+            prevAmount === 0 &&
+            nextAmount > 0;
+
           const updated: TransitCheque = {
             ...item,
             ...data,
+            chequeNature: nextNature,
+            amount: nextAmount,
             auditTrail: [
               {
                 id: `log-${Date.now()}`,
                 date: nowStr,
-                action: 'Modification des détails du chèque',
+                action: isBlankInvoiceUpdate
+                  ? 'Saisie du montant après réception facture'
+                  : 'Modification des détails du chèque',
                 actor: session ? `${session.user.fullName} (${session.user.role})` : 'Responsable Transit',
-                comment: 'Mise à jour des informations administratives'
+                comment: isBlankInvoiceUpdate
+                  ? `Chèque à blanc complété : montant fixé à ${nextAmount.toLocaleString('fr-FR')} ${item.currency}`
+                  : 'Mise à jour des informations administratives'
               },
               ...(item.auditTrail || [])
             ]
@@ -258,13 +272,16 @@ export default function App() {
       });
     } else {
       // Create new
+      const initialNature = data.chequeNature || 'ORDINAIRE';
+      const initialAmount = Number(data.amount) || 0;
       const newCheque: TransitCheque = {
         id: `chq-${Date.now()}`,
         chequeNumber: data.chequeNumber || `CHQ-${Math.floor(100000 + Math.random() * 900000)}`,
+        chequeNature: initialNature,
         bankName: data.bankName || settings.defaultBankName || 'BEA (Banque Extérieure d\'Algérie)',
         direction: data.direction || 'EMIS',
         category: data.category || 'CAUTION_CONTENEUR',
-        amount: Number(data.amount) || 0,
+        amount: initialAmount,
         currency: data.currency || settings.defaultCurrency,
         dossierNumber: data.dossierNumber || 'TR-2026-000',
         clientName: data.clientName || 'Client Standard',
@@ -282,7 +299,10 @@ export default function App() {
             id: `log-${Date.now()}`,
             date: nowStr,
             action: 'Création et enregistrement du chèque',
-            actor: session ? `${session.user.fullName} (${session.user.role})` : 'Caisse Service Transit'
+            actor: session ? `${session.user.fullName} (${session.user.role})` : 'Caisse Service Transit',
+            comment: initialNature === 'A_BLANC' && initialAmount === 0
+              ? 'Chèque à blanc émis à 0.00 DA (montant à saisir après réception des factures)'
+              : undefined
           }
         ]
       };

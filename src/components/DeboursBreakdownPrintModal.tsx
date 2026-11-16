@@ -12,7 +12,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { TransitCheque } from '../types/transit';
-import { formatAmount, formatShortDate, CATEGORY_LABELS } from '../utils/storage';
+import { formatAmount, formatShortDate, CATEGORY_LABELS, CHEQUE_NATURE_LABELS } from '../utils/storage';
 import { GICA_LOGO_BASE64 } from '../data/logoData';
 
 interface DeboursBreakdownPrintModalProps {
@@ -493,7 +493,7 @@ export const DeboursBreakdownPrintModal: React.FC<DeboursBreakdownPrintModalProp
                       <table className="w-full text-left text-[11px]">
                         <thead>
                           <tr className="bg-slate-50 text-slate-600 border-b border-slate-200">
-                            <th className="py-1 px-2">N° Chèque</th>
+                            <th className="py-1 px-2">Nature de chèque</th>
                             <th className="py-1 px-2">Banque</th>
                             <th className="py-1 px-2">Bénéficiaire</th>
                             <th className="py-1 px-2">Dossier / Client</th>
@@ -504,13 +504,18 @@ export const DeboursBreakdownPrintModal: React.FC<DeboursBreakdownPrintModalProp
                         <tbody className="divide-y divide-slate-100 font-mono">
                           {item.chequesList.map(chq => (
                             <tr key={chq.id} className="hover:bg-slate-50">
-                              <td className="py-1 px-2 font-bold text-slate-800">{chq.chequeNumber}</td>
+                              <td className="py-1 px-2 font-sans font-bold text-slate-800">
+                                {CHEQUE_NATURE_LABELS[chq.chequeNature || 'ORDINAIRE']?.label}
+                                <span className="block font-mono text-[10px] font-normal text-slate-500">{chq.chequeNumber}</span>
+                              </td>
                               <td className="py-1 px-2 font-sans text-slate-600 truncate max-w-[120px]">{chq.bankName}</td>
                               <td className="py-1 px-2 font-sans text-slate-800 font-semibold truncate max-w-[160px]">{chq.beneficiary}</td>
                               <td className="py-1 px-2 font-sans text-slate-600">{chq.dossierNumber}</td>
                               <td className="py-1 px-2 text-slate-600">{formatShortDate(chq.dateEmission)}</td>
                               <td className="py-1 px-2 text-right font-bold text-slate-900 whitespace-nowrap">
-                                {formatAmount(chq.amount, chq.currency)}
+                                {chq.chequeNature === 'A_BLANC' && chq.amount === 0
+                                  ? `0,00\u00A0${chq.currency}`
+                                  : formatAmount(chq.amount, chq.currency)}
                               </td>
                             </tr>
                           ))}
