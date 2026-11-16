@@ -58,27 +58,17 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
 
   const PORT_PRESETS = [
     { key: 'skikda', label: 'Port de Skikda' },
+    { key: 'djendjen', label: 'Port de Djendjen' },
     { key: 'annaba', label: 'Port d\'Annaba' },
     { key: 'bejaia', label: 'Port de Béjaïa' },
     { key: 'alger', label: 'Port d\'Alger' },
     { key: 'oran', label: 'Port d\'Oran' },
-    { key: 'djendjen', label: 'Port de Djendjen' },
+    { key: 'arzew', label: 'Port d\'Arzew' },
     { key: 'mostaganem', label: 'Port de Mostaganem' },
     { key: 'ghazaouet', label: 'Port de Ghazaouet' },
-    { key: 'aeroport', label: 'Aéroport (Fret Aérien)' }
+    { key: 'tenes', label: 'Port de Ténès' },
+    { key: 'dellys', label: 'Port de Dellys' }
   ];
-
-  // Extra custom ports present in dossiers that don't match presets
-  const customPorts = Array.from(
-    new Set(
-      dossiers
-        .map(d => (d.portOfDischarge || '').trim())
-        .filter(Boolean)
-    )
-  ).filter(port => {
-    const norm = normalizeText(port);
-    return !PORT_PRESETS.some(p => norm.includes(p.key));
-  });
 
   const matchesPort = (portOfDischarge: string | undefined, selectedPort: string) => {
     if (selectedPort === 'ALL') return true;
@@ -184,12 +174,12 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
               </select>
             </div>
 
-            {/* Port / Aéroport de Débarquement Filter */}
+            {/* Port de Débarquement Filter (Ports d'Algérie uniquement) */}
             <div className="space-y-1.5 pt-1 border-t border-slate-100">
               <div className="flex items-center justify-between gap-2">
                 <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
                   <Anchor className="h-3.5 w-3.5 text-cyan-700" />
-                  <span>Port / Aéroport de Débarquement</span>
+                  <span>Port de Débarquement (Algérie)</span>
                 </label>
                 {(portFilter !== 'ALL' || statusFilter !== 'ALL' || searchTerm.trim() !== '') && (
                   <button
@@ -210,22 +200,14 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                 value={portFilter}
                 onChange={e => setPortFilter(e.target.value)}
                 className="w-full bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-2 text-xs text-slate-800 font-semibold focus:outline-none focus:bg-white focus:border-cyan-600 cursor-pointer"
-                title="Filtrer par Port ou Aéroport de Débarquement"
+                title="Filtrer par Port de Débarquement (Algérie)"
               >
-                <option value="ALL">Tous les Ports / Aéroports ({dossiers.length})</option>
+                <option value="ALL">Tous les Ports d'Algérie ({dossiers.length})</option>
                 {PORT_PRESETS.map(port => {
                   const count = dossiers.filter(d => matchesPort(d.portOfDischarge, port.key)).length;
                   return (
                     <option key={port.key} value={port.key}>
                       {port.label} ({count})
-                    </option>
-                  );
-                })}
-                {customPorts.map(cp => {
-                  const count = dossiers.filter(d => matchesPort(d.portOfDischarge, cp)).length;
-                  return (
-                    <option key={cp} value={cp}>
-                      {cp} ({count})
                     </option>
                   );
                 })}
