@@ -71,6 +71,7 @@ export interface TransitCheque {
   containerInfo?: ContainerInfo;
   observations?: string;
   attachmentsCount?: number;
+  updatedAt?: string;
   auditTrail: ChequeAuditLog[];
 }
 
@@ -108,6 +109,7 @@ export interface TransitDossier {
   containerCount: number;
   status: DossierStatus;
   openedDate: string;
+  updatedAt?: string;
   totalProvisionsReceived?: number;
 }
 

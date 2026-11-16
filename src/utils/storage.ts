@@ -148,6 +148,69 @@ export function loadStoredDossiers(): TransitDossier[] {
   }
 }
 
+export function hasLocalChequesSaved(): boolean {
+  try {
+    return localStorage.getItem(CHEQUES_STORAGE_KEY) !== null;
+  } catch {
+    return false;
+  }
+}
+
+export function hasLocalDossiersSaved(): boolean {
+  try {
+    return localStorage.getItem(DOSSIERS_STORAGE_KEY) !== null;
+  } catch {
+    return false;
+  }
+}
+
+export function mergeServerAndLocalRecords<T extends { id: string; updatedAt?: string }>(params: {
+  localItems: T[];
+  serverItems: T[];
+  localDeletedIds: string[];
+  serverDeletedIds: string[];
+  hasLocalSaved: boolean;
+  seedIdPattern: RegExp;
+}): { merged: T[]; localNeedsPush: boolean } {
+  const { localItems, serverItems, localDeletedIds, serverDeletedIds, hasLocalSaved, seedIdPattern } = params;
+  const allDeleted = new Set([...localDeletedIds, ...serverDeletedIds]);
+  const resultMap = new Map<string, T>();
+  let localNeedsPush = false;
+
+  for (const item of serverItems) {
+    if (item && item.id && !allDeleted.has(item.id)) {
+      resultMap.set(item.id, item);
+    }
+  }
+
+  if (hasLocalSaved) {
+    for (const localItem of localItems) {
+      if (!localItem || !localItem.id || allDeleted.has(localItem.id)) continue;
+      const existingServer = resultMap.get(localItem.id);
+      if (!existingServer) {
+        // Keep user-created records (timestamp IDs) or explicitly modified seed records if server cold-started without them
+        const isSeedPlaceholder = seedIdPattern.test(localItem.id) && !localItem.updatedAt;
+        if (!isSeedPlaceholder) {
+          resultMap.set(localItem.id, localItem);
+          localNeedsPush = true;
+        }
+      } else {
+        const localTime = localItem.updatedAt ? Date.parse(localItem.updatedAt) : 0;
+        const serverTime = existingServer.updatedAt ? Date.parse(existingServer.updatedAt) : 0;
+        if (localTime > serverTime) {
+          resultMap.set(localItem.id, localItem);
+          localNeedsPush = true;
+        }
+      }
+    }
+  }
+
+  return {
+    merged: Array.from(resultMap.values()),
+    localNeedsPush
+  };
+}
+
 export function saveStoredDossiers(dossiers: TransitDossier[]): void {
   try {
     localStorage.setItem(DOSSIERS_STORAGE_KEY, JSON.stringify(dossiers));
@@ -517,8 +580,11 @@ export async function safeParseJsonResponse(res: Response): Promise<{ ok: boolea
 
 export async function fetchServerDatabase(): Promise<{
   success: boolean;
+  persistentStorage?: boolean;
   dossiers?: TransitDossier[];
   cheques?: TransitCheque[];
+  deletedDossierIds?: string[];
+  deletedChequeIds?: string[];
   settings?: AppSettings;
   users?: any[];
   version?: number;
@@ -541,6 +607,8 @@ export async function fetchServerDatabase(): Promise<{
         success: true, 
         dossiers: localDossiers, 
         cheques: localCheques,
+        deletedDossierIds: loadDeletedDossierIds(),
+        deletedChequeIds: loadDeletedChequeIds(),
         settings: localSettings,
         version: 1 
       };
@@ -549,8 +617,10 @@ export async function fetchServerDatabase(): Promise<{
     if (!parsed.ok || !parsed.data) {
       return { success: false, error: parsed.error || 'Réponse serveur invalide' };
     }
-    const deletedChequeIds = loadDeletedChequeIds();
-    const deletedDossierIds = loadDeletedDossierIds();
+    const serverDeletedCheques: string[] = Array.isArray(parsed.data.deletedChequeIds) ? parsed.data.deletedChequeIds : [];
+    const serverDeletedDossiers: string[] = Array.isArray(parsed.data.deletedDossierIds) ? parsed.data.deletedDossierIds : [];
+    const deletedChequeIds = Array.from(new Set([...loadDeletedChequeIds(), ...serverDeletedCheques]));
+    const deletedDossierIds = Array.from(new Set([...loadDeletedDossierIds(), ...serverDeletedDossiers]));
 
     const cheques = Array.isArray(parsed.data.cheques)
       ? parsed.data.cheques
@@ -570,7 +640,9 @@ export async function fetchServerDatabase(): Promise<{
       success: true,
       ...parsed.data,
       dossiers,
-      cheques
+      cheques,
+      deletedDossierIds: serverDeletedDossiers,
+      deletedChequeIds: serverDeletedCheques
     };
   } catch (e: any) {
     // On network failure or offline mode, fall back to local browser cache seamlessly

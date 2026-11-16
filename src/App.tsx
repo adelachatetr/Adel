@@ -40,7 +40,10 @@ import {
   loadDeletedDossierIds,
   loadDeletedChequeIds,
   saveDeletedDossierId,
-  saveDeletedChequeId
+  saveDeletedChequeId,
+  hasLocalDossiersSaved,
+  hasLocalChequesSaved,
+  mergeServerAndLocalRecords
 } from './utils/storage';
 
 export default function App() {
@@ -107,27 +110,61 @@ export default function App() {
       }
 
       if (serverData && serverData.success) {
-        const deletedDossierIds = loadDeletedDossierIds();
-        const deletedChequeIds = loadDeletedChequeIds();
+        const localDeletedDossierIds = loadDeletedDossierIds();
+        const localDeletedChequeIds = loadDeletedChequeIds();
+        const serverDeletedDossierIds = serverData.deletedDossierIds || [];
+        const serverDeletedChequeIds = serverData.deletedChequeIds || [];
+
+        serverDeletedDossierIds.forEach(id => saveDeletedDossierId(id));
+        serverDeletedChequeIds.forEach(id => saveDeletedChequeId(id));
+
         const rawServerDossiers = serverData.dossiers || [];
         const rawServerCheques = serverData.cheques || [];
 
-        const serverDossiers = rawServerDossiers.filter((d: any) => !deletedDossierIds.includes(d.id));
-        const serverCheques = rawServerCheques.filter((c: any) => !deletedChequeIds.includes(c.id));
+        const dossierMerge = mergeServerAndLocalRecords({
+          localItems: loadStoredDossiers(),
+          serverItems: rawServerDossiers,
+          localDeletedIds: localDeletedDossierIds,
+          serverDeletedIds: serverDeletedDossierIds,
+          hasLocalSaved: hasLocalDossiersSaved(),
+          seedIdPattern: /^dossier-[0-5]$/
+        });
 
-        setDossiers(serverDossiers);
-        setCheques(serverCheques);
-        saveStoredDossiers(serverDossiers);
-        saveStoredCheques(serverCheques);
+        const chequeMerge = mergeServerAndLocalRecords({
+          localItems: loadStoredCheques(),
+          serverItems: rawServerCheques,
+          localDeletedIds: localDeletedChequeIds,
+          serverDeletedIds: serverDeletedChequeIds,
+          hasLocalSaved: hasLocalChequesSaved(),
+          seedIdPattern: /^chq-\d{1,2}$/
+        });
 
-        // If server had any records that were locally deleted, purge them on the server immediately
-        if (rawServerDossiers.length !== serverDossiers.length || rawServerCheques.length !== serverCheques.length) {
+        const mergedDossiers = dossierMerge.merged;
+        const mergedCheques = chequeMerge.merged;
+
+        setDossiers(mergedDossiers);
+        setCheques(mergedCheques);
+        saveStoredDossiers(mergedDossiers);
+        saveStoredCheques(mergedCheques);
+
+        // If local browser holds newer/unsaved records (e.g. after a Vercel redeploy) or local deletions, re-sync up to the server
+        if (
+          dossierMerge.localNeedsPush ||
+          chequeMerge.localNeedsPush ||
+          rawServerDossiers.length !== mergedDossiers.length ||
+          rawServerCheques.length !== mergedCheques.length
+        ) {
           pushServerDatabase({
-            dossiers: serverDossiers,
-            cheques: serverCheques,
-            deletedDossierIds,
-            deletedChequeIds,
+            dossiers: mergedDossiers,
+            cheques: mergedCheques,
+            deletedDossierIds: Array.from(new Set([...localDeletedDossierIds, ...serverDeletedDossierIds])),
+            deletedChequeIds: Array.from(new Set([...localDeletedChequeIds, ...serverDeletedChequeIds])),
             actor: session?.user?.fullName || 'Transit SCHB'
+          }).then(res => {
+            if (res && res.version) {
+              serverVersionRef.current = res.version;
+              setServerVersion(res.version);
+            }
           }).catch(console.error);
         }
 
@@ -144,7 +181,7 @@ export default function App() {
         const timeNow = new Date().toLocaleTimeString('fr-FR');
         setLastSyncTime(timeNow);
         if (isManual) {
-          showSyncToast('success', `Base Centrale : Synchronisation réussie (${serverDossiers.length} dossiers, ${serverCheques.length} chèques connectés)`);
+          showSyncToast('success', `Base Centrale : Synchronisation réussie (${mergedDossiers.length} dossiers, ${mergedCheques.length} chèques connectés)`);
         }
       } else {
         setSyncStatus('ERROR');
@@ -179,18 +216,37 @@ export default function App() {
           if (serverData.version !== undefined && serverData.version !== serverVersionRef.current) {
             serverVersionRef.current = serverData.version;
             setServerVersion(serverData.version);
-            const deletedDossierIds = loadDeletedDossierIds();
-            const deletedChequeIds = loadDeletedChequeIds();
+            const localDeletedDossierIds = loadDeletedDossierIds();
+            const localDeletedChequeIds = loadDeletedChequeIds();
+            const serverDeletedDossierIds = serverData.deletedDossierIds || [];
+            const serverDeletedChequeIds = serverData.deletedChequeIds || [];
+
+            serverDeletedDossierIds.forEach(id => saveDeletedDossierId(id));
+            serverDeletedChequeIds.forEach(id => saveDeletedChequeId(id));
 
             if (Array.isArray(serverData.dossiers)) {
-              const cleanDossiers = serverData.dossiers.filter((d: any) => !deletedDossierIds.includes(d.id));
-              setDossiers(cleanDossiers);
-              saveStoredDossiers(cleanDossiers);
+              const dossierMerge = mergeServerAndLocalRecords({
+                localItems: loadStoredDossiers(),
+                serverItems: serverData.dossiers,
+                localDeletedIds: localDeletedDossierIds,
+                serverDeletedIds: serverDeletedDossierIds,
+                hasLocalSaved: hasLocalDossiersSaved(),
+                seedIdPattern: /^dossier-[0-5]$/
+              });
+              setDossiers(dossierMerge.merged);
+              saveStoredDossiers(dossierMerge.merged);
             }
             if (Array.isArray(serverData.cheques)) {
-              const cleanCheques = serverData.cheques.filter((c: any) => !deletedChequeIds.includes(c.id));
-              setCheques(cleanCheques);
-              saveStoredCheques(cleanCheques);
+              const chequeMerge = mergeServerAndLocalRecords({
+                localItems: loadStoredCheques(),
+                serverItems: serverData.cheques,
+                localDeletedIds: localDeletedChequeIds,
+                serverDeletedIds: serverDeletedChequeIds,
+                hasLocalSaved: hasLocalChequesSaved(),
+                seedIdPattern: /^chq-\d{1,2}$/
+              });
+              setCheques(chequeMerge.merged);
+              saveStoredCheques(chequeMerge.merged);
             }
             if (serverData.settings) {
               setSettings(serverData.settings);
@@ -248,6 +304,7 @@ export default function App() {
             ...data,
             chequeNature: nextNature,
             amount: nextAmount,
+            updatedAt: new Date().toISOString(),
             auditTrail: [
               {
                 id: `log-${Date.now()}`,
@@ -294,6 +351,7 @@ export default function App() {
         containerInfo: data.containerInfo,
         observations: data.observations,
         attachmentsCount: 1,
+        updatedAt: new Date().toISOString(),
         auditTrail: [
           {
             id: `log-${Date.now()}`,
@@ -362,6 +420,7 @@ export default function App() {
           ...c,
           status: newStatus,
           ...extraUpdates,
+          updatedAt: new Date().toISOString(),
           auditTrail: [
             {
               id: `log-${Date.now()}`,
@@ -407,6 +466,7 @@ export default function App() {
         const updated: TransitCheque = {
           ...c,
           status: 'A_RECUPERER',
+          updatedAt: new Date().toISOString(),
           containerInfo: {
             ...c.containerInfo,
             actualReturnDate,
@@ -449,7 +509,7 @@ export default function App() {
     let updatedList: TransitDossier[] = [];
     let savedDossier: TransitDossier;
     if (editingDossier) {
-      savedDossier = { ...editingDossier, ...data } as TransitDossier;
+      savedDossier = { ...editingDossier, ...data, updatedAt: new Date().toISOString() } as TransitDossier;
       updatedList = dossiers.map(d => d.id === editingDossier.id ? savedDossier : d);
     } else {
       savedDossier = {
@@ -473,6 +533,7 @@ export default function App() {
         containerCount: data.containerCount || 1,
         status: data.status || 'OUVERT',
         openedDate: new Date().toISOString().slice(0, 10),
+        updatedAt: new Date().toISOString(),
         totalProvisionsReceived: 0
       };
       updatedList = [savedDossier, ...dossiers];
@@ -492,7 +553,7 @@ export default function App() {
   const handleUpdateDossierStatus = (dossierId: string, newStatus: DossierStatus) => {
     const target = dossiers.find(d => d.id === dossierId);
     if (!target) return;
-    const updated: TransitDossier = { ...target, status: newStatus };
+    const updated: TransitDossier = { ...target, status: newStatus, updatedAt: new Date().toISOString() };
     const updatedList = dossiers.map(d => d.id === dossierId ? updated : d);
     setDossiers(updatedList);
     saveStoredDossiers(updatedList);

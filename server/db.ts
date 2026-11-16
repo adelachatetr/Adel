@@ -241,13 +241,14 @@ class DatabaseManager {
 
   // Dossier operations
   public saveDossier(dossier: any, actor?: string): DatabaseState {
-    const deletedDossierIds = (this.state.deletedDossierIds || []).filter(id => id !== dossier.id);
-    const existingIndex = this.state.dossiers.findIndex(d => d.id === dossier.id);
+    const stampedDossier = { ...dossier, updatedAt: new Date().toISOString() };
+    const deletedDossierIds = (this.state.deletedDossierIds || []).filter(id => id !== stampedDossier.id);
+    const existingIndex = this.state.dossiers.findIndex(d => d.id === stampedDossier.id);
     let updatedDossiers = [...this.state.dossiers];
     if (existingIndex >= 0) {
-      updatedDossiers[existingIndex] = { ...updatedDossiers[existingIndex], ...dossier };
+      updatedDossiers[existingIndex] = { ...updatedDossiers[existingIndex], ...stampedDossier };
     } else {
-      updatedDossiers.unshift(dossier);
+      updatedDossiers.unshift(stampedDossier);
     }
 
     this.state = {
@@ -296,6 +297,7 @@ class DatabaseManager {
     const deletedChequeIds = (this.state.deletedChequeIds || []).filter(id => id !== cheque.id);
     const normalizedCheque = {
       ...cheque,
+      updatedAt: new Date().toISOString(),
       bankName: (!cheque.bankName || !cheque.bankName.toUpperCase().includes('BEA') || cheque.bankName === 'BEA (Banque Extérieure d\'Algérie)')
         ? 'BEA Constantine (Banque Extérieure d\'Algérie)'
         : cheque.bankName

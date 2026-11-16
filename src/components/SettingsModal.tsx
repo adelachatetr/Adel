@@ -582,7 +582,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <span className="text-[10px] text-slate-500 uppercase font-bold block mb-0.5">Moteur</span>
                   <span className="text-xs font-bold text-slate-900 flex items-center gap-1 justify-center sm:justify-start">
                     <Server className="h-3.5 w-3.5 text-cyan-700" />
-                    <span>SQL / JSON DB</span>
+                    <span>
+                      {serverDbInfo?.persistentStorage === false
+                        ? 'Vercel /tmp (Éphémère)'
+                        : serverDbInfo?.persistentStorage
+                        ? 'Cloud / BDD Persistante'
+                        : 'JSON / SQL DB'}
+                    </span>
                   </span>
                 </div>
                 <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100">

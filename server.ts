@@ -60,6 +60,7 @@ async function startServer() {
 
       res.json({
         status: 'CONNECTED',
+        persistentStorage: true,
         engine: 'Persistent Central JSON Database (Transit SCHB)',
         databaseFilePath: dbPath,
         workingDirectory: process.cwd(),
@@ -100,10 +101,13 @@ async function startServer() {
       const state = db.getState();
       res.json({
         success: true,
+        persistentStorage: true,
         version: state.version,
         lastModified: state.lastModified,
         dossiers: state.dossiers,
         cheques: state.cheques,
+        deletedDossierIds: state.deletedDossierIds || [],
+        deletedChequeIds: state.deletedChequeIds || [],
         settings: state.settings,
         users: state.users,
         auditLogs: state.auditLogs
