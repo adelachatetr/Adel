@@ -76,8 +76,11 @@ export interface TransitCheque {
 }
 
 export type DossierStatus = 
+  | 'EN_ATTENTE_RECEPTION'      // En attente de réception
   | 'RECEPTIONNE'               // Dossier réceptionné à l'agence / documents reçus
   | 'OUVERT'                    // Ouvert / En cours de constitution & préparation
+  | 'ARRIVEE_PARTIELLE'         // Arrivée partielle de la marchandise
+  | 'MANQUE_SUR_LIVRAISON'      // Manque constaté sur livraison
   | 'EN_DEDOUANEMENT'           // En cours de déclaration / visite douane
   | 'BON_A_DELIVRER'            // Bon à Délivrer (BAD) obtenu
   | 'TRANSMIS_POUR_PAIEMENT'    // Transmis pour paiement (Direction des Finances / Comptabilité / Caisse)

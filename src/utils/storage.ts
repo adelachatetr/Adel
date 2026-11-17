@@ -424,6 +424,12 @@ export const STATUS_CONFIG: Record<ChequeStatus, { label: string; textClass: str
 };
 
 export const DOSSIER_STATUS_CONFIG: Record<DossierStatus, { label: string; textClass: string; bgClass: string; borderClass: string }> = {
+  EN_ATTENTE_RECEPTION: {
+    label: 'En attente de réception',
+    textClass: 'text-sky-800 font-semibold',
+    bgClass: 'bg-sky-50',
+    borderClass: 'border-sky-200'
+  },
   RECEPTIONNE: {
     label: 'Réceptionné',
     textClass: 'text-indigo-800 font-semibold',
@@ -435,6 +441,18 @@ export const DOSSIER_STATUS_CONFIG: Record<DossierStatus, { label: string; textC
     textClass: 'text-slate-800 font-medium',
     bgClass: 'bg-slate-100',
     borderClass: 'border-slate-300'
+  },
+  ARRIVEE_PARTIELLE: {
+    label: 'Arrivée partielle',
+    textClass: 'text-orange-800 font-semibold',
+    bgClass: 'bg-orange-50',
+    borderClass: 'border-orange-200'
+  },
+  MANQUE_SUR_LIVRAISON: {
+    label: 'Manque sur livraison',
+    textClass: 'text-rose-800 font-bold',
+    bgClass: 'bg-rose-50',
+    borderClass: 'border-rose-300'
   },
   EN_DEDOUANEMENT: {
     label: 'En Dédouanement',

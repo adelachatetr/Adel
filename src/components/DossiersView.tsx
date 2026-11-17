@@ -178,8 +178,11 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                 title="Filtrer par statut dossier"
               >
                 <option value="ALL">Statuts ({dossiers.length})</option>
+                <option value="EN_ATTENTE_RECEPTION">En attente de réception</option>
                 <option value="RECEPTIONNE">Réceptionné</option>
                 <option value="OUVERT">Ouvert</option>
+                <option value="ARRIVEE_PARTIELLE">Arrivée partielle</option>
+                <option value="MANQUE_SUR_LIVRAISON">Manque sur livraison</option>
                 <option value="EN_DEDOUANEMENT">En Dédouanement</option>
                 <option value="BON_A_DELIVRER">BAD</option>
                 <option value="TRANSMIS_POUR_PAIEMENT">Transmis pour paiement</option>
@@ -420,8 +423,11 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                               className="text-[11px] font-semibold bg-slate-50 hover:bg-slate-100 border border-slate-300 rounded-lg px-2 py-0.5 text-slate-700 cursor-pointer focus:outline-none focus:border-cyan-600 transition-colors"
                               title="Changer rapidement le statut du dossier"
                             >
+                              <option value="EN_ATTENTE_RECEPTION">En attente de réception</option>
                               <option value="RECEPTIONNE">Réceptionné</option>
                               <option value="OUVERT">Ouvert / Préparation</option>
+                              <option value="ARRIVEE_PARTIELLE">Arrivée partielle</option>
+                              <option value="MANQUE_SUR_LIVRAISON">Manque sur livraison</option>
                               <option value="EN_DEDOUANEMENT">En Dédouanement</option>
                               <option value="BON_A_DELIVRER">Bon à Délivrer (BAD)</option>
                               <option value="TRANSMIS_POUR_PAIEMENT">Transmis pour paiement</option>

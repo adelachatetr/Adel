@@ -356,8 +356,11 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
                 onChange={e => setStatus(e.target.value as DossierStatus)}
                 className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-medium focus:border-cyan-600"
               >
+                <option value="EN_ATTENTE_RECEPTION">En attente de réception</option>
                 <option value="RECEPTIONNE">Réceptionné</option>
                 <option value="OUVERT">Ouvert / Préparation</option>
+                <option value="ARRIVEE_PARTIELLE">Arrivée partielle</option>
+                <option value="MANQUE_SUR_LIVRAISON">Manque sur livraison</option>
                 <option value="EN_DEDOUANEMENT">En Dédouanement</option>
                 <option value="BON_A_DELIVRER">Bon à Délivrer (BAD) Obtenu</option>
                 <option value="TRANSMIS_POUR_PAIEMENT">Transmis pour paiement</option>
@@ -366,6 +369,17 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
               </select>
 
               <div className="flex flex-wrap gap-1.5 mt-2">
+                <button
+                  type="button"
+                  onClick={() => setStatus('EN_ATTENTE_RECEPTION')}
+                  className={`px-2 py-0.5 rounded-lg text-[11px] font-semibold border transition-all cursor-pointer ${
+                    status === 'EN_ATTENTE_RECEPTION'
+                      ? 'bg-sky-100 text-sky-900 border-sky-300 ring-1 ring-sky-400 font-bold'
+                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  En attente de réception
+                </button>
                 <button
                   type="button"
                   onClick={() => setStatus('RECEPTIONNE')}
@@ -387,6 +401,28 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
                   }`}
                 >
                   Ouvert
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStatus('ARRIVEE_PARTIELLE')}
+                  className={`px-2 py-0.5 rounded-lg text-[11px] font-semibold border transition-all cursor-pointer ${
+                    status === 'ARRIVEE_PARTIELLE'
+                      ? 'bg-orange-100 text-orange-900 border-orange-300 ring-1 ring-orange-400 font-bold'
+                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  Arrivée partielle
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStatus('MANQUE_SUR_LIVRAISON')}
+                  className={`px-2 py-0.5 rounded-lg text-[11px] font-semibold border transition-all cursor-pointer ${
+                    status === 'MANQUE_SUR_LIVRAISON'
+                      ? 'bg-rose-100 text-rose-900 border-rose-300 ring-1 ring-rose-400 font-bold'
+                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  Manque sur livraison
                 </button>
                 <button
                   type="button"
