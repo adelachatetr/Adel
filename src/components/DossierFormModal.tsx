@@ -51,10 +51,8 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
       setTransportDocType(editingDossier.transportDocType || 'BL');
       setBlNumber(editingDossier.blNumber);
       setDemandNature(editingDossier.demandNature || 'B/C');
-      const existingMode = editingDossier.deliveryMode
-        || (['CFR', 'FOB', 'CPL'].includes((editingDossier.vesselName || '').toUpperCase())
-          ? (editingDossier.vesselName!.toUpperCase() as DeliveryMode)
-          : 'CFR');
+      const rawMode = (editingDossier.deliveryMode || editingDossier.vesselName || '').toUpperCase();
+      const existingMode: DeliveryMode = rawMode === 'FOB' ? 'FOB' : 'CFR';
       setDeliveryMode(existingMode);
       setEta(editingDossier.eta || '');
       setBerthingDate(editingDossier.berthingDate || '');
@@ -248,7 +246,6 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
               >
                 <option value="CFR">CFR</option>
                 <option value="FOB">FOB</option>
-                <option value="CPL">CPL</option>
               </select>
             </div>
 
