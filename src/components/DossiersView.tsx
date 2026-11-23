@@ -362,7 +362,7 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                     </div>
 
                     <div className="text-xs font-bold text-slate-800 mt-2 truncate flex items-center gap-1.5" title={dossier.clientName}>
-                      <span className="text-[10px] text-slate-500 font-medium">N° BC:</span>
+                      <span className="text-[10px] text-slate-500 font-medium">N° BC/CNT:</span>
                       <span className="font-mono text-cyan-800 font-bold">{dossier.clientName}</span>
                     </div>
 
@@ -446,7 +446,7 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                     </span>
                   </div>
                   <h2 className="text-sm font-bold text-slate-800 mt-1.5 flex items-center gap-2 flex-wrap">
-                    <span className="text-xs text-slate-500 font-semibold uppercase">N° Bon de Commande :</span>
+                    <span className="text-xs text-slate-500 font-semibold uppercase">N° BC/CNT :</span>
                     <span className="font-mono text-cyan-900 font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-300">
                       {selectedDossier.clientName}
                     </span>

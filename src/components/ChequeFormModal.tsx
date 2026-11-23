@@ -384,14 +384,14 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
 
             <div>
               <label className="block text-slate-700 font-semibold mb-1">
-                N° DE BON DE COMMANDE <span className="text-rose-500">*</span>
+                N° BC/CNT <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
                 required
                 value={clientName}
                 onChange={e => setClientName(e.target.value)}
-                placeholder="ex: BC-2026-04192 / BON DE COMMANDE SCHB"
+                placeholder="ex: BC-2026-04192 / CNT-2026-015"
                 className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-bold font-mono focus:outline-none focus:border-cyan-600"
               />
             </div>

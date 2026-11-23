@@ -89,7 +89,7 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
     setFormError(null);
 
     if (!dossierNumber.trim() || !clientName.trim() || !blNumber.trim()) {
-      setFormError(`Veuillez renseigner au moins le Nom Fournisseur, le N° de Bon de Commande et le N° de ${transportDocType === 'LTA' ? 'LTA' : 'B/L'}.`);
+      setFormError(`Veuillez renseigner au moins le Nom Fournisseur, le N° BC/CNT et le N° de ${transportDocType === 'LTA' ? 'LTA' : 'B/L'}.`);
       return;
     }
 
@@ -182,14 +182,14 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="sm:col-span-2">
               <label className="block text-slate-700 font-semibold mb-1">
-                N° DE BON DE COMMANDE <span className="text-rose-500">*</span>
+                N° BC/CNT <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
                 required
                 value={clientName}
                 onChange={e => setClientName(e.target.value)}
-                placeholder="ex: BC-2026-04192 / BON DE COMMANDE SCHB"
+                placeholder="ex: BC-2026-04192 / CNT-2026-015"
                 className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-bold font-mono focus:border-cyan-600"
               />
             </div>

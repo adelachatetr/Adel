@@ -307,7 +307,7 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
               FICHE RÉCAPITULATIVE & ÉTAT DE DÉBOURS DU DOSSIER DE TRANSIT
             </h2>
             <div className="text-xs text-slate-600 mt-1.5 flex items-center justify-center gap-4 flex-wrap">
-              <span>N° Bon de Commande : <strong className="text-slate-900 font-mono">{dossier.clientName}</strong></span>
+              <span>N° BC/CNT : <strong className="text-slate-900 font-mono">{dossier.clientName}</strong></span>
               <span>·</span>
               <span>Fournisseur : <strong className="text-slate-900">{dossier.dossierNumber}</strong></span>
               <span>·</span>
