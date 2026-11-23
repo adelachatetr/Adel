@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Check, Container, FileText, AlertCircle } from 'lucide-react';
 import { TransitCheque, TransitDossier, ChequeDirection, ChequeCategory, ChequeStatus, ChequeNature } from '../types/transit';
-import { SHIPPING_LINES, MAJOR_BANKS, TRANSIT_AGENTS } from '../data/mockTransitData';
+import { SHIPPING_LINES, TRANSIT_AGENTS } from '../data/mockTransitData';
 
 interface ChequeFormModalProps {
   isOpen: boolean;
@@ -28,7 +28,6 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
 }) => {
   const [chequeNature, setChequeNature] = useState<ChequeNature>('ORDINAIRE');
   const [chequeNumber, setChequeNumber] = useState('');
-  const [bankName, setBankName] = useState(defaultBankName || MAJOR_BANKS[0]);
   const [direction, setDirection] = useState<ChequeDirection>('EMIS');
   const [category, setCategory] = useState<ChequeCategory>('CAUTION_CONTENEUR');
   const [amount, setAmount] = useState<string>('');
@@ -58,11 +57,6 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
       const nature: ChequeNature = editingCheque.chequeNature || 'ORDINAIRE';
       setChequeNature(nature);
       setChequeNumber(editingCheque.chequeNumber);
-      const rawBank = editingCheque.bankName || '';
-      const mappedBank = rawBank === 'BEA (Banque Extérieure d\'Algérie)'
-        ? MAJOR_BANKS[0]
-        : (MAJOR_BANKS.includes(rawBank) ? rawBank : MAJOR_BANKS[0]);
-      setBankName(mappedBank);
       setDirection(editingCheque.direction);
       setCategory(editingCheque.category);
       setAmount(
@@ -94,7 +88,6 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
       // New form reset
       setChequeNature('ORDINAIRE');
       setChequeNumber(`CHQ-${Math.floor(100000 + Math.random() * 900000)}`);
-      setBankName(MAJOR_BANKS[0]);
       setDirection('EMIS');
       setCategory('CAUTION_CONTENEUR');
       setAmount('');
@@ -189,9 +182,9 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
     const payload: Partial<TransitCheque> = {
       chequeNumber: finalChequeNumber,
       chequeNature,
-      bankName: (bankName && bankName.toUpperCase().includes('BEA'))
-        ? bankName.trim()
-        : 'BEA Constantine (Banque Extérieure d\'Algérie)',
+      bankName: editingCheque?.bankName && editingCheque.bankName.toUpperCase().includes('BEA')
+        ? editingCheque.bankName
+        : (defaultBankName || 'BEA Constantine (Banque Extérieure d\'Algérie)'),
       direction,
       category,
       amount: parsedAmount,
@@ -261,7 +254,7 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
           )}
           
           {/* Section 1: Identification du chèque & flux */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-700 font-semibold mb-1">
                 Nature de chèque <span className="text-rose-500">*</span>
@@ -285,26 +278,6 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
                   className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-[11px] text-slate-800 font-mono font-semibold focus:outline-none focus:border-cyan-600 focus:bg-white"
                 />
               </div>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-slate-700 font-semibold text-xs">
-                  Banque Tirée (BEA Constantine) <span className="text-rose-500">*</span>
-                </label>
-                <span className="text-[10px] bg-blue-100 text-blue-900 font-extrabold px-2 py-0.5 rounded border border-blue-200 tracking-wider">
-                  BEA CONSTANTINE
-                </span>
-              </div>
-              <select
-                value={bankName}
-                onChange={e => setBankName(e.target.value)}
-                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-bold focus:outline-none focus:border-cyan-600 text-xs sm:text-sm"
-              >
-                {MAJOR_BANKS.map(b => (
-                  <option key={b} value={b}>{b}</option>
-                ))}
-              </select>
             </div>
 
             <div>
