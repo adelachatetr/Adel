@@ -148,7 +148,7 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
   <style>
     @page { margin: 1cm; size: A4 portrait; }
     body { background: white !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #0f172a; margin: 0; padding: 24px; }
-    .printable-document { max-width: 900px; margin: 0 auto; }
+    .printable-document { max-width: 1020px; margin: 0 auto; }
     .whitespace-nowrap { white-space: nowrap !important; }
     @media print {
       body { padding: 0; }
@@ -183,7 +183,7 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-2 sm:p-5 overflow-y-auto backdrop-blur-xs print:p-0 print:bg-white print:static print:overflow-visible">
-      <div className="bg-white border border-slate-300 rounded-2xl max-w-4xl w-full max-h-[94vh] flex flex-col shadow-2xl print:bg-white print:border-none print:shadow-none print:max-w-none print:max-h-none print:p-0">
+      <div className="bg-white border border-slate-300 rounded-2xl max-w-5xl w-full max-h-[94vh] flex flex-col shadow-2xl print:bg-white print:border-none print:shadow-none print:max-w-none print:max-h-none print:p-0">
         
         {/* Modal Controls Bar (Hidden when printing) */}
         <div className="print:hidden p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/90 rounded-t-2xl">
@@ -357,9 +357,9 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
                 {dossier.bankReceptionDate ? formatShortDate(dossier.bankReceptionDate) : 'En attente'}
               </span>
             </div>
-            <div>
+            <div className="col-span-2 sm:col-span-4 pt-1 border-t border-slate-200/80">
               <span className="text-slate-500 block text-[10px] uppercase font-bold">Désignation Marchandises</span>
-              <span className="font-medium text-slate-900 truncate block">{dossier.goodsDescription}</span>
+              <span className="font-medium text-slate-900 block">{dossier.goodsDescription}</span>
             </div>
           </div>
 
@@ -396,6 +396,7 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
               <span className="text-[10px] font-normal text-slate-500 lowercase">Tous montants en {selectedCurrency}</span>
             </h3>
 
+            <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-y-2 border-slate-900 bg-slate-100 font-bold text-slate-800">
@@ -404,8 +405,8 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
                   <th className="py-2 px-2 border-r border-slate-200">Nature de la Dépense</th>
                   <th className="py-2 px-2 border-r border-slate-200">Bénéficiaire</th>
                   <th className="py-2 px-2 border-r border-slate-200">Déclarant / Coursier</th>
-                  <th className="py-2 px-2 border-r border-slate-200">Statut</th>
-                  <th className="py-2 px-3 text-right whitespace-nowrap min-w-[130px]">Montant</th>
+                  <th className="py-2 px-3 border-r border-slate-200 min-w-[175px]">Statut</th>
+                  <th className="py-2 px-3 text-right whitespace-nowrap min-w-[135px]">Montant</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
@@ -445,8 +446,8 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
                         <td className="py-2 px-2 border-r border-slate-200 text-[11px] text-slate-600">
                           {chq.coursierName || 'Non assigné'}
                         </td>
-                        <td className="py-2 px-2 border-r border-slate-200">
-                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 border border-slate-300">
+                        <td className="py-2 px-3 border-r border-slate-200 min-w-[175px] whitespace-nowrap">
+                          <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded bg-slate-100 border border-slate-300 inline-block">
                             {chqStatusCfg.label}
                           </span>
                         </td>
@@ -469,6 +470,7 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
                 </tr>
               </tfoot>
             </table>
+            </div>
           </div>
 
           {/* Observations note if any */}

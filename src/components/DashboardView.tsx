@@ -444,7 +444,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <th className="py-3 px-3">Dossier</th>
                 <th className="py-3 px-3">Bénéficiaire / Nature</th>
                 <th className="py-3 px-3">Montant</th>
-                <th className="py-3 px-3">Statut</th>
+                <th className="py-3 px-4 min-w-[180px]">Statut</th>
                 <th className="py-3 px-3">Date</th>
                 <th className="py-3 pl-3 text-right">Action</th>
               </tr>
@@ -469,8 +469,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     <td className="py-3.5 px-3 font-mono font-bold text-slate-900 text-sm">
                       {formatAmount(chq.amount, chq.currency)}
                     </td>
-                    <td className="py-3.5 px-3">
-                      <span className={`inline-flex items-center text-xs px-2.5 py-0.5 rounded-md border font-medium ${statusCfg.bgClass} ${statusCfg.textClass} ${statusCfg.borderClass}`}>
+                    <td className="py-3.5 px-4 min-w-[180px]">
+                      <span className={`inline-flex items-center whitespace-nowrap text-xs px-2.5 py-0.5 rounded-md border font-medium ${statusCfg.bgClass} ${statusCfg.textClass} ${statusCfg.borderClass}`}>
                         {statusCfg.label}
                       </span>
                     </td>

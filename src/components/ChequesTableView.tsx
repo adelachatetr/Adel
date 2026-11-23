@@ -639,7 +639,7 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
                 <th className="py-3 px-3 font-bold text-slate-700">Bénéficiaire & Nature</th>
                 <th className="py-3 px-3 font-bold text-slate-700">Montant</th>
                 <th className="py-3 px-3 font-bold text-slate-700">Déclarant / Coursier</th>
-                <th className="py-3 px-3 font-bold text-slate-700">Statut</th>
+                <th className="py-3 px-4 font-bold text-slate-700 min-w-[200px]">Statut</th>
                 <th className="py-3 px-3 font-bold text-slate-700">Échéance / Suivi</th>
                 <th className="py-3 px-3 text-right font-bold text-slate-700">Actions</th>
               </tr>
@@ -786,9 +786,9 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
                       </td>
 
                       {/* Status with quick change menu */}
-                      <td className="py-3 px-3 relative">
-                        <div className="flex items-center gap-1">
-                          <span className={`inline-flex items-center text-xs px-2.5 py-0.5 rounded-md border font-medium ${statusCfg.bgClass} ${statusCfg.textClass} ${statusCfg.borderClass}`}>
+                      <td className="py-3 px-4 relative min-w-[200px]">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`inline-flex items-center whitespace-nowrap text-xs px-2.5 py-0.5 rounded-md border font-medium ${statusCfg.bgClass} ${statusCfg.textClass} ${statusCfg.borderClass}`}>
                             {statusCfg.label}
                           </span>
                           

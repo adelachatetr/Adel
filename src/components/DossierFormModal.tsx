@@ -333,7 +333,7 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="block text-slate-700 font-semibold mb-1">
                 Nombre de conteneurs (EVP)
@@ -347,7 +347,7 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
               />
             </div>
 
-            <div>
+            <div className="sm:col-span-2">
               <label className="block text-slate-700 font-semibold mb-1">
                 Statut du Dossier
               </label>
