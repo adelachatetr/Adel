@@ -142,6 +142,8 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
       setBeneficiary('Entreprise Portuaire / Marsa / DP World');
     } else if (cat === 'TRANSPORT_TRACTION') {
       setBeneficiary('Transporteur Routier Agréé');
+    } else if (cat === 'ASSURANCE_CAAT') {
+      setBeneficiary('CAAT (Compagnie Algérienne des Assurances)');
     } else if (cat === 'AVANCE_PROVISION') {
       setDirection('RECU');
       setBeneficiary('Notre Agence de Transit');
@@ -357,6 +359,8 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
                 <option value="FRAIS_MARITIMES">Frais Maritimes & BAD</option>
                 <option value="MANUTENTION_PORT">Manutention & Acconage Port</option>
                 <option value="TRANSPORT_TRACTION">Transport Terrestre</option>
+                <option value="CX">CX</option>
+                <option value="ASSURANCE_CAAT">Assurance (CAAT)</option>
                 <option value="AVANCE_PROVISION">Avance / Provision Client</option>
                 <option value="HONORAIRES_TRANSIT">Honoraires Transit</option>
                 <option value="AUTRE_DEBOURS">Autre Débours</option>

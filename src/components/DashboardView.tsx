@@ -367,7 +367,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         catKey === 'CAUTION_CONTENEUR' ? 'bg-amber-500' :
                         catKey === 'DROITS_DOUANE' ? 'bg-emerald-600' :
                         catKey === 'FRAIS_MARITIMES' ? 'bg-cyan-600' :
-                        catKey === 'MANUTENTION_PORT' ? 'bg-indigo-600' : 'bg-purple-600'
+                        catKey === 'MANUTENTION_PORT' ? 'bg-indigo-600' :
+                        catKey === 'CX' ? 'bg-orange-500' :
+                        catKey === 'ASSURANCE_CAAT' ? 'bg-rose-600' : 'bg-purple-600'
                       }`}
                       style={{ width: `${Math.min(percent, 100)}%` }}
                     />

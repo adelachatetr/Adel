@@ -8,6 +8,8 @@ export type ChequeCategory =
   | 'FRAIS_MARITIMES'      // Fret, échange B/L, BAD, frais d'escale, surestaries
   | 'MANUTENTION_PORT'     // Acconage, magasinage terminal, pesage VGM, scanner
   | 'TRANSPORT_TRACTION'   // Transporteur routier / traction port-client
+  | 'CX'                   // Frais CX
+  | 'ASSURANCE_CAAT'       // Assurance transport / marchandises CAAT
   | 'AVANCE_PROVISION'     // Provision reçue du client importateur
   | 'HONORAIRES_TRANSIT'   // Rémunération de la prestation transitaire
   | 'AUTRE_DEBOURS';       // Frais vétérinaires, phytosanitaires, escorte, etc.

@@ -333,6 +333,16 @@ export const CATEGORY_LABELS: Record<ChequeCategory, { label: string; short: str
     short: 'Transport',
     color: 'purple'
   },
+  CX: {
+    label: 'CX',
+    short: 'CX',
+    color: 'orange'
+  },
+  ASSURANCE_CAAT: {
+    label: 'Assurance (CAAT)',
+    short: 'Assurance (CAAT)',
+    color: 'rose'
+  },
   AVANCE_PROVISION: {
     label: 'Avance & Provision Client',
     short: 'Avance Client',

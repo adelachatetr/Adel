@@ -412,6 +412,8 @@ export const DeboursBreakdownPrintModal: React.FC<DeboursBreakdownPrintModalProp
                             {item.catKey === 'FRAIS_MARITIMES' && 'Échange de B/L, BAD, surestaries et frais portuaires armateurs'}
                             {item.catKey === 'MANUTENTION_PORT' && 'Acconage, magasinage terminal, pesage VGM et prestations de quai'}
                             {item.catKey === 'TRANSPORT_TRACTION' && 'Traction routière entre port de débarquement et usine'}
+                            {item.catKey === 'CX' && 'Frais et prestations CX'}
+                            {item.catKey === 'ASSURANCE_CAAT' && 'Assurance transport / marchandises auprès de la CAAT'}
                             {item.catKey === 'AVANCE_PROVISION' && 'Provisions et avances versées pour les débours'}
                             {item.catKey === 'AUTRE_DEBOURS' && 'Frais annexes, contrôle phytosanitaire, escorte, etc.'}
                           </div>
