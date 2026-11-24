@@ -428,7 +428,7 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
                           {index + 1}
                         </td>
                         <td className="py-2 px-2 border-r border-slate-200">
-                          <div className="font-bold text-slate-900 text-[11px]">{natureLabel}</div>
+                          <div className={`font-bold text-[11px] ${chq.chequeNature === 'A_BLANC' ? 'text-red-700' : 'text-slate-900'}`}>{natureLabel}</div>
                           <div className="font-mono text-[10px] text-slate-600">{chq.chequeNumber}</div>
                           <div className="text-[10px] font-sans font-normal text-slate-500">{chq.bankName}</div>
                         </td>
@@ -451,7 +451,7 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
                             {chqStatusCfg.label}
                           </span>
                         </td>
-                        <td className="py-2 px-3 text-right font-mono font-bold whitespace-nowrap text-slate-900">
+                        <td className={`py-2 px-3 text-right font-mono font-bold whitespace-nowrap ${isBlankPending ? 'text-red-700' : 'text-slate-900'}`}>
                           {isBlankPending ? `0,00\u00A0${chq.currency}` : formatAmount(chq.amount, chq.currency)}
                         </td>
                       </tr>

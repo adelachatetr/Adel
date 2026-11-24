@@ -113,11 +113,11 @@ export const ChequeDetailModal: React.FC<ChequeDetailModalProps> = ({
           
           {/* Main Info Strip */}
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-            <div className={`p-3.5 rounded-xl border ${isBlankPending ? 'bg-amber-50/70 border-amber-300' : 'bg-slate-50 border-slate-200'}`}>
+            <div className={`p-3.5 rounded-xl border ${isBlankPending ? 'bg-red-50/70 border-red-300' : 'bg-slate-50 border-slate-200'}`}>
               <span className="text-[11px] text-slate-500 font-semibold">Montant du Titre</span>
               {isBlankPending ? (
                 <div className="mt-0.5 space-y-1">
-                  <div className="text-lg font-bold font-mono text-amber-800">
+                  <div className="text-lg font-bold font-mono text-red-700">
                     0,00&nbsp;{cheque.currency}
                   </div>
                   <button
@@ -126,7 +126,7 @@ export const ChequeDetailModal: React.FC<ChequeDetailModalProps> = ({
                       onClose();
                       onEdit(cheque);
                     }}
-                    className="px-2 py-0.5 rounded-md bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-bold cursor-pointer transition-colors"
+                    className="px-2 py-0.5 rounded-md bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold cursor-pointer transition-colors"
                   >
                     Facture reçue ? Saisir le montant
                   </button>

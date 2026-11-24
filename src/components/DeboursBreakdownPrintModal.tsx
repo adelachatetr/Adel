@@ -504,7 +504,7 @@ export const DeboursBreakdownPrintModal: React.FC<DeboursBreakdownPrintModalProp
                         <tbody className="divide-y divide-slate-100 font-mono">
                           {item.chequesList.map(chq => (
                             <tr key={chq.id} className="hover:bg-slate-50">
-                              <td className="py-1 px-2 font-sans font-bold text-slate-800">
+                              <td className={`py-1 px-2 font-sans font-bold ${chq.chequeNature === 'A_BLANC' ? 'text-red-700' : 'text-slate-800'}`}>
                                 {CHEQUE_NATURE_LABELS[chq.chequeNature || 'ORDINAIRE']?.label}
                                 <span className="block font-mono text-[10px] font-normal text-slate-500">{chq.chequeNumber}</span>
                               </td>
@@ -512,7 +512,7 @@ export const DeboursBreakdownPrintModal: React.FC<DeboursBreakdownPrintModalProp
                               <td className="py-1 px-2 font-sans text-slate-800 font-semibold truncate max-w-[160px]">{chq.beneficiary}</td>
                               <td className="py-1 px-2 font-sans text-slate-600">{chq.dossierNumber}</td>
                               <td className="py-1 px-2 text-slate-600">{formatShortDate(chq.dateEmission)}</td>
-                              <td className="py-1 px-2 text-right font-bold text-slate-900 whitespace-nowrap">
+                              <td className={`py-1 px-2 text-right font-bold whitespace-nowrap ${chq.chequeNature === 'A_BLANC' && chq.amount === 0 ? 'text-red-700' : 'text-slate-900'}`}>
                                 {chq.chequeNature === 'A_BLANC' && chq.amount === 0
                                   ? `0,00\u00A0${chq.currency}`
                                   : formatAmount(chq.amount, chq.currency)}

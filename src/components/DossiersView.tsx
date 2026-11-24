@@ -611,10 +611,10 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
 
                         <div className="flex items-center gap-3 self-end sm:self-center">
                           <div className="text-right">
-                            <div className={`text-sm font-mono font-bold ${isBlankPending ? 'text-amber-800' : 'text-slate-900'}`}>
+                            <div className={`text-sm font-mono font-bold ${isBlankPending ? 'text-red-700' : 'text-slate-900'}`}>
                               {isBlankPending ? `0,00\u00A0${chq.currency}` : formatAmount(chq.amount, chq.currency)}
                             </div>
-                            <div className="text-[11px] text-slate-400 font-medium">
+                            <div className={`text-[11px] font-medium ${isBlankPending ? 'text-red-600' : 'text-slate-400'}`}>
                               {isBlankPending
                                 ? 'En attente de facture'
                                 : (chq.coursierName ? `Coursier: ${chq.coursierName}` : 'Non remis')}

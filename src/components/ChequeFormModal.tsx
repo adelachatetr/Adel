@@ -262,11 +262,15 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
               <select
                 value={chequeNature}
                 onChange={e => handleChequeNatureChange(e.target.value as ChequeNature)}
-                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-bold focus:outline-none focus:border-cyan-600 cursor-pointer"
+                className={`w-full border rounded-xl p-2.5 font-bold focus:outline-none cursor-pointer transition-colors ${
+                  chequeNature === 'A_BLANC'
+                    ? 'bg-red-50 border-red-400 text-red-700 focus:border-red-600'
+                    : 'bg-white border-slate-300 text-slate-900 focus:border-cyan-600'
+                }`}
               >
-                <option value="ORDINAIRE">Chèque Ordinaire</option>
-                <option value="VISE">Chèque visé</option>
-                <option value="A_BLANC">Chèque à Blanc</option>
+                <option value="ORDINAIRE" className="text-slate-900">Chèque Ordinaire</option>
+                <option value="VISE" className="text-indigo-800">Chèque visé</option>
+                <option value="A_BLANC" className="text-red-700 font-bold">Chèque à Blanc</option>
               </select>
               <div className="mt-1.5 flex items-center gap-1.5">
                 <span className="text-[10px] font-semibold text-slate-500 whitespace-nowrap">Réf. chèque :</span>
@@ -303,7 +307,7 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
                   Montant du Chèque {chequeNature !== 'A_BLANC' && <span className="text-rose-500">*</span>}
                 </label>
                 {chequeNature === 'A_BLANC' && (
-                  <span className="text-[10px] bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded border border-amber-300">
+                  <span className="text-[10px] bg-red-100 text-red-800 font-bold px-2 py-0.5 rounded border border-red-300">
                     Chèque à Blanc · 0.00 par défaut
                   </span>
                 )}
@@ -320,8 +324,10 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
                     setAmount(e.target.value);
                     if (formError) setFormError(null);
                   }}
-                  className={`flex-1 bg-white border rounded-xl p-2.5 text-slate-900 font-mono font-bold text-sm focus:outline-none focus:border-cyan-600 ${
-                    chequeNature === 'A_BLANC' ? 'border-amber-300 bg-amber-50/30' : 'border-slate-300'
+                  className={`flex-1 border rounded-xl p-2.5 font-mono font-bold text-sm focus:outline-none ${
+                    chequeNature === 'A_BLANC'
+                      ? 'border-red-400 bg-red-50/40 text-red-700 focus:border-red-600'
+                      : 'bg-white border-slate-300 text-slate-900 focus:border-cyan-600'
                   }`}
                 />
                 <div className="w-24 bg-slate-100 border border-slate-300 rounded-xl px-3 py-2.5 text-slate-900 font-mono font-extrabold flex items-center justify-center text-center text-xs select-none">
@@ -329,7 +335,7 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
                 </div>
               </div>
               {chequeNature === 'A_BLANC' && (
-                <p className="text-[11px] text-amber-800 font-medium mt-1">
+                <p className="text-[11px] text-red-700 font-medium mt-1">
                   {editingCheque
                     ? 'Saisissez le montant définitif ci-dessus dès réception des factures.'
                     : 'Le montant reste à 0.00 à l\'émission. Dès réception des factures, modifiez ce chèque pour saisir le montant.'}

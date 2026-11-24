@@ -322,13 +322,17 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
             <select
               value={natureFilter}
               onChange={e => setNatureFilter(e.target.value as ChequeNature | 'ALL')}
-              className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 font-semibold focus:outline-none focus:border-cyan-600 focus:bg-white cursor-pointer truncate"
+              className={`w-full border rounded-lg px-2.5 py-1.5 text-xs font-semibold focus:outline-none cursor-pointer truncate ${
+                natureFilter === 'A_BLANC'
+                  ? 'bg-red-50 border-red-400 text-red-700 focus:border-red-600'
+                  : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-cyan-600 focus:bg-white'
+              }`}
             >
               <option value="ALL">Toutes natures de chèque ({cheques.length})</option>
               {(Object.entries(CHEQUE_NATURE_LABELS) as [ChequeNature, typeof CHEQUE_NATURE_LABELS['ORDINAIRE']][]).map(([key, val]) => {
                 const count = cheques.filter(c => (c.chequeNature || 'ORDINAIRE') === key).length;
                 return (
-                  <option key={key} value={key}>
+                  <option key={key} value={key} className={key === 'A_BLANC' ? 'text-red-700 font-bold' : ''}>
                     {val.label} ({count})
                   </option>
                 );
@@ -470,13 +474,13 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
               onClick={() => setNatureFilter(natureFilter === 'A_BLANC' ? 'ALL' : 'A_BLANC')}
               className={`px-2.5 py-1 rounded-md text-xs font-bold transition-colors cursor-pointer flex items-center gap-1 ${
                 natureFilter === 'A_BLANC'
-                  ? 'bg-amber-600 text-white shadow-xs'
-                  : 'bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100'
+                  ? 'bg-red-600 text-white shadow-xs'
+                  : 'bg-red-50 text-red-700 border border-red-300 hover:bg-red-100'
               }`}
               title="Afficher les chèques à blanc (en attente de facture)"
             >
               <span>Chèques à Blanc</span>
-              <span className={`text-[10px] px-1 rounded ${natureFilter === 'A_BLANC' ? 'bg-white/20 text-white' : 'bg-amber-200/70 text-amber-950'}`}>
+              <span className={`text-[10px] px-1 rounded ${natureFilter === 'A_BLANC' ? 'bg-white/20 text-white' : 'bg-red-200/80 text-red-900'}`}>
                 {cheques.filter(c => c.chequeNature === 'A_BLANC').length}
               </span>
             </button>
@@ -500,7 +504,11 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
             <span className="text-[11px] text-slate-500 font-medium">Filtres actifs :</span>
             
             {natureFilter !== 'ALL' && (
-              <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-950 px-2 py-0.5 rounded-full text-[11px] font-semibold border border-amber-300">
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border ${
+                natureFilter === 'A_BLANC'
+                  ? 'bg-red-100 text-red-800 border-red-300'
+                  : 'bg-amber-100 text-amber-950 border-amber-300'
+              }`}>
                 Nature de chèque: {CHEQUE_NATURE_LABELS[natureFilter]?.label || natureFilter}
                 <button onClick={() => setNatureFilter('ALL')} className="hover:text-black">
                   <X className="h-3 w-3" />
@@ -738,17 +746,17 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
                       <td className="py-3 px-3">
                         {isBlankPending ? (
                           <div>
-                            <div className="font-mono font-bold text-amber-800 text-sm">
+                            <div className="font-mono font-bold text-red-700 text-sm">
                               0,00&nbsp;{chq.currency}
                             </div>
                             <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                              <span className="text-[10px] text-amber-800 font-semibold">
+                              <span className="text-[10px] text-red-700 font-semibold">
                                 En attente facture
                               </span>
                               <button
                                 type="button"
                                 onClick={() => onEditCheque(chq)}
-                                className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 font-bold cursor-pointer transition-colors"
+                                className="text-[10px] px-1.5 py-0.5 rounded bg-red-100 hover:bg-red-200 text-red-800 border border-red-300 font-bold cursor-pointer transition-colors"
                               >
                                 Saisir montant
                               </button>

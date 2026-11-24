@@ -300,9 +300,9 @@ export const CHEQUE_NATURE_LABELS: Record<ChequeNature, { label: string; short: 
   A_BLANC: {
     label: 'Chèque à Blanc',
     short: 'À Blanc',
-    bgClass: 'bg-amber-50',
-    textClass: 'text-amber-900',
-    borderClass: 'border-amber-300'
+    bgClass: 'bg-red-50',
+    textClass: 'text-red-700',
+    borderClass: 'border-red-300'
   }
 };
 

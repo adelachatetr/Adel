@@ -360,7 +360,9 @@ export const BordereauModal: React.FC<BordereauModalProps> = ({
                       ? isFromFilter
                         ? 'bg-emerald-100 text-emerald-950 border-emerald-500 font-bold shadow-2xs ring-1 ring-emerald-400'
                         : 'bg-cyan-100 text-cyan-900 border-cyan-400 font-bold shadow-2xs'
-                      : 'bg-white text-slate-600 border-slate-300 hover:text-slate-900 hover:border-slate-400'
+                      : c.chequeNature === 'A_BLANC'
+                        ? 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100'
+                        : 'bg-white text-slate-600 border-slate-300 hover:text-slate-900 hover:border-slate-400'
                   }`}
                   title={isFromFilter ? 'Chèque issu du filtre actif' : undefined}
                 >
@@ -463,7 +465,7 @@ export const BordereauModal: React.FC<BordereauModalProps> = ({
                           {index + 1}
                         </td>
                         <td className="py-2 px-2 border-r border-slate-200">
-                          <div className="font-bold text-slate-900 text-[11px]">{natureLabel}</div>
+                          <div className={`font-bold text-[11px] ${chq.chequeNature === 'A_BLANC' ? 'text-red-700' : 'text-slate-900'}`}>{natureLabel}</div>
                           <div className="font-mono text-[10px] text-slate-600">{chq.chequeNumber}</div>
                           <div className="text-[10px] font-sans font-normal text-slate-600">{chq.bankName}</div>
                         </td>
@@ -487,7 +489,7 @@ export const BordereauModal: React.FC<BordereauModalProps> = ({
                             'Débours ordinaire'
                           )}
                         </td>
-                        <td className="py-2 px-2 text-right font-mono font-bold whitespace-nowrap">
+                        <td className={`py-2 px-2 text-right font-mono font-bold whitespace-nowrap ${isBlankPending ? 'text-red-700' : ''}`}>
                           {isBlankPending ? `0,00\u00A0${chq.currency} (À blanc)` : formatAmount(chq.amount, chq.currency)}
                         </td>
                       </tr>
