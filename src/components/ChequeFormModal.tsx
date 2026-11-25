@@ -276,8 +276,8 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
             </div>
           )}
           
-          {/* Section 1: Identification du chèque & flux */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Section 1: Nature de chèque & Montant du Chèque */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
             <div>
               <label className="block text-slate-700 font-semibold mb-1">
                 Nature de chèque <span className="text-rose-500">*</span>
@@ -308,64 +308,49 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-slate-700 font-semibold mb-1">
-                Flux de Trésorerie
-              </label>
-              <select
-                value={direction}
-                onChange={e => setDirection(e.target.value as ChequeDirection)}
-                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-medium focus:outline-none focus:border-cyan-600"
-              >
-                <option value="EMIS">Émis (Débours / Paiement)</option>
-                <option value="RECU">Reçu (Avance / Client)</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Section 2: Montant du Chèque */}
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="block text-slate-700 font-semibold">
-                Montant du Chèque {chequeNature !== 'A_BLANC' && <span className="text-rose-500">*</span>}
-              </label>
+              <div className="flex items-center justify-between mb-1 gap-2">
+                <label className="block text-slate-700 font-semibold">
+                  Montant du Chèque {chequeNature !== 'A_BLANC' && <span className="text-rose-500">*</span>}
+                </label>
+                {chequeNature === 'A_BLANC' && (
+                  <span className="text-[10px] bg-red-100 text-red-800 font-bold px-2 py-0.5 rounded border border-red-300 whitespace-nowrap">
+                    Chèque à Blanc · 0.00
+                  </span>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  step="any"
+                  min={chequeNature === 'A_BLANC' ? '0' : '0.01'}
+                  required={chequeNature !== 'A_BLANC'}
+                  placeholder="0.00"
+                  value={amount}
+                  onChange={e => {
+                    setAmount(e.target.value);
+                    if (formError) setFormError(null);
+                  }}
+                  className={`flex-1 min-w-0 border rounded-xl p-2.5 font-mono font-bold text-sm focus:outline-none ${
+                    chequeNature === 'A_BLANC'
+                      ? 'border-red-400 bg-red-50/40 text-red-700 focus:border-red-600'
+                      : 'bg-white border-slate-300 text-slate-900 focus:border-cyan-600'
+                  }`}
+                />
+                <div className="w-16 bg-slate-100 border border-slate-300 rounded-xl px-2 py-2.5 text-slate-900 font-mono font-extrabold flex items-center justify-center text-center text-xs select-none shrink-0">
+                  DA
+                </div>
+              </div>
               {chequeNature === 'A_BLANC' && (
-                <span className="text-[10px] bg-red-100 text-red-800 font-bold px-2 py-0.5 rounded border border-red-300">
-                  Chèque à Blanc · 0.00 par défaut
-                </span>
+                <p className="text-[11px] text-red-700 font-medium mt-1">
+                  {editingCheque
+                    ? 'Saisissez le montant définitif ci-dessus dès réception des factures.'
+                    : 'Le montant reste à 0.00 à l\'émission. Modifiez ce chèque dès réception des factures.'}
+                </p>
               )}
             </div>
-            <div className="flex gap-2">
-              <input
-                type="number"
-                step="any"
-                min={chequeNature === 'A_BLANC' ? '0' : '0.01'}
-                required={chequeNature !== 'A_BLANC'}
-                placeholder="0.00"
-                value={amount}
-                onChange={e => {
-                  setAmount(e.target.value);
-                  if (formError) setFormError(null);
-                }}
-                className={`flex-1 border rounded-xl p-2.5 font-mono font-bold text-sm focus:outline-none ${
-                  chequeNature === 'A_BLANC'
-                    ? 'border-red-400 bg-red-50/40 text-red-700 focus:border-red-600'
-                    : 'bg-white border-slate-300 text-slate-900 focus:border-cyan-600'
-                }`}
-              />
-              <div className="w-24 bg-slate-100 border border-slate-300 rounded-xl px-3 py-2.5 text-slate-900 font-mono font-extrabold flex items-center justify-center text-center text-xs select-none">
-                DA
-              </div>
-            </div>
-            {chequeNature === 'A_BLANC' && (
-              <p className="text-[11px] text-red-700 font-medium mt-1">
-                {editingCheque
-                  ? 'Saisissez le montant définitif ci-dessus dès réception des factures.'
-                  : 'Le montant reste à 0.00 à l\'émission. Dès réception des factures, modifiez ce chèque pour saisir le montant.'}
-              </p>
-            )}
           </div>
 
-          {/* Section 2B: Catégorie & Nature de dépenses dépendante */}
+          {/* Section 2: Catégorie & Nature de dépenses dépendante */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-700 font-semibold mb-1">

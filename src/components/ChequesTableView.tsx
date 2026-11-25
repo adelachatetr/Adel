@@ -17,8 +17,8 @@ import {
   X,
   AlertTriangle
 } from 'lucide-react';
-import { TransitCheque, ChequeStatus, ChequeCategory, ChequeDirection, ChequeNature } from '../types/transit';
-import { formatAmount, formatShortDate, STATUS_CONFIG, CATEGORY_LABELS, CHEQUE_NATURE_LABELS } from '../utils/storage';
+import { TransitCheque, ChequeStatus, ChequeCategory, ChequeNature } from '../types/transit';
+import { formatAmount, formatShortDate, STATUS_CONFIG, CATEGORY_LABELS, CHEQUE_NATURE_LABELS, CATEGORY_EXPENSE_NATURES } from '../utils/storage';
 
 interface ChequesTableViewProps {
   cheques: TransitCheque[];
@@ -55,7 +55,7 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
   const [beneficiaryFilter, setBeneficiaryFilter] = useState<string>(
     initialFilter?.type === 'beneficiary' ? initialFilter.value : 'ALL'
   );
-  const [directionFilter, setDirectionFilter] = useState<ChequeDirection | 'ALL'>('ALL');
+  const [expenseNatureFilter, setExpenseNatureFilter] = useState<string>('ALL');
   const [natureFilter, setNatureFilter] = useState<ChequeNature | 'ALL'>(
     initialFilter?.type === 'nature' ? (initialFilter.value as ChequeNature) : 'ALL'
   );
@@ -128,8 +128,8 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
         return false;
       }
 
-      // Direction filter
-      if (directionFilter !== 'ALL' && c.direction !== directionFilter) {
+      // Expense nature filter
+      if (expenseNatureFilter !== 'ALL' && (c.expenseNature || '') !== expenseNatureFilter) {
         return false;
       }
 
@@ -140,14 +140,25 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
 
       return true;
     });
-  }, [cheques, searchTerm, statusFilter, categoryFilter, beneficiaryFilter, directionFilter, natureFilter]);
+  }, [cheques, searchTerm, statusFilter, categoryFilter, beneficiaryFilter, expenseNatureFilter, natureFilter]);
+
+  const handleCategoryFilterChange = (nextCategory: ChequeCategory | 'ALL') => {
+    setCategoryFilter(nextCategory);
+    if (
+      nextCategory !== 'ALL' &&
+      expenseNatureFilter !== 'ALL' &&
+      !(CATEGORY_EXPENSE_NATURES[nextCategory] || []).includes(expenseNatureFilter)
+    ) {
+      setExpenseNatureFilter('ALL');
+    }
+  };
 
   // Active filters count
   const hasActiveFilters = searchTerm !== '' || 
     statusFilter !== 'ALL' || 
     categoryFilter !== 'ALL' || 
     beneficiaryFilter !== 'ALL' || 
-    directionFilter !== 'ALL' ||
+    expenseNatureFilter !== 'ALL' ||
     natureFilter !== 'ALL';
 
   const resetAllFilters = () => {
@@ -155,14 +166,14 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
     setStatusFilter('ALL');
     setCategoryFilter('ALL');
     setBeneficiaryFilter('ALL');
-    setDirectionFilter('ALL');
+    setExpenseNatureFilter('ALL');
     setNatureFilter('ALL');
   };
 
   // Automatically reset manual row selections whenever filters change so stale cheques don't contaminate the filtered view
   useEffect(() => {
     setSelectedIds([]);
-  }, [searchTerm, statusFilter, categoryFilter, beneficiaryFilter, directionFilter, natureFilter]);
+  }, [searchTerm, statusFilter, categoryFilter, beneficiaryFilter, expenseNatureFilter, natureFilter]);
 
   // Report filtered cheques up to parent so header buttons also stay in sync
   useEffect(() => {
@@ -280,7 +291,7 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
             </label>
             <select
               value={categoryFilter}
-              onChange={e => setCategoryFilter(e.target.value as any)}
+              onChange={e => handleCategoryFilterChange(e.target.value as any)}
               className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 font-semibold focus:outline-none focus:border-cyan-600 focus:bg-white"
             >
               <option value="ALL">Toutes les natures ({cheques.length})</option>
@@ -367,20 +378,47 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
             </select>
           </div>
 
-          {/* 5. Filtre par Flux */}
+          {/* 5. Filtre par Nature de dépenses */}
           <div className="flex flex-col gap-1">
             <label className="text-[11px] font-bold text-slate-600 flex items-center gap-1">
               <FileText className="h-3.5 w-3.5 text-cyan-700" />
-              <span>Flux Trésorerie</span>
+              <span>Nature de dépenses</span>
             </label>
             <select
-              value={directionFilter}
-              onChange={e => setDirectionFilter(e.target.value as any)}
-              className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 font-semibold focus:outline-none focus:border-cyan-600 focus:bg-white"
+              value={expenseNatureFilter}
+              onChange={e => setExpenseNatureFilter(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 font-semibold focus:outline-none focus:border-cyan-600 focus:bg-white truncate"
             >
-              <option value="ALL">Tous flux (Émis & Reçus)</option>
-              <option value="EMIS">Débours émis par SCHB</option>
-              <option value="RECU">Avances reçues des clients</option>
+              <option value="ALL">Toutes natures de dépenses</option>
+              {categoryFilter !== 'ALL' ? (
+                (CATEGORY_EXPENSE_NATURES[categoryFilter] || []).map(item => {
+                  const count = cheques.filter(
+                    c => c.category === categoryFilter && c.expenseNature === item
+                  ).length;
+                  return (
+                    <option key={item} value={item}>
+                      {item} ({count})
+                    </option>
+                  );
+                })
+              ) : (
+                Object.entries(CATEGORY_LABELS).map(([catKey, catVal]) => {
+                  const items = CATEGORY_EXPENSE_NATURES[catKey as ChequeCategory] || [];
+                  if (items.length === 0) return null;
+                  return (
+                    <optgroup key={catKey} label={catVal.label}>
+                      {items.map(item => {
+                        const count = cheques.filter(c => c.expenseNature === item).length;
+                        return (
+                          <option key={`${catKey}-${item}`} value={item}>
+                            {item} ({count})
+                          </option>
+                        );
+                      })}
+                    </optgroup>
+                  );
+                })
+              )}
             </select>
           </div>
         </div>
@@ -423,7 +461,7 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
 
             {/* Nature quick buttons */}
             <button
-              onClick={() => setCategoryFilter('ALL')}
+              onClick={() => handleCategoryFilterChange('ALL')}
               className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
                 categoryFilter === 'ALL'
                   ? 'bg-slate-800 text-white font-bold'
@@ -433,7 +471,7 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
               Toutes natures
             </button>
             <button
-              onClick={() => setCategoryFilter(categoryFilter === 'CAUTION_CONTENEUR' ? 'ALL' : 'CAUTION_CONTENEUR')}
+              onClick={() => handleCategoryFilterChange(categoryFilter === 'CAUTION_CONTENEUR' ? 'ALL' : 'CAUTION_CONTENEUR')}
               className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
                 categoryFilter === 'CAUTION_CONTENEUR'
                   ? 'bg-amber-600 text-white font-bold'
@@ -443,7 +481,7 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
               Cautions &amp; Consign. (CC)
             </button>
             <button
-              onClick={() => setCategoryFilter(categoryFilter === 'DROITS_DOUANE' ? 'ALL' : 'DROITS_DOUANE')}
+              onClick={() => handleCategoryFilterChange(categoryFilter === 'DROITS_DOUANE' ? 'ALL' : 'DROITS_DOUANE')}
               className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
                 categoryFilter === 'DROITS_DOUANE'
                   ? 'bg-emerald-600 text-white font-bold'
@@ -453,7 +491,7 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
               Droits Douane (DTD)
             </button>
             <button
-              onClick={() => setCategoryFilter(categoryFilter === 'FRAIS_MARITIMES' ? 'ALL' : 'FRAIS_MARITIMES')}
+              onClick={() => handleCategoryFilterChange(categoryFilter === 'FRAIS_MARITIMES' ? 'ALL' : 'FRAIS_MARITIMES')}
               className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
                 categoryFilter === 'FRAIS_MARITIMES'
                   ? 'bg-cyan-600 text-white font-bold'
@@ -463,7 +501,7 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
               Fret &amp; Maritimes (FFM)
             </button>
             <button
-              onClick={() => setCategoryFilter(categoryFilter === 'MANUTENTION_PORT' ? 'ALL' : 'MANUTENTION_PORT')}
+              onClick={() => handleCategoryFilterChange(categoryFilter === 'MANUTENTION_PORT' ? 'ALL' : 'MANUTENTION_PORT')}
               className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
                 categoryFilter === 'MANUTENTION_PORT'
                   ? 'bg-indigo-600 text-white font-bold'
@@ -546,10 +584,10 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
               </span>
             )}
 
-            {directionFilter !== 'ALL' && (
+            {expenseNatureFilter !== 'ALL' && (
               <span className="inline-flex items-center gap-1 bg-teal-100 text-teal-900 px-2 py-0.5 rounded-full text-[11px] font-semibold border border-teal-200">
-                Flux: {directionFilter === 'EMIS' ? 'Émis' : 'Reçu'}
-                <button onClick={() => setDirectionFilter('ALL')} className="hover:text-black">
+                Nature de dépenses: {expenseNatureFilter}
+                <button onClick={() => setExpenseNatureFilter('ALL')} className="hover:text-black">
                   <X className="h-3 w-3" />
                 </button>
               </span>
