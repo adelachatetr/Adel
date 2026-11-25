@@ -93,6 +93,8 @@ export type DeliveryMode = 'CFR' | 'FOB';
 
 export type DemandNature = 'B/C' | 'Contrat';
 
+export type PackagingUnit = 'CONTENEURS' | 'CAISSE';
+
 export interface TransitDossier {
   id: string;
   dossierNumber: string;
@@ -110,10 +112,12 @@ export interface TransitDossier {
   berthingDate?: string;       // Date d'accostage du navire au port
   bankReceptionDate?: string;  // Date de réception du dossier par la banque
   forwarderDeclarationDate?: string; // Date de déclaration du transitaire
+  forwarderHandoverDate?: string;    // Date remise dossier transitaire
   receptionDate?: string;      // Date de réception du dossier (statut Réceptionné)
   portOfDischarge: string;     // Port / Aéroport
   goodsDescription: string;    // Désignation marchandise
   containerCount: number;
+  containerUnit?: PackagingUnit; // Choix Conteneurs ou Caisse
   status: DossierStatus;
   openedDate: string;
   updatedAt?: string;

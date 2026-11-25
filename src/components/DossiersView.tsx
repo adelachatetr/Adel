@@ -466,6 +466,9 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                       </span>
                     )}
                     <span>Marchandise : {selectedDossier.goodsDescription}</span>
+                    <span>
+                      Colisage : <strong className="font-mono text-slate-700">{selectedDossier.containerCount} {selectedDossier.containerUnit === 'CAISSE' ? 'Caisse(s)' : 'Conteneur(s)'}</strong>
+                    </span>
                     {selectedDossier.berthingDate && (
                       <span className="text-cyan-900 font-bold bg-cyan-50 px-2 py-0.5 rounded-md border border-cyan-200 flex items-center gap-1">
                         ⚓ Accostage : <strong className="font-mono">{formatShortDate(selectedDossier.berthingDate)}</strong>
@@ -484,6 +487,11 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                     {selectedDossier.forwarderDeclarationDate && (
                       <span className="text-emerald-900 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 flex items-center gap-1">
                         📄 Déclaration Transitaire : <strong className="font-mono">{formatShortDate(selectedDossier.forwarderDeclarationDate)}</strong>
+                      </span>
+                    )}
+                    {selectedDossier.forwarderHandoverDate && (
+                      <span className="text-amber-900 font-bold bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 flex items-center gap-1">
+                        📤 Remise Transitaire : <strong className="font-mono">{formatShortDate(selectedDossier.forwarderHandoverDate)}</strong>
                       </span>
                     )}
                   </div>

@@ -338,8 +338,12 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
               <span className="font-semibold text-slate-900 font-mono">{dossier.deliveryMode || dossier.vesselName || 'Non spécifié'}</span>
             </div>
             <div>
-              <span className="text-slate-500 block text-[10px] uppercase font-bold">Conteneurs Déclarés</span>
-              <span className="font-mono font-bold text-slate-900">{dossier.containerCount} conteneur(s)</span>
+              <span className="text-slate-500 block text-[10px] uppercase font-bold">
+                {dossier.containerUnit === 'CAISSE' ? 'Caisses Déclarées' : 'Conteneurs Déclarés'}
+              </span>
+              <span className="font-mono font-bold text-slate-900">
+                {dossier.containerCount} {dossier.containerUnit === 'CAISSE' ? 'caisse(s)' : 'conteneur(s)'}
+              </span>
             </div>
             <div>
               <span className="text-slate-500 block text-[10px] uppercase font-bold">1. Date Accostage Navire</span>
@@ -359,6 +363,12 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
                 {dossier.forwarderDeclarationDate ? formatShortDate(dossier.forwarderDeclarationDate) : 'En attente'}
               </span>
             </div>
+            <div>
+              <span className="text-slate-500 block text-[10px] uppercase font-bold">4. Date Remise Dossier Transitaire</span>
+              <span className="font-medium text-slate-900 font-mono">
+                {dossier.forwarderHandoverDate ? formatShortDate(dossier.forwarderHandoverDate) : 'En attente'}
+              </span>
+            </div>
             {dossier.receptionDate && (
               <div>
                 <span className="text-slate-500 block text-[10px] uppercase font-bold">Date Réception Dossier</span>
@@ -367,7 +377,7 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
                 </span>
               </div>
             )}
-            <div className={`col-span-2 ${dossier.receptionDate ? 'sm:col-span-3' : 'sm:col-span-4'} pt-1 border-t border-slate-200/80`}>
+            <div className={`col-span-2 ${dossier.receptionDate ? 'sm:col-span-2' : 'sm:col-span-3'} pt-1 border-t border-slate-200/80 sm:border-t-0 sm:pt-0`}>
               <span className="text-slate-500 block text-[10px] uppercase font-bold">Désignation Marchandises</span>
               <span className="font-medium text-slate-900 block">{dossier.goodsDescription}</span>
             </div>

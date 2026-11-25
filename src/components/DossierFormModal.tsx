@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, FolderPlus, Check, Trash2, Printer, Anchor, Landmark, FileCheck, CalendarCheck, AlertCircle } from 'lucide-react';
-import { TransitDossier, DossierStatus, DeliveryMode, DemandNature } from '../types/transit';
+import { X, FolderPlus, Check, Trash2, Printer, Anchor, Landmark, FileCheck, Send, CalendarCheck, AlertCircle } from 'lucide-react';
+import { TransitDossier, DossierStatus, DeliveryMode, DemandNature, PackagingUnit } from '../types/transit';
 
 interface DossierFormModalProps {
   isOpen: boolean;
@@ -30,9 +30,11 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
   const [berthingDate, setBerthingDate] = useState('');
   const [bankReceptionDate, setBankReceptionDate] = useState('');
   const [forwarderDeclarationDate, setForwarderDeclarationDate] = useState('');
+  const [forwarderHandoverDate, setForwarderHandoverDate] = useState('');
   const [portOfDischarge, setPortOfDischarge] = useState('Port de Skikda');
   const [goodsDescription, setGoodsDescription] = useState('');
   const [containerCount, setContainerCount] = useState<number>(1);
+  const [containerUnit, setContainerUnit] = useState<PackagingUnit>('CONTENEURS');
   const [status, setStatus] = useState<DossierStatus>('OUVERT');
   const [receptionDate, setReceptionDate] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
@@ -58,9 +60,11 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
       setBerthingDate(editingDossier.berthingDate || '');
       setBankReceptionDate(editingDossier.bankReceptionDate || '');
       setForwarderDeclarationDate(editingDossier.forwarderDeclarationDate || '');
+      setForwarderHandoverDate(editingDossier.forwarderHandoverDate || '');
       setPortOfDischarge(editingDossier.portOfDischarge);
       setGoodsDescription(editingDossier.goodsDescription);
       setContainerCount(editingDossier.containerCount);
+      setContainerUnit(editingDossier.containerUnit || 'CONTENEURS');
       setStatus(editingDossier.status);
       setReceptionDate(editingDossier.receptionDate || '');
       setFormError(null);
@@ -76,9 +80,11 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
       setBerthingDate('');
       setBankReceptionDate('');
       setForwarderDeclarationDate('');
+      setForwarderHandoverDate('');
       setPortOfDischarge('Port de Skikda');
       setGoodsDescription('');
       setContainerCount(1);
+      setContainerUnit('CONTENEURS');
       setStatus('OUVERT');
       setReceptionDate('');
       setFormError(null);
@@ -116,9 +122,11 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
       berthingDate: berthingDate || undefined,
       bankReceptionDate: bankReceptionDate || undefined,
       forwarderDeclarationDate: forwarderDeclarationDate || undefined,
+      forwarderHandoverDate: forwarderHandoverDate || undefined,
       portOfDischarge: portOfDischarge.trim(),
       goodsDescription: goodsDescription.trim() || 'Marchandises diverses',
       containerCount: Number(containerCount) || 1,
+      containerUnit,
       status,
       receptionDate: receptionDate || undefined
     });
@@ -291,8 +299,8 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
             </div>
           </div>
 
-          {/* Les 3 caisses de suivi des dates : 1-Accostage, 2-Reçu Banque, 3-Déclaration Transitaire */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-cyan-50/70 p-3.5 rounded-2xl border border-cyan-200 shadow-2xs">
+          {/* Les 4 caisses de suivi des dates : 1-Accostage, 2-Reçu Banque, 3-Déclaration Transitaire, 4-Remise Transitaire */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-cyan-50/70 p-3.5 rounded-2xl border border-cyan-200 shadow-2xs">
             <div>
               <label className="block text-slate-800 font-bold mb-1 text-xs flex items-center gap-1.5">
                 <Anchor className="h-4 w-4 text-cyan-700 shrink-0" />
@@ -340,23 +348,50 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
                 Date de déclaration du transitaire
               </span>
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block text-slate-700 font-semibold mb-1">
-                Nombre de conteneurs (EVP)
+              <label className="block text-slate-800 font-bold mb-1 text-xs flex items-center gap-1.5">
+                <Send className="h-4 w-4 text-amber-700 shrink-0" />
+                <span>4. Date Remise Dossier Transitaire</span>
               </label>
               <input
-                type="number"
-                min="0"
-                value={containerCount}
-                onChange={e => setContainerCount(parseInt(e.target.value) || 0)}
-                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-mono font-bold focus:border-cyan-600"
+                type="date"
+                value={forwarderHandoverDate}
+                onChange={e => setForwarderHandoverDate(e.target.value)}
+                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-medium focus:outline-none focus:border-cyan-600 focus:ring-1 focus:ring-cyan-600 shadow-2xs"
               />
+              <span className="text-[10px] text-amber-800 font-medium mt-1 block">
+                Date de remise du dossier au transitaire
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+            <div className="sm:col-span-5">
+              <label className="block text-slate-700 font-semibold mb-1">
+                Nombre de conteneurs / Caisses
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  min="0"
+                  value={containerCount}
+                  onChange={e => setContainerCount(parseInt(e.target.value) || 0)}
+                  className="w-24 shrink-0 bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-mono font-bold focus:border-cyan-600"
+                />
+                <select
+                  value={containerUnit}
+                  onChange={e => setContainerUnit(e.target.value as PackagingUnit)}
+                  className="flex-1 min-w-0 bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-2.5 text-slate-900 font-bold focus:border-cyan-600 cursor-pointer"
+                  title="Choisir Conteneurs ou Caisse"
+                >
+                  <option value="CONTENEURS">Conteneurs</option>
+                  <option value="CAISSE">Caisse</option>
+                </select>
+              </div>
             </div>
 
-            <div className="sm:col-span-2">
+            <div className="sm:col-span-7">
               <label className="block text-slate-700 font-semibold mb-1">
                 Statut du Dossier
               </label>
