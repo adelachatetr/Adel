@@ -342,10 +342,6 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
               <span className="font-mono font-bold text-slate-900">{dossier.containerCount} conteneur(s)</span>
             </div>
             <div>
-              <span className="text-slate-500 block text-[10px] uppercase font-bold">Date d'Ouverture</span>
-              <span className="font-medium text-slate-900">{formatShortDate(dossier.openedDate)}</span>
-            </div>
-            <div>
               <span className="text-slate-500 block text-[10px] uppercase font-bold">1. Date Accostage Navire</span>
               <span className="font-medium text-slate-900 font-mono">
                 {dossier.berthingDate ? formatShortDate(dossier.berthingDate) : 'En attente'}
@@ -363,7 +359,7 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
                 {dossier.forwarderDeclarationDate ? formatShortDate(dossier.forwarderDeclarationDate) : 'En attente'}
               </span>
             </div>
-            <div className="col-span-2 sm:col-span-3 pt-1 border-t border-slate-200/80 sm:border-t-0 sm:pt-0">
+            <div className="col-span-2 sm:col-span-4 pt-1 border-t border-slate-200/80">
               <span className="text-slate-500 block text-[10px] uppercase font-bold">Désignation Marchandises</span>
               <span className="font-medium text-slate-900 block">{dossier.goodsDescription}</span>
             </div>
