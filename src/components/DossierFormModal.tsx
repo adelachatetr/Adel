@@ -335,24 +335,8 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
 
             <div>
               <label className="block text-slate-800 font-bold mb-1 text-xs flex items-center gap-1.5">
-                <FileCheck className="h-4 w-4 text-emerald-700 shrink-0" />
-                <span>3. Date Déclaration Transitaire</span>
-              </label>
-              <input
-                type="date"
-                value={forwarderDeclarationDate}
-                onChange={e => setForwarderDeclarationDate(e.target.value)}
-                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-medium focus:outline-none focus:border-cyan-600 focus:ring-1 focus:ring-cyan-600 shadow-2xs"
-              />
-              <span className="text-[10px] text-emerald-800 font-medium mt-1 block">
-                Date de déclaration du transitaire
-              </span>
-            </div>
-
-            <div>
-              <label className="block text-slate-800 font-bold mb-1 text-xs flex items-center gap-1.5">
                 <Send className="h-4 w-4 text-amber-700 shrink-0" />
-                <span>4. Date Remise Dossier Transitaire</span>
+                <span>3. Date Remise Dossier Transitaire</span>
               </label>
               <input
                 type="date"
@@ -362,6 +346,22 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
               />
               <span className="text-[10px] text-amber-800 font-medium mt-1 block">
                 Date de remise du dossier au transitaire
+              </span>
+            </div>
+
+            <div>
+              <label className="block text-slate-800 font-bold mb-1 text-xs flex items-center gap-1.5">
+                <FileCheck className="h-4 w-4 text-emerald-700 shrink-0" />
+                <span>4. Date Déclaration Transitaire</span>
+              </label>
+              <input
+                type="date"
+                value={forwarderDeclarationDate}
+                onChange={e => setForwarderDeclarationDate(e.target.value)}
+                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-medium focus:outline-none focus:border-cyan-600 focus:ring-1 focus:ring-cyan-600 shadow-2xs"
+              />
+              <span className="text-[10px] text-emerald-800 font-medium mt-1 block">
+                Date de déclaration du transitaire
               </span>
             </div>
           </div>

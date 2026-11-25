@@ -484,14 +484,14 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                         📥 Réception dossier : <strong className="font-mono">{formatShortDate(selectedDossier.receptionDate)}</strong>
                       </span>
                     )}
-                    {selectedDossier.forwarderDeclarationDate && (
-                      <span className="text-emerald-900 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 flex items-center gap-1">
-                        📄 Déclaration Transitaire : <strong className="font-mono">{formatShortDate(selectedDossier.forwarderDeclarationDate)}</strong>
-                      </span>
-                    )}
                     {selectedDossier.forwarderHandoverDate && (
                       <span className="text-amber-900 font-bold bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 flex items-center gap-1">
                         📤 Remise Transitaire : <strong className="font-mono">{formatShortDate(selectedDossier.forwarderHandoverDate)}</strong>
+                      </span>
+                    )}
+                    {selectedDossier.forwarderDeclarationDate && (
+                      <span className="text-emerald-900 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 flex items-center gap-1">
+                        📄 Déclaration Transitaire : <strong className="font-mono">{formatShortDate(selectedDossier.forwarderDeclarationDate)}</strong>
                       </span>
                     )}
                   </div>
