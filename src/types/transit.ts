@@ -59,6 +59,7 @@ export interface TransitCheque {
   bankName: string;
   direction: ChequeDirection;
   category: ChequeCategory;
+  expenseNature?: string;     // Nature de dépenses liée à la catégorie
   amount: number;
   currency: string;
   dossierNumber: string;      // Réf Dossier Transit (ex: DOS-2026-084)

@@ -99,10 +99,12 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
         const matchBeneficiary = c.beneficiary.toLowerCase().includes(q);
         const matchBank = c.bankName.toLowerCase().includes(q);
         const matchCoursier = (c.coursierName || '').toLowerCase().includes(q);
+        const matchExpenseNature = (c.expenseNature || '').toLowerCase().includes(q);
+        const matchCategory = (CATEGORY_LABELS[c.category]?.label || '').toLowerCase().includes(q);
         const matchContainer = (c.containerInfo?.containerNumbers || []).some(cn => cn.toLowerCase().includes(q));
         const matchEIR = (c.containerInfo?.interchangeNumber || '').toLowerCase().includes(q);
 
-        if (!matchNature && !matchNumber && !matchDossier && !matchClient && !matchBeneficiary && !matchBank && !matchCoursier && !matchContainer && !matchEIR) {
+        if (!matchNature && !matchNumber && !matchDossier && !matchClient && !matchBeneficiary && !matchBank && !matchCoursier && !matchExpenseNature && !matchCategory && !matchContainer && !matchEIR) {
           return false;
         }
       }
@@ -733,8 +735,13 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
                         <div className="font-semibold text-slate-900 truncate max-w-[200px]" title={chq.beneficiary}>
                           {chq.beneficiary}
                         </div>
-                        <div className="text-xs text-slate-500 flex items-center gap-1 mt-0.5 font-medium">
+                        <div className="text-xs text-slate-500 flex items-center gap-1 mt-0.5 font-medium flex-wrap">
                           <span>{catCfg?.short || chq.category}</span>
+                          {chq.expenseNature && (
+                            <span className="text-[11px] text-cyan-800 font-semibold">
+                              · {chq.expenseNature}
+                            </span>
+                          )}
                           {chq.containerInfo && (
                             <span className="text-amber-800 font-mono text-[11px] font-bold">
                               ({chq.containerInfo.shippingLine})

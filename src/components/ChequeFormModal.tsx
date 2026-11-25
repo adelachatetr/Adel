@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Check, Container, FileText, AlertCircle } from 'lucide-react';
 import { TransitCheque, TransitDossier, ChequeDirection, ChequeCategory, ChequeStatus, ChequeNature } from '../types/transit';
 import { SHIPPING_LINES, TRANSIT_AGENTS } from '../data/mockTransitData';
+import { CATEGORY_EXPENSE_NATURES } from '../utils/storage';
 
 interface ChequeFormModalProps {
   isOpen: boolean;
@@ -30,6 +31,7 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
   const [chequeNumber, setChequeNumber] = useState('');
   const [direction, setDirection] = useState<ChequeDirection>('EMIS');
   const [category, setCategory] = useState<ChequeCategory>('CAUTION_CONTENEUR');
+  const [expenseNature, setExpenseNature] = useState<string>(CATEGORY_EXPENSE_NATURES.CAUTION_CONTENEUR[0]);
   const [amount, setAmount] = useState<string>('');
   const [currency, setCurrency] = useState(defaultCurrency);
   const [dossierNumber, setDossierNumber] = useState(preselectedDossierNumber || '');
@@ -59,6 +61,9 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
       setChequeNumber(editingCheque.chequeNumber);
       setDirection(editingCheque.direction);
       setCategory(editingCheque.category);
+      setExpenseNature(
+        editingCheque.expenseNature || CATEGORY_EXPENSE_NATURES[editingCheque.category]?.[0] || ''
+      );
       setAmount(
         nature === 'A_BLANC' && (editingCheque.amount === 0 || !editingCheque.amount)
           ? '0.00'
@@ -90,6 +95,7 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
       setChequeNumber(`CHQ-${Math.floor(100000 + Math.random() * 900000)}`);
       setDirection('EMIS');
       setCategory('CAUTION_CONTENEUR');
+      setExpenseNature(CATEGORY_EXPENSE_NATURES.CAUTION_CONTENEUR[0]);
       setAmount('');
       setCurrency(defaultCurrency);
       setDossierNumber(preselectedDossierNumber || (dossiers[0]?.dossierNumber || ''));
@@ -126,9 +132,11 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
     }
   };
 
-  // When category changes, adjust suggestions
+  // When category changes, adjust suggestions & dependent Nature de dépenses
   const handleCategoryChange = (cat: ChequeCategory) => {
     setCategory(cat);
+    const availableNatures = CATEGORY_EXPENSE_NATURES[cat] || [];
+    setExpenseNature(availableNatures[0] || '');
     const isCaution = cat === 'CAUTION_CONTENEUR';
     setIsContainerCaution(isCaution);
 
@@ -137,9 +145,9 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
     } else if (cat === 'CAUTION_CONTENEUR') {
       setBeneficiary(shippingLine ? `${shippingLine} - Cautions et consignations CC` : 'MSC Mediterranean Shipping Company');
     } else if (cat === 'FRAIS_MARITIMES') {
-      setBeneficiary('Compagnie Maritime (Fret et frais maritimes FFM)');
+      setBeneficiary('Compagnie Maritime (FFM - Fret et frais maritimes)');
     } else if (cat === 'MANUTENTION_PORT') {
-      setBeneficiary('Entreprise Portuaire (Frais portuaires et manutention FPM)');
+      setBeneficiary('Entreprise Portuaire (FPM - Frais portuaires et manutention)');
     } else if (cat === 'TRANSPORT_TRACTION') {
       setBeneficiary('Transporteur Routier Agréé (FTT)');
     } else if (cat === 'HONORAIRES_TRANSIT') {
@@ -193,6 +201,7 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
         : (defaultBankName || 'BEA Constantine (Banque Extérieure d\'Algérie)'),
       direction,
       category,
+      expenseNature: expenseNature || undefined,
       amount: parsedAmount,
       currency,
       dossierNumber: dossierNumber.trim(),
@@ -305,68 +314,89 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
             </div>
           </div>
 
-          {/* Section 2: Montant & Nature de la dépense */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="sm:col-span-2">
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-slate-700 font-semibold">
-                  Montant du Chèque {chequeNature !== 'A_BLANC' && <span className="text-rose-500">*</span>}
-                </label>
-                {chequeNature === 'A_BLANC' && (
-                  <span className="text-[10px] bg-red-100 text-red-800 font-bold px-2 py-0.5 rounded border border-red-300">
-                    Chèque à Blanc · 0.00 par défaut
-                  </span>
-                )}
-              </div>
-              <div className="flex gap-2">
-                <input
-                  type="number"
-                  step="any"
-                  min={chequeNature === 'A_BLANC' ? '0' : '0.01'}
-                  required={chequeNature !== 'A_BLANC'}
-                  placeholder="0.00"
-                  value={amount}
-                  onChange={e => {
-                    setAmount(e.target.value);
-                    if (formError) setFormError(null);
-                  }}
-                  className={`flex-1 border rounded-xl p-2.5 font-mono font-bold text-sm focus:outline-none ${
-                    chequeNature === 'A_BLANC'
-                      ? 'border-red-400 bg-red-50/40 text-red-700 focus:border-red-600'
-                      : 'bg-white border-slate-300 text-slate-900 focus:border-cyan-600'
-                  }`}
-                />
-                <div className="w-24 bg-slate-100 border border-slate-300 rounded-xl px-3 py-2.5 text-slate-900 font-mono font-extrabold flex items-center justify-center text-center text-xs select-none">
-                  DA
-                </div>
-              </div>
+          {/* Section 2: Montant du Chèque */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-slate-700 font-semibold">
+                Montant du Chèque {chequeNature !== 'A_BLANC' && <span className="text-rose-500">*</span>}
+              </label>
               {chequeNature === 'A_BLANC' && (
-                <p className="text-[11px] text-red-700 font-medium mt-1">
-                  {editingCheque
-                    ? 'Saisissez le montant définitif ci-dessus dès réception des factures.'
-                    : 'Le montant reste à 0.00 à l\'émission. Dès réception des factures, modifiez ce chèque pour saisir le montant.'}
-                </p>
+                <span className="text-[10px] bg-red-100 text-red-800 font-bold px-2 py-0.5 rounded border border-red-300">
+                  Chèque à Blanc · 0.00 par défaut
+                </span>
               )}
             </div>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                step="any"
+                min={chequeNature === 'A_BLANC' ? '0' : '0.01'}
+                required={chequeNature !== 'A_BLANC'}
+                placeholder="0.00"
+                value={amount}
+                onChange={e => {
+                  setAmount(e.target.value);
+                  if (formError) setFormError(null);
+                }}
+                className={`flex-1 border rounded-xl p-2.5 font-mono font-bold text-sm focus:outline-none ${
+                  chequeNature === 'A_BLANC'
+                    ? 'border-red-400 bg-red-50/40 text-red-700 focus:border-red-600'
+                    : 'bg-white border-slate-300 text-slate-900 focus:border-cyan-600'
+                }`}
+              />
+              <div className="w-24 bg-slate-100 border border-slate-300 rounded-xl px-3 py-2.5 text-slate-900 font-mono font-extrabold flex items-center justify-center text-center text-xs select-none">
+                DA
+              </div>
+            </div>
+            {chequeNature === 'A_BLANC' && (
+              <p className="text-[11px] text-red-700 font-medium mt-1">
+                {editingCheque
+                  ? 'Saisissez le montant définitif ci-dessus dès réception des factures.'
+                  : 'Le montant reste à 0.00 à l\'émission. Dès réception des factures, modifiez ce chèque pour saisir le montant.'}
+              </p>
+            )}
+          </div>
 
+          {/* Section 2B: Catégorie & Nature de dépenses dépendante */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-700 font-semibold mb-1">
-                Nature / Catégorie
+                Catégorie <span className="text-rose-500">*</span>
               </label>
               <select
                 value={category}
                 onChange={e => handleCategoryChange(e.target.value as ChequeCategory)}
-                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-medium focus:outline-none focus:border-cyan-600"
+                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-semibold focus:outline-none focus:border-cyan-600 cursor-pointer"
               >
-                <option value="FRAIS_MARITIMES">1. Fret et frais maritimes FFM</option>
-                <option value="MANUTENTION_PORT">2. Frais portuaires et manutention FPM</option>
-                <option value="DROITS_DOUANE">3. Droits et taxes douaniers DTD</option>
-                <option value="HONORAIRES_TRANSIT">4. Honoraires et frais de transit HFT</option>
-                <option value="TRANSPORT_TRACTION">5. Transport terrestre FTT</option>
-                <option value="ASSURANCE_CAAT">6. Assurance importation ASS</option>
-                <option value="CAUTION_CONTENEUR">7. Cautions et consignations CC</option>
-                <option value="CX">8. Pénalités (CX) et amendes PAD</option>
-                <option value="AUTRE_DEBOURS">9. Autres frais et débours AFD</option>
+                <option value="FRAIS_MARITIMES">1. FFM – Fret et frais maritimes</option>
+                <option value="MANUTENTION_PORT">2. FPM – Frais portuaires et manutention</option>
+                <option value="DROITS_DOUANE">3. DTD – Droits et taxes douaniers</option>
+                <option value="HONORAIRES_TRANSIT">4. HFT – Honoraires et frais de transit</option>
+                <option value="TRANSPORT_TRACTION">5. FTT – Transport terrestre</option>
+                <option value="ASSURANCE_CAAT">6. ASS – Assurance importation</option>
+                <option value="CAUTION_CONTENEUR">7. CC – Cautions et consignations</option>
+                <option value="CX">8. PAD – Pénalités et amendes</option>
+                <option value="AUTRE_DEBOURS">9. AFD – Autres frais et débours</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-slate-700 font-semibold mb-1">
+                Nature de dépenses <span className="text-rose-500">*</span>
+              </label>
+              <select
+                value={expenseNature}
+                onChange={e => setExpenseNature(e.target.value)}
+                className="w-full bg-cyan-50/50 border border-cyan-300 rounded-xl p-2.5 text-slate-900 font-semibold focus:outline-none focus:border-cyan-600 cursor-pointer"
+              >
+                {(CATEGORY_EXPENSE_NATURES[category] || []).map(item => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+                {expenseNature && !(CATEGORY_EXPENSE_NATURES[category] || []).includes(expenseNature) && (
+                  <option value={expenseNature}>{expenseNature}</option>
+                )}
               </select>
             </div>
           </div>

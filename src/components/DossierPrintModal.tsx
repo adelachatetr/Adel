@@ -453,7 +453,12 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
                           <div className="text-[10px] font-sans font-normal text-slate-500">{chq.bankName}</div>
                         </td>
                         <td className="py-2 px-2 border-r border-slate-200 font-medium">
-                          {cat?.label || chq.category}
+                          <div>{cat?.label || chq.category}</div>
+                          {chq.expenseNature && (
+                            <div className="text-[10px] text-slate-600 font-normal">
+                              {chq.expenseNature}
+                            </div>
+                          )}
                           {chq.containerInfo && (
                             <div className="text-[10px] text-amber-800 font-mono">
                               Conteneurs: {chq.containerInfo.containerNumbers.join(', ')}

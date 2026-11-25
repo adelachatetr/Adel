@@ -475,7 +475,10 @@ export const BordereauModal: React.FC<BordereauModalProps> = ({
                         </td>
                         <td className="py-2 px-2 border-r border-slate-200">
                           <span className="font-semibold">{chq.beneficiary}</span>
-                          <div className="text-[10px] text-slate-600">{cat?.label || chq.category}</div>
+                          <div className="text-[10px] text-slate-700 font-medium">{cat?.label || chq.category}</div>
+                          {chq.expenseNature && (
+                            <div className="text-[10px] text-slate-500">{chq.expenseNature}</div>
+                          )}
                         </td>
                         <td className="py-2 px-2 border-r border-slate-200 font-mono text-[10px]">
                           {chq.containerInfo ? (

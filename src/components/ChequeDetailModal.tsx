@@ -139,10 +139,15 @@ export const ChequeDetailModal: React.FC<ChequeDetailModalProps> = ({
             </div>
 
             <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
-              <span className="text-[11px] text-slate-500 font-semibold">Nature de la Dépense</span>
-              <div className="text-xs font-bold text-slate-800 mt-1 truncate">
+              <span className="text-[11px] text-slate-500 font-semibold">Catégorie</span>
+              <div className="text-xs font-bold text-slate-800 mt-1 truncate" title={catCfg?.label || cheque.category}>
                 {catCfg?.label || cheque.category}
               </div>
+              {cheque.expenseNature && (
+                <div className="text-[11px] text-cyan-800 font-semibold mt-0.5 truncate" title={cheque.expenseNature}>
+                  {cheque.expenseNature}
+                </div>
+              )}
             </div>
 
             <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200">

@@ -338,6 +338,7 @@ export default function App() {
         bankName: data.bankName || settings.defaultBankName || 'BEA Constantine (Banque Extérieure d\'Algérie)',
         direction: data.direction || 'EMIS',
         category: data.category || 'CAUTION_CONTENEUR',
+        expenseNature: data.expenseNature,
         amount: initialAmount,
         currency: data.currency || settings.defaultCurrency,
         dossierNumber: data.dossierNumber || 'TR-2026-000',

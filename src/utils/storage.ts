@@ -309,47 +309,47 @@ export const CHEQUE_NATURE_LABELS: Record<ChequeNature, { label: string; short: 
 // Helpers for Category info
 export const CATEGORY_LABELS: Record<ChequeCategory, { label: string; short: string; color: string }> = {
   FRAIS_MARITIMES: {
-    label: '1. Fret et frais maritimes FFM',
+    label: '1. FFM – Fret et frais maritimes',
     short: 'FFM · Fret & Maritimes',
     color: 'sky'
   },
   MANUTENTION_PORT: {
-    label: '2. Frais portuaires et manutention FPM',
+    label: '2. FPM – Frais portuaires et manutention',
     short: 'FPM · Port & Manutention',
     color: 'indigo'
   },
   DROITS_DOUANE: {
-    label: '3. Droits et taxes douaniers DTD',
+    label: '3. DTD – Droits et taxes douaniers',
     short: 'DTD · Droits Douane',
     color: 'emerald'
   },
   HONORAIRES_TRANSIT: {
-    label: '4. Honoraires et frais de transit HFT',
+    label: '4. HFT – Honoraires et frais de transit',
     short: 'HFT · Honoraires Transit',
     color: 'blue'
   },
   TRANSPORT_TRACTION: {
-    label: '5. Transport terrestre FTT',
+    label: '5. FTT – Transport terrestre',
     short: 'FTT · Transport Terrestre',
     color: 'purple'
   },
   ASSURANCE_CAAT: {
-    label: '6. Assurance importation ASS',
+    label: '6. ASS – Assurance importation',
     short: 'ASS · Assurance Import',
     color: 'rose'
   },
   CAUTION_CONTENEUR: {
-    label: '7. Cautions et consignations CC',
+    label: '7. CC – Cautions et consignations',
     short: 'CC · Cautions & Consign.',
     color: 'amber'
   },
   CX: {
-    label: '8. Pénalités (CX) et amendes PAD',
-    short: 'PAD · Pénalités (CX)',
+    label: '8. PAD – Pénalités et amendes',
+    short: 'PAD · Pénalités & Amendes',
     color: 'orange'
   },
   AUTRE_DEBOURS: {
-    label: '9. Autres frais et débours AFD',
+    label: '9. AFD – Autres frais et débours',
     short: 'AFD · Autres Débours',
     color: 'slate'
   },
@@ -358,6 +358,81 @@ export const CATEGORY_LABELS: Record<ChequeCategory, { label: string; short: str
     short: 'Avance Client',
     color: 'teal'
   }
+};
+
+export const CATEGORY_EXPENSE_NATURES: Record<ChequeCategory, string[]> = {
+  FRAIS_MARITIMES: [
+    'Fret maritime',
+    'Frais CMA CGM, MSC, Maersk',
+    'Frais d\'échange documentaire (Exchange)',
+    'Frais de connaissement (B/L)',
+    'Frais BAD (Bon à délivrer)',
+    'Surestaries (Demurrage)',
+    'Détention (Detention)'
+  ],
+  MANUTENTION_PORT: [
+    'Débarquement',
+    'Manutention et acconage',
+    'Magasinage portuaire',
+    'Stationnement portuaire',
+    'Pesage et scanner',
+    'Déplacement de conteneur',
+    'Gardiennage portuaire'
+  ],
+  DROITS_DOUANE: [
+    'Droits de douane',
+    'TVA à l\'importation',
+    'Taxes parafiscales',
+    'Redevances douanières',
+    'Autres taxes à l\'importation'
+  ],
+  HONORAIRES_TRANSIT: [
+    'Honoraires du transitaire',
+    'Frais d\'ouverture de dossier',
+    'Déclaration en douane',
+    'Formalités douanières',
+    'Suivi et traitement du dossier'
+  ],
+  TRANSPORT_TRACTION: [
+    'Transport port-usine',
+    'Transport par camion',
+    'Camionnage',
+    'Transport exceptionnel',
+    'Chargement et déchargement',
+    'Frais d\'attente des camions'
+  ],
+  ASSURANCE_CAAT: [
+    'Assurance maritime',
+    'Assurance terrestre',
+    'Assurance marchandises transportées',
+    'Prime d\'assurance',
+    'Extension de garantie'
+  ],
+  CAUTION_CONTENEUR: [
+    'Caution conteneur',
+    'Consignation conteneur',
+    'Dépôt de garantie',
+    'Garantie de restitution du conteneur'
+  ],
+  CX: [
+    'Pénalité CX pour retard de déclaration douanière',
+    'Amendes douanières',
+    'Pénalités administratives',
+    'Sanctions pour irrégularités documentaires'
+  ],
+  AUTRE_DEBOURS: [
+    'Sortie fourrière (Sortie Fourrière)',
+    'Frais administratifs exceptionnels',
+    'Frais de légalisation',
+    'Frais de traduction',
+    'Frais de photocopies',
+    'Frais DHL, UPS et FedEx',
+    'Frais de dossier divers',
+    'Autres dépenses exceptionnelles'
+  ],
+  AVANCE_PROVISION: [
+    'Provision client'
+  ]
 };
 
 export const STATUS_CONFIG: Record<ChequeStatus, { label: string; textClass: string; bgClass: string; borderClass: string; iconName: string }> = {
@@ -503,6 +578,7 @@ export function exportChequesToCSV(cheques: TransitCheque[]): void {
     'Direction',
     'Statut',
     'Catégorie',
+    'Nature de dépenses',
     'Nom Fournisseur',
     'N° Bon de Commande',
     'Bénéficiaire',
@@ -525,6 +601,7 @@ export function exportChequesToCSV(cheques: TransitCheque[]): void {
     `"${c.direction === 'EMIS' ? 'Émis (Débours)' : 'Reçu (Client)'}"`,
     `"${STATUS_CONFIG[c.status]?.label || c.status}"`,
     `"${CATEGORY_LABELS[c.category]?.label || c.category}"`,
+    `"${(c.expenseNature || '').replace(/"/g, '""')}"`,
     `"${c.dossierNumber || ''}"`,
     `"${(c.clientName || '').replace(/"/g, '""')}"`,
     `"${(c.beneficiary || '').replace(/"/g, '""')}"`,

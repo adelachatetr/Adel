@@ -616,7 +616,10 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                             </span>
                           </div>
                           <div className="text-xs text-slate-500 mt-1 flex items-center gap-3 font-medium flex-wrap">
-                            <span>Nature: <strong className="text-slate-800 font-semibold">{catCfg?.label || chq.category}</strong></span>
+                            <span>Catégorie: <strong className="text-slate-800 font-semibold">{catCfg?.label || chq.category}</strong></span>
+                            {chq.expenseNature && (
+                              <span>Nature de dépenses: <strong className="text-cyan-800 font-semibold">{chq.expenseNature}</strong></span>
+                            )}
                             <span>Banque: {chq.bankName}</span>
                             <span>Émis le: {formatShortDate(chq.dateEmission)}</span>
                           </div>
