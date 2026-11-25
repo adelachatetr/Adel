@@ -96,7 +96,7 @@ export type DeliveryMode = 'CFR' | 'FOB';
 
 export type DemandNature = 'B/C' | 'Contrat';
 
-export type PackagingUnit = 'CONTENEURS' | 'CAISSE';
+export type PackagingUnit = 'CONTENEURS' | 'CAISSE' | 'PALETTES';
 
 export interface TransitDossier {
   id: string;
@@ -120,7 +120,7 @@ export interface TransitDossier {
   portOfDischarge: string;     // Port / Aéroport
   goodsDescription: string;    // Désignation marchandise
   containerCount: number;
-  containerUnit?: PackagingUnit; // Choix Conteneurs ou Caisse
+  containerUnit?: PackagingUnit; // Choix Conteneurs, Caisse ou Palettes
   status: DossierStatus;
   openedDate: string;
   updatedAt?: string;

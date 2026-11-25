@@ -339,10 +339,19 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
             </div>
             <div>
               <span className="text-slate-500 block text-[10px] uppercase font-bold">
-                {dossier.containerUnit === 'CAISSE' ? 'Caisses Déclarées' : 'Conteneurs Déclarés'}
+                {dossier.containerUnit === 'CAISSE'
+                  ? 'Caisses Déclarées'
+                  : dossier.containerUnit === 'PALETTES'
+                    ? 'Palettes Déclarées'
+                    : 'Conteneurs Déclarés'}
               </span>
               <span className="font-mono font-bold text-slate-900">
-                {dossier.containerCount} {dossier.containerUnit === 'CAISSE' ? 'caisse(s)' : 'conteneur(s)'}
+                {dossier.containerCount}{' '}
+                {dossier.containerUnit === 'CAISSE'
+                  ? 'caisse(s)'
+                  : dossier.containerUnit === 'PALETTES'
+                    ? 'palette(s)'
+                    : 'conteneur(s)'}
               </span>
             </div>
             <div>

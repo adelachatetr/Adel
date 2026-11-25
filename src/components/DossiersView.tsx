@@ -467,7 +467,7 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                     )}
                     <span>Marchandise : {selectedDossier.goodsDescription}</span>
                     <span>
-                      Colisage : <strong className="font-mono text-slate-700">{selectedDossier.containerCount} {selectedDossier.containerUnit === 'CAISSE' ? 'Caisse(s)' : 'Conteneur(s)'}</strong>
+                      Colisage : <strong className="font-mono text-slate-700">{selectedDossier.containerCount} {selectedDossier.containerUnit === 'CAISSE' ? 'Caisse(s)' : selectedDossier.containerUnit === 'PALETTES' ? 'Palette(s)' : 'Conteneur(s)'}</strong>
                     </span>
                     {selectedDossier.berthingDate && (
                       <span className="text-cyan-900 font-bold bg-cyan-50 px-2 py-0.5 rounded-md border border-cyan-200 flex items-center gap-1">

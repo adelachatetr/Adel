@@ -369,7 +369,7 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
             <div className="sm:col-span-5">
               <label className="block text-slate-700 font-semibold mb-1">
-                Nombre de conteneurs / Caisses
+                Nombre de conteneurs / Caisses / Palettes
               </label>
               <div className="flex gap-2">
                 <input
@@ -383,10 +383,11 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
                   value={containerUnit}
                   onChange={e => setContainerUnit(e.target.value as PackagingUnit)}
                   className="flex-1 min-w-0 bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-2.5 text-slate-900 font-bold focus:border-cyan-600 cursor-pointer"
-                  title="Choisir Conteneurs ou Caisse"
+                  title="Choisir Conteneurs, Caisse ou Palettes"
                 >
                   <option value="CONTENEURS">Conteneurs</option>
                   <option value="CAISSE">Caisse</option>
+                  <option value="PALETTES">Palettes</option>
                 </select>
               </div>
             </div>
