@@ -528,6 +528,7 @@ export default function App() {
         eta: data.eta,
         berthingDate: data.berthingDate,
         bankReceptionDate: data.bankReceptionDate,
+        forwarderDeclarationDate: data.forwarderDeclarationDate,
         portOfDischarge: data.portOfDischarge || 'Port',
         goodsDescription: data.goodsDescription || 'Marchandises',
         containerCount: data.containerCount || 1,

@@ -109,6 +109,7 @@ export interface TransitDossier {
   eta?: string;                // Date arrivée prévue
   berthingDate?: string;       // Date d'accostage du navire au port
   bankReceptionDate?: string;  // Date de réception du dossier par la banque
+  forwarderDeclarationDate?: string; // Date de déclaration du transitaire
   portOfDischarge: string;     // Port / Aéroport
   goodsDescription: string;    // Désignation marchandise
   containerCount: number;

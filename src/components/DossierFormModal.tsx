@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, FolderPlus, Check, Trash2, Printer, Anchor, Landmark, AlertCircle } from 'lucide-react';
+import { X, FolderPlus, Check, Trash2, Printer, Anchor, Landmark, FileCheck, AlertCircle } from 'lucide-react';
 import { TransitDossier, DossierStatus, DeliveryMode, DemandNature } from '../types/transit';
 
 interface DossierFormModalProps {
@@ -30,6 +30,7 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
   const [eta, setEta] = useState('');
   const [berthingDate, setBerthingDate] = useState('');
   const [bankReceptionDate, setBankReceptionDate] = useState('');
+  const [forwarderDeclarationDate, setForwarderDeclarationDate] = useState('');
   const [portOfDischarge, setPortOfDischarge] = useState('Port de Skikda');
   const [goodsDescription, setGoodsDescription] = useState('');
   const [containerCount, setContainerCount] = useState<number>(1);
@@ -57,6 +58,7 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
       setEta(editingDossier.eta || '');
       setBerthingDate(editingDossier.berthingDate || '');
       setBankReceptionDate(editingDossier.bankReceptionDate || '');
+      setForwarderDeclarationDate(editingDossier.forwarderDeclarationDate || '');
       setPortOfDischarge(editingDossier.portOfDischarge);
       setGoodsDescription(editingDossier.goodsDescription);
       setContainerCount(editingDossier.containerCount);
@@ -74,6 +76,7 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
       setEta('');
       setBerthingDate('');
       setBankReceptionDate('');
+      setForwarderDeclarationDate('');
       setPortOfDischarge('Port de Skikda');
       setGoodsDescription('');
       setContainerCount(1);
@@ -113,6 +116,7 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
       eta: eta || undefined,
       berthingDate: berthingDate || undefined,
       bankReceptionDate: bankReceptionDate || undefined,
+      forwarderDeclarationDate: forwarderDeclarationDate || undefined,
       portOfDischarge: portOfDischarge.trim(),
       goodsDescription: goodsDescription.trim() || 'Marchandises diverses',
       containerCount: Number(containerCount) || 1,
@@ -298,8 +302,8 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
             </div>
           </div>
 
-          {/* Les 2 caisses demandées : 1er Date accostage, 2-Date Recu Dossier (Banque) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-cyan-50/70 p-3.5 rounded-2xl border border-cyan-200 shadow-2xs">
+          {/* Les 3 caisses de suivi des dates : 1-Accostage, 2-Reçu Banque, 3-Déclaration Transitaire */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-cyan-50/70 p-3.5 rounded-2xl border border-cyan-200 shadow-2xs">
             <div>
               <label className="block text-slate-800 font-bold mb-1 text-xs flex items-center gap-1.5">
                 <Anchor className="h-4 w-4 text-cyan-700 shrink-0" />
@@ -329,6 +333,22 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
               />
               <span className="text-[10px] text-blue-800 font-medium mt-1 block">
                 Date réception dossier par la banque
+              </span>
+            </div>
+
+            <div>
+              <label className="block text-slate-800 font-bold mb-1 text-xs flex items-center gap-1.5">
+                <FileCheck className="h-4 w-4 text-emerald-700 shrink-0" />
+                <span>3. Date Déclaration Transitaire</span>
+              </label>
+              <input
+                type="date"
+                value={forwarderDeclarationDate}
+                onChange={e => setForwarderDeclarationDate(e.target.value)}
+                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-medium focus:outline-none focus:border-cyan-600 focus:ring-1 focus:ring-cyan-600 shadow-2xs"
+              />
+              <span className="text-[10px] text-emerald-800 font-medium mt-1 block">
+                Date de déclaration du transitaire
               </span>
             </div>
           </div>
