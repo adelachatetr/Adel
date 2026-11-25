@@ -359,7 +359,15 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
                 {dossier.forwarderDeclarationDate ? formatShortDate(dossier.forwarderDeclarationDate) : 'En attente'}
               </span>
             </div>
-            <div className="col-span-2 sm:col-span-4 pt-1 border-t border-slate-200/80">
+            {dossier.receptionDate && (
+              <div>
+                <span className="text-slate-500 block text-[10px] uppercase font-bold">Date Réception Dossier</span>
+                <span className="font-medium text-indigo-900 font-mono">
+                  {formatShortDate(dossier.receptionDate)}
+                </span>
+              </div>
+            )}
+            <div className={`col-span-2 ${dossier.receptionDate ? 'sm:col-span-3' : 'sm:col-span-4'} pt-1 border-t border-slate-200/80`}>
               <span className="text-slate-500 block text-[10px] uppercase font-bold">Désignation Marchandises</span>
               <span className="font-medium text-slate-900 block">{dossier.goodsDescription}</span>
             </div>

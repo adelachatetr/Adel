@@ -533,6 +533,7 @@ export default function App() {
         goodsDescription: data.goodsDescription || 'Marchandises',
         containerCount: data.containerCount || 1,
         status: data.status || 'OUVERT',
+        receptionDate: data.receptionDate,
         openedDate: new Date().toISOString().slice(0, 10),
         updatedAt: new Date().toISOString(),
         totalProvisionsReceived: 0
@@ -554,7 +555,15 @@ export default function App() {
   const handleUpdateDossierStatus = (dossierId: string, newStatus: DossierStatus) => {
     const target = dossiers.find(d => d.id === dossierId);
     if (!target) return;
-    const updated: TransitDossier = { ...target, status: newStatus, updatedAt: new Date().toISOString() };
+    const updated: TransitDossier = {
+      ...target,
+      status: newStatus,
+      receptionDate:
+        newStatus === 'RECEPTIONNE' && !target.receptionDate
+          ? new Date().toISOString().slice(0, 10)
+          : target.receptionDate,
+      updatedAt: new Date().toISOString()
+    };
     const updatedList = dossiers.map(d => d.id === dossierId ? updated : d);
     setDossiers(updatedList);
     saveStoredDossiers(updatedList);

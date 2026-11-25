@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, FolderPlus, Check, Trash2, Printer, Anchor, Landmark, FileCheck, AlertCircle } from 'lucide-react';
+import { X, FolderPlus, Check, Trash2, Printer, Anchor, Landmark, FileCheck, CalendarCheck, AlertCircle } from 'lucide-react';
 import { TransitDossier, DossierStatus, DeliveryMode, DemandNature } from '../types/transit';
 
 interface DossierFormModalProps {
@@ -34,6 +34,7 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
   const [goodsDescription, setGoodsDescription] = useState('');
   const [containerCount, setContainerCount] = useState<number>(1);
   const [status, setStatus] = useState<DossierStatus>('OUVERT');
+  const [receptionDate, setReceptionDate] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
@@ -61,6 +62,7 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
       setGoodsDescription(editingDossier.goodsDescription);
       setContainerCount(editingDossier.containerCount);
       setStatus(editingDossier.status);
+      setReceptionDate(editingDossier.receptionDate || '');
       setFormError(null);
     } else {
       setDossierNumber('');
@@ -78,6 +80,7 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
       setGoodsDescription('');
       setContainerCount(1);
       setStatus('OUVERT');
+      setReceptionDate('');
       setFormError(null);
     }
   }, [editingDossier, isOpen]);
@@ -116,7 +119,8 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
       portOfDischarge: portOfDischarge.trim(),
       goodsDescription: goodsDescription.trim() || 'Marchandises diverses',
       containerCount: Number(containerCount) || 1,
-      status
+      status,
+      receptionDate: receptionDate || undefined
     });
   };
 
@@ -485,6 +489,21 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
                   Soldé
                 </button>
               </div>
+
+              {(status === 'RECEPTIONNE' || Boolean(receptionDate)) && (
+                <div className="mt-3 p-3 rounded-xl bg-indigo-50/80 border border-indigo-200 flex flex-col sm:flex-row sm:items-center gap-2.5">
+                  <label className="text-xs font-bold text-indigo-900 flex items-center gap-1.5 shrink-0">
+                    <CalendarCheck className="h-4 w-4 text-indigo-700" />
+                    <span>Date de réception du dossier :</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={receptionDate}
+                    onChange={e => setReceptionDate(e.target.value)}
+                    className="flex-1 bg-white border border-indigo-300 rounded-xl px-3 py-2 text-slate-900 font-medium focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 shadow-2xs"
+                  />
+                </div>
+              )}
             </div>
           </div>
 

@@ -476,6 +476,11 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                         🏦 Reçu Banque : <strong className="font-mono">{formatShortDate(selectedDossier.bankReceptionDate)}</strong>
                       </span>
                     )}
+                    {selectedDossier.receptionDate && (
+                      <span className="text-indigo-900 font-bold bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200 flex items-center gap-1">
+                        📥 Réception dossier : <strong className="font-mono">{formatShortDate(selectedDossier.receptionDate)}</strong>
+                      </span>
+                    )}
                     {selectedDossier.forwarderDeclarationDate && (
                       <span className="text-emerald-900 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 flex items-center gap-1">
                         📄 Déclaration Transitaire : <strong className="font-mono">{formatShortDate(selectedDossier.forwarderDeclarationDate)}</strong>
