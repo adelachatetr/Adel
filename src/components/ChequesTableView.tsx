@@ -284,6 +284,7 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
               <option value="ALL">Toutes les natures ({cheques.length})</option>
               {Object.entries(CATEGORY_LABELS).map(([catKey, catVal]) => {
                 const count = cheques.filter(c => c.category === catKey).length;
+                if (catKey === 'AVANCE_PROVISION' && count === 0) return null;
                 return (
                   <option key={catKey} value={catKey}>
                     {catVal.label} ({count})
@@ -437,7 +438,7 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
                   : 'bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100'
               }`}
             >
-              Cautions Conteneurs
+              Cautions &amp; Consign. (CC)
             </button>
             <button
               onClick={() => setCategoryFilter(categoryFilter === 'DROITS_DOUANE' ? 'ALL' : 'DROITS_DOUANE')}
@@ -447,7 +448,7 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
                   : 'bg-emerald-50 text-emerald-900 border border-emerald-200 hover:bg-emerald-100'
               }`}
             >
-              Droits Douane
+              Droits Douane (DTD)
             </button>
             <button
               onClick={() => setCategoryFilter(categoryFilter === 'FRAIS_MARITIMES' ? 'ALL' : 'FRAIS_MARITIMES')}
@@ -457,7 +458,7 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
                   : 'bg-cyan-50 text-cyan-900 border border-cyan-200 hover:bg-cyan-100'
               }`}
             >
-              Frais B/L & BAD
+              Fret &amp; Maritimes (FFM)
             </button>
             <button
               onClick={() => setCategoryFilter(categoryFilter === 'MANUTENTION_PORT' ? 'ALL' : 'MANUTENTION_PORT')}
@@ -467,7 +468,7 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
                   : 'bg-indigo-50 text-indigo-900 border border-indigo-200 hover:bg-indigo-100'
               }`}
             >
-              Port / Magasinage
+              Port &amp; Manutention (FPM)
             </button>
 
             <button

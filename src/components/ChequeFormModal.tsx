@@ -135,15 +135,19 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
     if (cat === 'DROITS_DOUANE') {
       setBeneficiary('Receveur des Douanes (Trésor Public)');
     } else if (cat === 'CAUTION_CONTENEUR') {
-      setBeneficiary(shippingLine ? `${shippingLine} - Caution Consignation` : 'MSC Mediterranean Shipping Company');
+      setBeneficiary(shippingLine ? `${shippingLine} - Cautions et consignations CC` : 'MSC Mediterranean Shipping Company');
     } else if (cat === 'FRAIS_MARITIMES') {
-      setBeneficiary('Compagnie Maritime (Frais BAD / THC / Surestaries)');
+      setBeneficiary('Compagnie Maritime (Fret et frais maritimes FFM)');
     } else if (cat === 'MANUTENTION_PORT') {
-      setBeneficiary('Entreprise Portuaire / Marsa / DP World');
+      setBeneficiary('Entreprise Portuaire (Frais portuaires et manutention FPM)');
     } else if (cat === 'TRANSPORT_TRACTION') {
-      setBeneficiary('Transporteur Routier Agréé');
+      setBeneficiary('Transporteur Routier Agréé (FTT)');
+    } else if (cat === 'HONORAIRES_TRANSIT') {
+      setBeneficiary('Transitaire Agréé (HFT)');
     } else if (cat === 'ASSURANCE_CAAT') {
-      setBeneficiary('CAAT (Compagnie Algérienne des Assurances)');
+      setBeneficiary('Compagnie d\'Assurance (ASS)');
+    } else if (cat === 'CX') {
+      setBeneficiary('Receveur des Douanes / Trésor (PAD)');
     } else if (cat === 'AVANCE_PROVISION') {
       setDirection('RECU');
       setBeneficiary('Notre Agence de Transit');
@@ -354,16 +358,15 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
                 onChange={e => handleCategoryChange(e.target.value as ChequeCategory)}
                 className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-medium focus:outline-none focus:border-cyan-600"
               >
-                <option value="CAUTION_CONTENEUR">Caution Conteneur (Consignation)</option>
-                <option value="DROITS_DOUANE">Droits & Taxes Douane</option>
-                <option value="FRAIS_MARITIMES">Frais Maritimes & BAD</option>
-                <option value="MANUTENTION_PORT">Manutention & Acconage Port</option>
-                <option value="TRANSPORT_TRACTION">Transport Terrestre</option>
-                <option value="CX">CX</option>
-                <option value="ASSURANCE_CAAT">Assurance (CAAT)</option>
-                <option value="AVANCE_PROVISION">Avance / Provision Client</option>
-                <option value="HONORAIRES_TRANSIT">Honoraires Transit</option>
-                <option value="AUTRE_DEBOURS">Autre Débours</option>
+                <option value="FRAIS_MARITIMES">1. Fret et frais maritimes FFM</option>
+                <option value="MANUTENTION_PORT">2. Frais portuaires et manutention FPM</option>
+                <option value="DROITS_DOUANE">3. Droits et taxes douaniers DTD</option>
+                <option value="HONORAIRES_TRANSIT">4. Honoraires et frais de transit HFT</option>
+                <option value="TRANSPORT_TRACTION">5. Transport terrestre FTT</option>
+                <option value="ASSURANCE_CAAT">6. Assurance importation ASS</option>
+                <option value="CAUTION_CONTENEUR">7. Cautions et consignations CC</option>
+                <option value="CX">8. Pénalités (CX) et amendes PAD</option>
+                <option value="AUTRE_DEBOURS">9. Autres frais et débours AFD</option>
               </select>
             </div>
           </div>

@@ -407,15 +407,16 @@ export const DeboursBreakdownPrintModal: React.FC<DeboursBreakdownPrintModalProp
                         <td className="py-2 px-3 border-r border-slate-200">
                           <strong className="text-slate-900 font-bold">{info.label}</strong>
                           <div className="text-[10px] text-slate-500">
-                            {item.catKey === 'CAUTION_CONTENEUR' && 'Consignation remboursable sous 14/21 jours dès restitution vide'}
-                            {item.catKey === 'DROITS_DOUANE' && 'Liquidation Trésor Public / Droits de douane DUM'}
-                            {item.catKey === 'FRAIS_MARITIMES' && 'Échange de B/L, BAD, surestaries et frais portuaires armateurs'}
-                            {item.catKey === 'MANUTENTION_PORT' && 'Acconage, magasinage terminal, pesage VGM et prestations de quai'}
-                            {item.catKey === 'TRANSPORT_TRACTION' && 'Traction routière entre port de débarquement et usine'}
-                            {item.catKey === 'CX' && 'Frais et prestations CX'}
-                            {item.catKey === 'ASSURANCE_CAAT' && 'Assurance transport / marchandises auprès de la CAAT'}
+                            {item.catKey === 'FRAIS_MARITIMES' && 'Fret maritime, échange B/L, BAD, surestaries (FFM)'}
+                            {item.catKey === 'MANUTENTION_PORT' && 'Frais portuaires, acconage, magasinage et manutention (FPM)'}
+                            {item.catKey === 'DROITS_DOUANE' && 'Liquidation Trésor Public / Droits et taxes douaniers (DTD)'}
+                            {item.catKey === 'HONORAIRES_TRANSIT' && 'Honoraires et prestations du transitaire (HFT)'}
+                            {item.catKey === 'TRANSPORT_TRACTION' && 'Transport terrestre et traction port-usine (FTT)'}
+                            {item.catKey === 'ASSURANCE_CAAT' && 'Assurance importation et transport marchandises (ASS)'}
+                            {item.catKey === 'CAUTION_CONTENEUR' && 'Cautions et consignations conteneurs remboursables (CC)'}
+                            {item.catKey === 'CX' && 'Pénalités (CX), contentieux douaniers et amendes (PAD)'}
+                            {item.catKey === 'AUTRE_DEBOURS' && 'Autres frais et débours annexes (AFD)'}
                             {item.catKey === 'AVANCE_PROVISION' && 'Provisions et avances versées pour les débours'}
-                            {item.catKey === 'AUTRE_DEBOURS' && 'Frais annexes, contrôle phytosanitaire, escorte, etc.'}
                           </div>
                         </td>
                         <td className="py-2 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-800">

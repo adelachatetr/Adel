@@ -308,55 +308,55 @@ export const CHEQUE_NATURE_LABELS: Record<ChequeNature, { label: string; short: 
 
 // Helpers for Category info
 export const CATEGORY_LABELS: Record<ChequeCategory, { label: string; short: string; color: string }> = {
-  CAUTION_CONTENEUR: {
-    label: 'Caution Conteneur (Consignation)',
-    short: 'Caution Conteneur',
-    color: 'amber'
-  },
-  DROITS_DOUANE: {
-    label: 'Droits & Taxes Douane (Trésor)',
-    short: 'Droits Douane',
-    color: 'emerald'
-  },
   FRAIS_MARITIMES: {
-    label: 'Frais Maritimes & BAD (Compagnie)',
-    short: 'Frais Maritimes',
+    label: '1. Fret et frais maritimes FFM',
+    short: 'FFM · Fret & Maritimes',
     color: 'sky'
   },
   MANUTENTION_PORT: {
-    label: 'Manutention, Acconage & Port',
-    short: 'Manutention Port',
+    label: '2. Frais portuaires et manutention FPM',
+    short: 'FPM · Port & Manutention',
     color: 'indigo'
   },
+  DROITS_DOUANE: {
+    label: '3. Droits et taxes douaniers DTD',
+    short: 'DTD · Droits Douane',
+    color: 'emerald'
+  },
+  HONORAIRES_TRANSIT: {
+    label: '4. Honoraires et frais de transit HFT',
+    short: 'HFT · Honoraires Transit',
+    color: 'blue'
+  },
   TRANSPORT_TRACTION: {
-    label: 'Transport Terrestre & Traction',
-    short: 'Transport',
+    label: '5. Transport terrestre FTT',
+    short: 'FTT · Transport Terrestre',
     color: 'purple'
   },
+  ASSURANCE_CAAT: {
+    label: '6. Assurance importation ASS',
+    short: 'ASS · Assurance Import',
+    color: 'rose'
+  },
+  CAUTION_CONTENEUR: {
+    label: '7. Cautions et consignations CC',
+    short: 'CC · Cautions & Consign.',
+    color: 'amber'
+  },
   CX: {
-    label: 'CX',
-    short: 'CX',
+    label: '8. Pénalités (CX) et amendes PAD',
+    short: 'PAD · Pénalités (CX)',
     color: 'orange'
   },
-  ASSURANCE_CAAT: {
-    label: 'Assurance (CAAT)',
-    short: 'Assurance (CAAT)',
-    color: 'rose'
+  AUTRE_DEBOURS: {
+    label: '9. Autres frais et débours AFD',
+    short: 'AFD · Autres Débours',
+    color: 'slate'
   },
   AVANCE_PROVISION: {
     label: 'Avance & Provision Client',
     short: 'Avance Client',
     color: 'teal'
-  },
-  HONORAIRES_TRANSIT: {
-    label: 'Honoraires Transit & Prestation',
-    short: 'Honoraires',
-    color: 'blue'
-  },
-  AUTRE_DEBOURS: {
-    label: 'Autre Débours / Frais Annexes',
-    short: 'Autre Débours',
-    color: 'slate'
   }
 };
 
