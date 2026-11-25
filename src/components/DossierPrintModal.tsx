@@ -321,7 +321,7 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs my-3">
             <div>
               <span className="text-slate-500 block text-[10px] uppercase font-bold">
-                {dossier.transportDocType === 'LTA' ? 'N° LTA (Transport Aérien)' : 'N° Connaissement (B/L)'}
+                Facture Commerciale N°
               </span>
               <span className="font-mono font-bold text-slate-900">{dossier.blNumber}</span>
             </div>

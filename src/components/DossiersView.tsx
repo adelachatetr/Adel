@@ -165,7 +165,7 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                 <Search className="h-4 w-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
-                  placeholder="Chercher dossier, B/L, BC, port..."
+                  placeholder="Chercher dossier, Facture Commerciale, BC, port..."
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
                   className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-cyan-600 font-medium"
@@ -368,7 +368,7 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
 
                     <div className="text-[11px] text-slate-500 mt-1 flex items-center justify-between gap-2 font-medium flex-wrap">
                       <span className="font-mono">
-                        {dossier.transportDocType === 'LTA' ? 'LTA' : 'B/L'}: {dossier.blNumber}
+                        Facture Commerciale N°: {dossier.blNumber}
                       </span>
                       {dossier.portOfDischarge && (
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-50 text-cyan-900 border border-cyan-200 font-semibold truncate max-w-[160px]" title={dossier.portOfDischarge}>
@@ -439,7 +439,7 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                       );
                     })()}
                     <span className="text-xs text-cyan-700 font-mono font-bold">
-                      · {selectedDossier.transportDocType === 'LTA' ? 'LTA' : 'B/L'} {selectedDossier.blNumber}
+                      · Facture Commerciale N° : {selectedDossier.blNumber}
                     </span>
                     <span className="text-xs text-emerald-700 font-bold">
                       · Nature De Demande : {selectedDossier.demandNature || 'B/C'}

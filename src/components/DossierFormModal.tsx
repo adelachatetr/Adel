@@ -23,7 +23,6 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
   const [clientName, setClientName] = useState('');
   const [clientContact, setClientContact] = useState('');
   const [bcAmountEur, setBcAmountEur] = useState<string>('');
-  const [transportDocType, setTransportDocType] = useState<'BL' | 'LTA'>('BL');
   const [blNumber, setBlNumber] = useState('');
   const [demandNature, setDemandNature] = useState<DemandNature>('B/C');
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>('CFR');
@@ -49,7 +48,6 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
           ? editingDossier.bcAmountEur.toString()
           : ''
       );
-      setTransportDocType(editingDossier.transportDocType || 'BL');
       setBlNumber(editingDossier.blNumber);
       setDemandNature(editingDossier.demandNature || 'B/C');
       const rawMode = (editingDossier.deliveryMode || editingDossier.vesselName || '').toUpperCase();
@@ -69,7 +67,6 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
       setClientName('');
       setClientContact('');
       setBcAmountEur('');
-      setTransportDocType('BL');
       setBlNumber('');
       setDemandNature('B/C');
       setDeliveryMode('CFR');
@@ -92,7 +89,7 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
     setFormError(null);
 
     if (!dossierNumber.trim() || !clientName.trim() || !blNumber.trim()) {
-      setFormError(`Veuillez renseigner au moins le Nom Fournisseur, le N° BC/CNT et le N° de ${transportDocType === 'LTA' ? 'LTA' : 'B/L'}.`);
+      setFormError('Veuillez renseigner au moins le Nom Fournisseur, le N° BC/CNT et le N° de Facture Commerciale.');
       return;
     }
 
@@ -108,7 +105,6 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
       clientName: clientName.trim(),
       clientContact: clientContact.trim() || undefined,
       bcAmountEur: parsedEuro,
-      transportDocType,
       blNumber: blNumber.trim(),
       demandNature,
       deliveryMode,
@@ -215,27 +211,16 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
 
           <div>
             <label className="block text-slate-700 font-semibold mb-1">
-              Document Transport (B/L ou LTA) <span className="text-rose-500">*</span>
+              Facture Commerciale N° <span className="text-rose-500">*</span>
             </label>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <select
-                value={transportDocType}
-                onChange={e => setTransportDocType(e.target.value as 'BL' | 'LTA')}
-                className="bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-slate-900 font-bold focus:border-cyan-600 cursor-pointer shrink-0 sm:w-48"
-                title="Choisir B/L Connaissement ou LTA"
-              >
-                <option value="BL">B/L Connaissement</option>
-                <option value="LTA">LTA</option>
-              </select>
-              <input
-                type="text"
-                required
-                value={blNumber}
-                onChange={e => setBlNumber(e.target.value)}
-                placeholder={transportDocType === 'LTA' ? 'ex: N° LTA 124-88109234' : 'ex: N° B/L MEDU83910283'}
-                className="flex-1 w-full min-w-0 bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-mono font-bold focus:border-cyan-600"
-              />
-            </div>
+            <input
+              type="text"
+              required
+              value={blNumber}
+              onChange={e => setBlNumber(e.target.value)}
+              placeholder="ex: FC-2026-00418 / INV-88392"
+              className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-mono font-bold focus:border-cyan-600"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-3">

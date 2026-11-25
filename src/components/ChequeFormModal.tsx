@@ -386,7 +386,7 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
               <datalist id="dossiers-list">
                 {dossiers.map(d => (
                   <option key={d.id} value={d.dossierNumber}>
-                    BC: {d.clientName} (B/L {d.blNumber})
+                    BC: {d.clientName} (Facture {d.blNumber})
                   </option>
                 ))}
               </datalist>
