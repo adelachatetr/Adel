@@ -66,6 +66,8 @@ export interface TransitCheque {
   clientName: string;         // Nom du client importateur/exportateur
   beneficiary: string;        // Bénéficiaire (Compagnie maritime, Douane, Port, etc.)
   dateEmission: string;       // Date d'émission
+  dateDemandeCheque?: string; // Date Demande Chèque
+  dateRecuChequeDfc?: string; // Date Reçu de Chèque (DFC)
   dateEcheance?: string;      // Date d'échéance / validité
   dateRemiseCoursier?: string;
   coursierName?: string;      // Nom du déclarant/coursier

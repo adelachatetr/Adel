@@ -176,6 +176,20 @@ export const ChequeDetailModal: React.FC<ChequeDetailModalProps> = ({
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
+                <span className="text-slate-500 font-medium">Date Demande Chèque :</span>
+                <div className="font-bold text-slate-900 mt-0.5">
+                  {cheque.dateDemandeCheque ? formatShortDate(cheque.dateDemandeCheque) : 'Non renseignée'}
+                </div>
+              </div>
+
+              <div>
+                <span className="text-slate-500 font-medium">Date Reçu de Chèque (DFC) :</span>
+                <div className="font-bold text-slate-900 mt-0.5">
+                  {cheque.dateRecuChequeDfc ? formatShortDate(cheque.dateRecuChequeDfc) : 'En attente DFC'}
+                </div>
+              </div>
+
+              <div>
                 <span className="text-slate-500 font-medium">Date d'Émission en Caisse :</span>
                 <div className="font-bold text-slate-900 mt-0.5">{formatShortDate(cheque.dateEmission)}</div>
               </div>

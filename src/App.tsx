@@ -345,6 +345,8 @@ export default function App() {
         clientName: data.clientName || 'Client Standard',
         beneficiary: data.beneficiary || 'Bénéficiaire',
         dateEmission: data.dateEmission || new Date().toISOString().slice(0, 10),
+        dateDemandeCheque: data.dateDemandeCheque,
+        dateRecuChequeDfc: data.dateRecuChequeDfc,
         dateEcheance: data.dateEcheance,
         dateRemiseCoursier: data.dateRemiseCoursier,
         coursierName: data.coursierName,

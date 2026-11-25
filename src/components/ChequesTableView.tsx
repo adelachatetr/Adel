@@ -780,6 +780,12 @@ export const ChequesTableView: React.FC<ChequesTableViewProps> = ({
                             </div>
                           </>
                         )}
+                        {(chq.dateDemandeCheque || chq.dateRecuChequeDfc) && (
+                          <div className="text-[10px] text-slate-500 font-medium mt-0.5 space-y-0.5">
+                            {chq.dateDemandeCheque && <div>Demande: {formatShortDate(chq.dateDemandeCheque)}</div>}
+                            {chq.dateRecuChequeDfc && <div>DFC: {formatShortDate(chq.dateRecuChequeDfc)}</div>}
+                          </div>
+                        )}
                       </td>
 
                       {/* Coursier / Déclarant */}

@@ -38,6 +38,8 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
   const [clientName, setClientName] = useState(preselectedClientName || '');
   const [beneficiary, setBeneficiary] = useState('');
   const [dateEmission, setDateEmission] = useState(new Date().toISOString().slice(0, 10));
+  const [dateDemandeCheque, setDateDemandeCheque] = useState('');
+  const [dateRecuChequeDfc, setDateRecuChequeDfc] = useState('');
   const [dateEcheance, setDateEcheance] = useState('');
   const [coursierName, setCoursierName] = useState(TRANSIT_AGENTS[0]);
   const [status, setStatus] = useState<ChequeStatus>('EMIS');
@@ -74,6 +76,8 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
       setClientName(editingCheque.clientName);
       setBeneficiary(editingCheque.beneficiary);
       setDateEmission(editingCheque.dateEmission);
+      setDateDemandeCheque(editingCheque.dateDemandeCheque || '');
+      setDateRecuChequeDfc(editingCheque.dateRecuChequeDfc || '');
       setDateEcheance(editingCheque.dateEcheance || '');
       setCoursierName(editingCheque.coursierName || TRANSIT_AGENTS[0]);
       setStatus(editingCheque.status);
@@ -102,6 +106,8 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
       setClientName(preselectedClientName || (dossiers[0]?.clientName || ''));
       setBeneficiary('MSC Mediterranean Shipping Company');
       setDateEmission(new Date().toISOString().slice(0, 10));
+      setDateDemandeCheque('');
+      setDateRecuChequeDfc('');
       
       const defaultExp = new Date();
       defaultExp.setMonth(defaultExp.getMonth() + 1);
@@ -208,6 +214,8 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
       clientName: clientName.trim(),
       beneficiary: beneficiary.trim(),
       dateEmission,
+      dateDemandeCheque: dateDemandeCheque || undefined,
+      dateRecuChequeDfc: dateRecuChequeDfc || undefined,
       dateEcheance: dateEcheance || undefined,
       coursierName: coursierName || undefined,
       status,
@@ -551,10 +559,34 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
             </div>
           )}
 
-          {/* Section 4: Suivi logistique & coursier */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {/* Section 4: Dates de suivi chèque (Demande, Reçu DFC, Émission) */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-cyan-50/50 p-3.5 rounded-2xl border border-cyan-200/80">
             <div>
-              <label className="block text-slate-700 font-semibold mb-1">
+              <label className="block text-slate-800 font-bold mb-1">
+                Date Demande Chèque
+              </label>
+              <input
+                type="date"
+                value={dateDemandeCheque}
+                onChange={e => setDateDemandeCheque(e.target.value)}
+                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-medium focus:outline-none focus:border-cyan-600"
+              />
+            </div>
+
+            <div>
+              <label className="block text-slate-800 font-bold mb-1">
+                Date Reçu de Chèque (DFC)
+              </label>
+              <input
+                type="date"
+                value={dateRecuChequeDfc}
+                onChange={e => setDateRecuChequeDfc(e.target.value)}
+                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-medium focus:outline-none focus:border-cyan-600"
+              />
+            </div>
+
+            <div>
+              <label className="block text-slate-800 font-bold mb-1">
                 Date d'Émission
               </label>
               <input
@@ -565,7 +597,10 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
                 className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-medium focus:outline-none focus:border-cyan-600"
               />
             </div>
+          </div>
 
+          {/* Section 4B: Logistique coursier & statut */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-slate-700 font-semibold">
