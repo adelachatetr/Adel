@@ -627,7 +627,7 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                             {chq.dateRecuChequeDfc && (
                               <span>Reçu DFC: {formatShortDate(chq.dateRecuChequeDfc)}</span>
                             )}
-                            <span>Émis le: {formatShortDate(chq.dateEmission)}</span>
+                            <span>Remis transitaires: {formatShortDate(chq.dateEmission)}</span>
                           </div>
                           {chq.containerInfo && (
                             <div className="text-xs text-amber-800 font-mono font-bold mt-0.5">

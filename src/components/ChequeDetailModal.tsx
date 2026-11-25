@@ -190,7 +190,7 @@ export const ChequeDetailModal: React.FC<ChequeDetailModalProps> = ({
               </div>
 
               <div>
-                <span className="text-slate-500 font-medium">Date d'Émission en Caisse :</span>
+                <span className="text-slate-500 font-medium">Date Remis à Transitaires :</span>
                 <div className="font-bold text-slate-900 mt-0.5">{formatShortDate(cheque.dateEmission)}</div>
               </div>
 

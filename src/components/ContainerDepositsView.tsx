@@ -358,7 +358,7 @@ export const ContainerDepositsView: React.FC<ContainerDepositsViewProps> = ({
                         {formatAmount(chq.amount, chq.currency)}
                       </div>
                       <div className="text-xs text-slate-400 font-medium">
-                        Émis le {formatShortDate(chq.dateEmission)}
+                        Remis transitaires le {formatShortDate(chq.dateEmission)}
                       </div>
                     </div>
 

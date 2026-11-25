@@ -500,7 +500,7 @@ export const DeboursBreakdownPrintModal: React.FC<DeboursBreakdownPrintModalProp
                             <th className="py-1 px-2">Banque</th>
                             <th className="py-1 px-2">Bénéficiaire</th>
                             <th className="py-1 px-2">Dossier / Client</th>
-                            <th className="py-1 px-2">Date Émission</th>
+                            <th className="py-1 px-2">Date Remis à Transitaires</th>
                             <th className="py-1 px-2 text-right">Montant</th>
                           </tr>
                         </thead>

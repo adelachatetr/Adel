@@ -587,7 +587,7 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
 
             <div>
               <label className="block text-slate-800 font-bold mb-1">
-                Date d'Émission
+                Date Remis à Transitaires
               </label>
               <input
                 type="date"

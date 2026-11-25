@@ -587,7 +587,7 @@ export function exportChequesToCSV(cheques: TransitCheque[]): void {
     'Banque',
     'Date Demande Chèque',
     'Date Reçu de Chèque (DFC)',
-    'Date Émission',
+    'Date Remis à Transitaires',
     'Date Échéance',
     'Coursier / Déclarant',
     'N° Conteneurs',
