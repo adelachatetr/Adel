@@ -304,6 +304,7 @@ export default function App() {
             ...data,
             chequeNature: nextNature,
             amount: nextAmount,
+            beneficiary: (data.beneficiary ?? item.beneficiary ?? '').toUpperCase(),
             updatedAt: new Date().toISOString(),
             auditTrail: [
               {
@@ -343,7 +344,7 @@ export default function App() {
         currency: data.currency || settings.defaultCurrency,
         dossierNumber: data.dossierNumber || 'TR-2026-000',
         clientName: data.clientName || 'Client Standard',
-        beneficiary: data.beneficiary || 'Bénéficiaire',
+        beneficiary: (data.beneficiary || 'BÉNÉFICIAIRE').toUpperCase(),
         dateEmission: data.dateEmission || new Date().toISOString().slice(0, 10),
         dateDemandeCheque: data.dateDemandeCheque,
         dateRecuChequeDfc: data.dateRecuChequeDfc,

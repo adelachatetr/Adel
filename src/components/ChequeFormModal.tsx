@@ -74,7 +74,7 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
       setCurrency(editingCheque.currency || defaultCurrency);
       setDossierNumber(editingCheque.dossierNumber);
       setClientName(editingCheque.clientName);
-      setBeneficiary(editingCheque.beneficiary);
+      setBeneficiary((editingCheque.beneficiary || '').toUpperCase());
       setDateEmission(editingCheque.dateEmission);
       setDateDemandeCheque(editingCheque.dateDemandeCheque || '');
       setDateRecuChequeDfc(editingCheque.dateRecuChequeDfc || '');
@@ -104,7 +104,7 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
       setCurrency(defaultCurrency);
       setDossierNumber(preselectedDossierNumber || (dossiers[0]?.dossierNumber || ''));
       setClientName(preselectedClientName || (dossiers[0]?.clientName || ''));
-      setBeneficiary('MSC Mediterranean Shipping Company');
+      setBeneficiary('MSC MEDITERRANEAN SHIPPING COMPANY');
       setDateEmission(new Date().toISOString().slice(0, 10));
       setDateDemandeCheque('');
       setDateRecuChequeDfc('');
@@ -147,24 +147,26 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
     setIsContainerCaution(isCaution);
 
     if (cat === 'DROITS_DOUANE') {
-      setBeneficiary('Receveur des Douanes (Trésor Public)');
+      setBeneficiary('RECEVEUR DES DOUANES (TRÉSOR PUBLIC)');
     } else if (cat === 'CAUTION_CONTENEUR') {
-      setBeneficiary(shippingLine ? `${shippingLine} - Cautions et consignations CC` : 'MSC Mediterranean Shipping Company');
+      setBeneficiary(
+        (shippingLine ? `${shippingLine} - CAUTIONS ET CONSIGNATIONS CC` : 'MSC MEDITERRANEAN SHIPPING COMPANY').toUpperCase()
+      );
     } else if (cat === 'FRAIS_MARITIMES') {
-      setBeneficiary('Compagnie Maritime (FFM - Fret et frais maritimes)');
+      setBeneficiary('COMPAGNIE MARITIME (FFM - FRET ET FRAIS MARITIMES)');
     } else if (cat === 'MANUTENTION_PORT') {
-      setBeneficiary('Entreprise Portuaire (FPM - Frais portuaires et manutention)');
+      setBeneficiary('ENTREPRISE PORTUAIRE (FPM - FRAIS PORTUAIRES ET MANUTENTION)');
     } else if (cat === 'TRANSPORT_TRACTION') {
-      setBeneficiary('Transporteur Routier Agréé (FTT)');
+      setBeneficiary('TRANSPORTEUR ROUTIER AGRÉÉ (FTT)');
     } else if (cat === 'HONORAIRES_TRANSIT') {
-      setBeneficiary('Transitaire Agréé (HFT)');
+      setBeneficiary('TRANSITAIRE AGRÉÉ (HFT)');
     } else if (cat === 'ASSURANCE_CAAT') {
-      setBeneficiary('Compagnie d\'Assurance (ASS)');
+      setBeneficiary("COMPAGNIE D'ASSURANCE (ASS)");
     } else if (cat === 'CX') {
-      setBeneficiary('Receveur des Douanes / Trésor (PAD)');
+      setBeneficiary('RECEVEUR DES DOUANES / TRÉSOR (PAD)');
     } else if (cat === 'AVANCE_PROVISION') {
       setDirection('RECU');
-      setBeneficiary('Notre Agence de Transit');
+      setBeneficiary('NOTRE AGENCE DE TRANSIT');
     }
   };
 
@@ -212,7 +214,7 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
       currency,
       dossierNumber: dossierNumber.trim(),
       clientName: clientName.trim(),
-      beneficiary: beneficiary.trim(),
+      beneficiary: beneficiary.trim().toUpperCase(),
       dateEmission,
       dateDemandeCheque: dateDemandeCheque || undefined,
       dateRecuChequeDfc: dateRecuChequeDfc || undefined,
@@ -440,9 +442,9 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
                 type="text"
                 required
                 value={beneficiary}
-                onChange={e => setBeneficiary(e.target.value)}
-                placeholder="ex: CMA CGM, Douane, Port..."
-                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-semibold focus:outline-none focus:border-cyan-600"
+                onChange={e => setBeneficiary(e.target.value.toUpperCase())}
+                placeholder="EX: CMA CGM, DOUANE, PORT..."
+                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-semibold uppercase focus:outline-none focus:border-cyan-600"
               />
             </div>
           </div>
@@ -477,8 +479,8 @@ export const ChequeFormModal: React.FC<ChequeFormModalProps> = ({
                     value={shippingLine}
                     onChange={e => {
                       setShippingLine(e.target.value);
-                      if (!beneficiary || beneficiary.includes('Maritime')) {
-                        setBeneficiary(`${e.target.value} - Consignation`);
+                      if (!beneficiary || beneficiary.toUpperCase().includes('MARITIME')) {
+                        setBeneficiary(`${e.target.value} - CONSIGNATION`.toUpperCase());
                       }
                     }}
                     className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-semibold focus:outline-none focus:border-amber-500"
