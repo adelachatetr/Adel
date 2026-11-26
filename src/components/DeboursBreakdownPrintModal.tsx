@@ -46,6 +46,10 @@ export const DeboursBreakdownPrintModal: React.FC<DeboursBreakdownPrintModalProp
     if (isOpen) {
       setGroupingMode(initialGroupingMode);
     }
+    return () => {
+      document.body.classList.remove('printing-direct');
+      document.getElementById('direct-print-root')?.remove();
+    };
   }, [isOpen, initialGroupingMode]);
 
   if (!isOpen) return null;
@@ -172,65 +176,44 @@ export const DeboursBreakdownPrintModal: React.FC<DeboursBreakdownPrintModalProp
       return;
     }
 
-    try {
-      const iframe = document.createElement('iframe');
-      iframe.style.position = 'fixed';
-      iframe.style.right = '0';
-      iframe.style.bottom = '0';
-      iframe.style.width = '0';
-      iframe.style.height = '0';
-      iframe.style.border = '0';
-      iframe.setAttribute('title', 'Impression Etat Debours');
-      document.body.appendChild(iframe);
-
-      const headStyles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
-        .map(el => el.outerHTML)
-        .join('\n');
-
-      const doc = iframe.contentWindow?.document;
-      if (doc) {
-        doc.open();
-        doc.write(`<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <title>Etat_Debours_${reportRef}</title>
-  ${headStyles}
-  <style>
-    @page { margin: 1cm; size: A4 portrait; }
-    body { background: white !important; color: #0f172a !important; margin: 0 !important; padding: 0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .printable-document { width: 100% !important; margin: 0 !important; padding: 0 !important; }
-  </style>
-</head>
-<body class="bg-white">
-  <div class="printable-document">
-    ${sheet.innerHTML}
-  </div>
-</body>
-</html>`);
-        doc.close();
-
-        setTimeout(() => {
-          try {
-            iframe.contentWindow?.focus();
-            iframe.contentWindow?.print();
-          } catch (e) {
-            window.print();
-          } finally {
-            setTimeout(() => {
-              if (document.body.contains(iframe)) {
-                document.body.removeChild(iframe);
-              }
-            }, 1200);
-          }
-        }, 350);
-        return;
-      }
-    } catch (err) {
-      console.warn('Iframe print error, fallback to window.print():', err);
+    const existingRoot = document.getElementById('direct-print-root');
+    if (existingRoot) {
+      existingRoot.remove();
     }
 
-    window.print();
+    const printRoot = document.createElement('div');
+    printRoot.id = 'direct-print-root';
+    printRoot.className = 'hidden print:block bg-white text-slate-900 font-sans w-full';
+    printRoot.innerHTML = sheet.innerHTML;
+    document.body.appendChild(printRoot);
+    document.body.classList.add('printing-direct');
+
+    let cleanedUp = false;
+    const cleanup = () => {
+      if (cleanedUp) return;
+      cleanedUp = true;
+      document.body.classList.remove('printing-direct');
+      const node = document.getElementById('direct-print-root');
+      if (node) {
+        node.remove();
+      }
+      window.removeEventListener('afterprint', cleanup);
+    };
+
+    window.addEventListener('afterprint', cleanup);
+
+    try {
+      window.focus();
+      window.print();
+    } catch (err) {
+      console.warn('Direct window.print() error, falling back to HTML export:', err);
+      cleanup();
+      handleDownloadStandaloneHTML();
+      return;
+    }
+
+    // Fallback cleanup for browsers where afterprint does not fire reliably
+    setTimeout(cleanup, 60000);
   };
 
   const handleDownloadStandaloneHTML = () => {
@@ -281,8 +264,8 @@ export const DeboursBreakdownPrintModal: React.FC<DeboursBreakdownPrintModalProp
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-3 sm:p-6 overflow-y-auto backdrop-blur-xs">
-      <div className="bg-white border border-slate-300 rounded-3xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl print:bg-white print:border-none print:shadow-none print:max-w-none print:max-h-none print:p-0 overflow-hidden">
+    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-3 sm:p-6 overflow-y-auto backdrop-blur-xs print:static print:inset-auto print:block print:p-0 print:bg-white print:overflow-visible print:backdrop-blur-none">
+      <div className="bg-white border border-slate-300 rounded-3xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden print:block print:bg-white print:border-none print:rounded-none print:shadow-none print:max-w-none print:max-h-none print:w-full print:p-0 print:overflow-visible">
         
         {/* Modal Controls Bar (Hidden on print) */}
         <div className="print:hidden p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/90 rounded-t-3xl">

@@ -35,6 +35,28 @@
     border: none !important;
   }
 
+  /* Direct body-level print root (bypasses nested iframe & modal overflow issues) */
+  body.printing-direct > *:not(#direct-print-root) {
+    display: none !important;
+  }
+
+  body.printing-direct #direct-print-root,
+  body.printing-direct #direct-print-root * {
+    visibility: visible !important;
+  }
+
+  body.printing-direct #direct-print-root {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: white !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
   @page {
     margin: 1cm;
     size: A4 portrait;
