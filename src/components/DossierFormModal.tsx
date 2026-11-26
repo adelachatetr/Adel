@@ -51,7 +51,7 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
           ? editingDossier.bcAmountEur.toString()
           : ''
       );
-      setBlNumber(editingDossier.blNumber);
+      setBlNumber((editingDossier.blNumber || '').toUpperCase());
       setDemandNature(editingDossier.demandNature || 'B/C');
       const rawMode = (editingDossier.deliveryMode || editingDossier.vesselName || '').toUpperCase();
       const existingMode: DeliveryMode = rawMode === 'FOB' ? 'FOB' : 'CFR';
@@ -114,7 +114,7 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
       clientName: clientName.trim(),
       clientContact: clientContact.trim() || undefined,
       bcAmountEur: parsedEuro,
-      blNumber: blNumber.trim(),
+      blNumber: blNumber.trim().toUpperCase(),
       demandNature,
       deliveryMode,
       vesselName: deliveryMode,
@@ -229,9 +229,9 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
               type="text"
               required
               value={blNumber}
-              onChange={e => setBlNumber(e.target.value)}
-              placeholder="ex: FC-2026-00418 / INV-88392"
-              className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-mono font-bold focus:border-cyan-600"
+              onChange={e => setBlNumber(e.target.value.toUpperCase())}
+              placeholder="EX: FC-2026-00418 / INV-88392"
+              className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-mono font-bold uppercase focus:border-cyan-600"
             />
           </div>
 

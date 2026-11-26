@@ -323,7 +323,7 @@ export const DossierPrintModal: React.FC<DossierPrintModalProps> = ({
               <span className="text-slate-500 block text-[10px] uppercase font-bold">
                 Facture Commerciale N°
               </span>
-              <span className="font-mono font-bold text-slate-900">{dossier.blNumber}</span>
+              <span className="font-mono font-bold text-slate-900">{(dossier.blNumber || '').toUpperCase()}</span>
             </div>
             <div>
               <span className="text-slate-500 block text-[10px] uppercase font-bold">Nature De Demande</span>

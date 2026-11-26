@@ -513,7 +513,12 @@ export default function App() {
     let updatedList: TransitDossier[] = [];
     let savedDossier: TransitDossier;
     if (editingDossier) {
-      savedDossier = { ...editingDossier, ...data, updatedAt: new Date().toISOString() } as TransitDossier;
+      savedDossier = {
+        ...editingDossier,
+        ...data,
+        blNumber: (data.blNumber ?? editingDossier.blNumber ?? '').toUpperCase(),
+        updatedAt: new Date().toISOString()
+      } as TransitDossier;
       updatedList = dossiers.map(d => d.id === editingDossier.id ? savedDossier : d);
     } else {
       savedDossier = {
@@ -524,7 +529,7 @@ export default function App() {
         regime: data.regime,
         bcAmountEur: data.bcAmountEur,
         transportDocType: data.transportDocType || 'BL',
-        blNumber: data.blNumber || 'BL-AUTO',
+        blNumber: (data.blNumber || 'BL-AUTO').toUpperCase(),
         demandNature: data.demandNature || 'B/C',
         declarationNumber: data.declarationNumber,
         deliveryMode: data.deliveryMode || 'CFR',

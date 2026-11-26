@@ -400,7 +400,7 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
 
                     <div className="text-[11px] text-slate-500 mt-1 flex items-center justify-between gap-2 font-medium flex-wrap">
                       <span className="font-mono">
-                        Facture Commerciale N°: {dossier.blNumber}
+                        Facture Commerciale N°: {(dossier.blNumber || '').toUpperCase()}
                       </span>
                       {dossier.portOfDischarge && (
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-50 text-cyan-900 border border-cyan-200 font-semibold truncate max-w-[160px]" title={dossier.portOfDischarge}>
@@ -472,7 +472,7 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                       );
                     })()}
                     <span className="text-xs text-cyan-700 font-mono font-bold">
-                      · Facture Commerciale N° : {selectedDossier.blNumber}
+                      · Facture Commerciale N° : {(selectedDossier.blNumber || '').toUpperCase()}
                     </span>
                     <span className="text-xs text-emerald-700 font-bold">
                       · Nature De Demande : {selectedDossier.demandNature || 'B/C'}
