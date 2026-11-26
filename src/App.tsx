@@ -315,7 +315,7 @@ export default function App() {
                   : 'Modification des détails du chèque',
                 actor: session ? `${session.user.fullName} (${session.user.role})` : 'Responsable Transit',
                 comment: isBlankInvoiceUpdate
-                  ? `Chèque à blanc complété : montant fixé à ${nextAmount.toLocaleString('fr-FR')} ${item.currency}`
+                  ? `Chèque à blanc complété : montant fixé à ${nextAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${item.currency}`
                   : 'Mise à jour des informations administratives'
               },
               ...(item.auditTrail || [])

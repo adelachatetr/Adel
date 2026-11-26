@@ -252,7 +252,7 @@ export function resetAllDataToDemo(): { cheques: TransitCheque[]; dossiers: Tran
 // Format number with non-breaking spaces as thousand separators and before currency to prevent wrapping
 export function formatAmount(amount: number, currency: string = 'DA'): string {
   const formatted = new Intl.NumberFormat('fr-FR', {
-    minimumFractionDigits: 0,
+    minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(amount).replace(/\s/g, '\u00A0');
   return `${formatted}\u00A0${currency}`;
