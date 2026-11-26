@@ -410,6 +410,7 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
                 <option value="BON_A_DELIVRER">Bon à Délivrer (BAD) Obtenu</option>
                 <option value="TRANSMIS_POUR_PAIEMENT">Transmis pour paiement</option>
                 <option value="SORTI_PORT">Sorti Port / Livré</option>
+                <option value="EN_LITIGE">En Litige</option>
                 <option value="SOLDE_ARCHIVE">Soldé & Archivé</option>
               </select>
 
@@ -512,6 +513,17 @@ export const DossierFormModal: React.FC<DossierFormModalProps> = ({
                   }`}
                 >
                   Sorti Port
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStatus('EN_LITIGE')}
+                  className={`px-2 py-0.5 rounded-lg text-[11px] font-semibold border transition-all cursor-pointer ${
+                    status === 'EN_LITIGE'
+                      ? 'bg-red-100 text-red-900 border-red-300 ring-1 ring-red-400 font-bold'
+                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-red-50 hover:text-red-700'
+                  }`}
+                >
+                  En Litige
                 </button>
                 <button
                   type="button"

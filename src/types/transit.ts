@@ -90,6 +90,7 @@ export type DossierStatus =
   | 'BON_A_DELIVRER'            // Bon à Délivrer (BAD) obtenu
   | 'TRANSMIS_POUR_PAIEMENT'    // Transmis pour paiement (Direction des Finances / Comptabilité / Caisse)
   | 'SORTI_PORT'                // Marchandise sortie du port / livrée
+  | 'EN_LITIGE'                 // Dossier en litige
   | 'SOLDE_ARCHIVE';            // Dossier financièrement soldé & archivé
 
 export type DeliveryMode = 'CFR' | 'FOB';

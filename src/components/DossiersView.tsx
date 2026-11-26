@@ -218,6 +218,7 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                 <option value="BON_A_DELIVRER">BAD</option>
                 <option value="TRANSMIS_POUR_PAIEMENT">Transmis pour paiement</option>
                 <option value="SORTI_PORT">Sorti Port</option>
+                <option value="EN_LITIGE">En Litige</option>
                 <option value="SOLDE_ARCHIVE">Soldé</option>
               </select>
             </div>
@@ -463,6 +464,7 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
                               <option value="BON_A_DELIVRER">Bon à Délivrer (BAD)</option>
                               <option value="TRANSMIS_POUR_PAIEMENT">Transmis pour paiement</option>
                               <option value="SORTI_PORT">Sorti Port / Livré</option>
+                              <option value="EN_LITIGE">En Litige</option>
                               <option value="SOLDE_ARCHIVE">Soldé & Archivé</option>
                             </select>
                           )}

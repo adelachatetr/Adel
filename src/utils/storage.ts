@@ -563,6 +563,12 @@ export const DOSSIER_STATUS_CONFIG: Record<DossierStatus, { label: string; textC
     bgClass: 'bg-emerald-50',
     borderClass: 'border-emerald-200'
   },
+  EN_LITIGE: {
+    label: 'En Litige',
+    textClass: 'text-red-800 font-bold',
+    bgClass: 'bg-red-50',
+    borderClass: 'border-red-300'
+  },
   SOLDE_ARCHIVE: {
     label: 'Soldé & Archivé',
     textClass: 'text-purple-800 font-semibold',
