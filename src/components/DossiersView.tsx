@@ -6,6 +6,7 @@ import {
   FileText,
   Filter,
   Trash2,
+  Edit3,
   Printer,
   CheckCircle,
   AlertTriangle,
@@ -145,6 +146,36 @@ export const DossiersView: React.FC<DossiersViewProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled={!selectedDossier}
+            onClick={() => selectedDossier && onEditDossier(selectedDossier)}
+            className={`p-2 rounded-xl border transition-colors ${
+              selectedDossier
+                ? 'bg-white hover:bg-cyan-50 text-slate-700 hover:text-cyan-700 border-slate-300 hover:border-cyan-300 shadow-2xs cursor-pointer'
+                : 'bg-slate-50 text-slate-300 border-slate-200 cursor-not-allowed'
+            }`}
+            title={selectedDossier ? `Modifier le dossier (${selectedDossier.dossierNumber})` : 'Sélectionnez un dossier à modifier'}
+            aria-label="Modifier le dossier"
+          >
+            <Edit3 className="h-4 w-4" />
+          </button>
+
+          <button
+            type="button"
+            disabled={!selectedDossier}
+            onClick={() => selectedDossier && setDossierPendingDelete(selectedDossier)}
+            className={`p-2 rounded-xl border transition-colors ${
+              selectedDossier
+                ? 'bg-white hover:bg-rose-50 text-rose-600 hover:text-rose-700 border-slate-300 hover:border-rose-300 shadow-2xs cursor-pointer'
+                : 'bg-slate-50 text-slate-300 border-slate-200 cursor-not-allowed'
+            }`}
+            title={selectedDossier ? `Supprimer le dossier (${selectedDossier.dossierNumber})` : 'Sélectionnez un dossier à supprimer'}
+            aria-label="Supprimer le dossier"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+
           <button
             onClick={onOpenNewDossier}
             className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-sm shadow-cyan-600/30 transition-all cursor-pointer"
