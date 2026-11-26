@@ -135,8 +135,19 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, companyNam
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-cyan-950 flex flex-col justify-center py-10 px-4 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+    <div className="min-h-screen relative bg-slate-900 flex flex-col justify-center py-10 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <img
+        src="/assets/aistudio/lili_5574055b.png"
+        alt=""
+        aria-hidden="true"
+        className="fixed inset-0 w-full h-full object-cover object-center pointer-events-none select-none z-0"
+      />
+      <div
+        aria-hidden="true"
+        className="fixed inset-0 bg-slate-950/55 pointer-events-none z-0"
+      />
+
+      <div className="relative z-10 sm:mx-auto sm:w-full sm:max-w-md">
         {/* Company Header Box */}
         <div className="flex flex-col items-center text-center">
           <div className="p-3 bg-white rounded-2xl shadow-xl border border-slate-200/20 mb-4 inline-flex items-center justify-center">
@@ -146,18 +157,18 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, companyNam
               className="h-14 w-auto object-contain" 
             />
           </div>
-          <h1 className="text-2xl font-black text-white tracking-wide uppercase">
+          <h1 className="text-2xl font-black text-white tracking-wide uppercase drop-shadow-sm">
             {companyName}
           </h1>
-          <p className="text-xs text-cyan-300 font-semibold tracking-wider uppercase mt-1">
+          <p className="text-xs text-cyan-300 font-semibold tracking-wider uppercase mt-1 drop-shadow-sm">
             GROUPE INDUSTRIEL DES CIMENTS D'ALGÉRIE (GICA) · SCHB
           </p>
           <div className="mt-2 flex items-center justify-center gap-2 flex-wrap">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-500/30 text-cyan-200 text-[11px] font-medium">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-950/85 border border-cyan-500/30 text-cyan-200 text-[11px] font-medium">
               <ShieldCheck className="h-3.5 w-3.5 text-cyan-400" />
               <span>Portail de Transit, Débours & Cautions Maritimes</span>
             </div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800/90 border border-cyan-400/30 text-slate-200 text-[11px] font-bold">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/90 border border-cyan-400/30 text-slate-200 text-[11px] font-bold">
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
               <span>Réalisé par : <strong className="text-cyan-300 font-black">NOUI ADEL</strong></span>
             </div>
@@ -165,7 +176,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, companyNam
         </div>
       </div>
 
-      <div className={`mt-6 sm:mx-auto sm:w-full ${mode === 'REGISTER' ? 'sm:max-w-lg' : 'sm:max-w-md'} transition-all`}>
+      <div className={`relative z-10 mt-6 sm:mx-auto sm:w-full ${mode === 'REGISTER' ? 'sm:max-w-lg' : 'sm:max-w-md'} transition-all`}>
         <div className="bg-white/95 backdrop-blur-md py-8 px-6 sm:px-10 shadow-2xl rounded-3xl border border-white/20 animate-fade-in">
           
           {/* Header depending on mode */}
