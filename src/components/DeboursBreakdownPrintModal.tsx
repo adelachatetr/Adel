@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Printer, 
   X, 
@@ -23,6 +23,7 @@ interface DeboursBreakdownPrintModalProps {
   companyName: string;
   agencyCity: string;
   agencyPhone: string;
+  initialGroupingMode?: 'EXPENSE_NATURE' | 'CATEGORY';
 }
 
 export const DeboursBreakdownPrintModal: React.FC<DeboursBreakdownPrintModalProps> = ({
@@ -32,12 +33,20 @@ export const DeboursBreakdownPrintModal: React.FC<DeboursBreakdownPrintModalProp
   selectedCurrency,
   companyName,
   agencyCity,
-  agencyPhone
+  agencyPhone,
+  initialGroupingMode = 'EXPENSE_NATURE'
 }) => {
   const [showDetailedCheques, setShowDetailedCheques] = useState(true);
   const [periodFilter, setPeriodFilter] = useState<'ALL' | 'THIS_MONTH' | 'THIS_YEAR'>('ALL');
+  const [groupingMode, setGroupingMode] = useState<'EXPENSE_NATURE' | 'CATEGORY'>(initialGroupingMode);
   const [reportRef] = useState(`RAP-DEBOURS-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`);
   const [reportDate] = useState(new Date().toISOString().slice(0, 10));
+
+  useEffect(() => {
+    if (isOpen) {
+      setGroupingMode(initialGroupingMode);
+    }
+  }, [isOpen, initialGroupingMode]);
 
   if (!isOpen) return null;
 
@@ -64,26 +73,93 @@ export const DeboursBreakdownPrintModal: React.FC<DeboursBreakdownPrintModalProp
     return sum + (isNaN(val) ? 0 : val);
   }, 0);
 
-  // Group by category
-  const categoriesMap: Record<string, { count: number; totalAmount: number; chequesList: TransitCheque[] }> = {};
+  // Group by category (including nested expenseNature details)
+  const categoriesMap: Record<
+    string,
+    {
+      count: number;
+      totalAmount: number;
+      chequesList: TransitCheque[];
+      subNaturesMap: Record<string, { count: number; totalAmount: number }>;
+    }
+  > = {};
+
+  // Group by specific Nature de dépenses
+  const expenseNatureMap: Record<
+    string,
+    {
+      key: string;
+      expenseNatureLabel: string;
+      catKey: string;
+      count: number;
+      totalAmount: number;
+      chequesList: TransitCheque[];
+    }
+  > = {};
 
   validCheques.forEach(c => {
     const cat = c.category;
-    if (!categoriesMap[cat]) {
-      categoriesMap[cat] = { count: 0, totalAmount: 0, chequesList: [] };
-    }
     const val = typeof c.amount === 'number' ? c.amount : parseFloat(String(c.amount).replace(/[^0-9.-]+/g, '')) || 0;
+    const catInfo = CATEGORY_LABELS[cat as keyof typeof CATEGORY_LABELS];
+    const natureLabel = c.expenseNature?.trim() || `${catInfo?.short || cat} (Non précisée)`;
+
+    if (!categoriesMap[cat]) {
+      categoriesMap[cat] = { count: 0, totalAmount: 0, chequesList: [], subNaturesMap: {} };
+    }
     categoriesMap[cat].count += 1;
     categoriesMap[cat].totalAmount += val;
     categoriesMap[cat].chequesList.push(c);
+
+    if (!categoriesMap[cat].subNaturesMap[natureLabel]) {
+      categoriesMap[cat].subNaturesMap[natureLabel] = { count: 0, totalAmount: 0 };
+    }
+    categoriesMap[cat].subNaturesMap[natureLabel].count += 1;
+    categoriesMap[cat].subNaturesMap[natureLabel].totalAmount += val;
+
+    const expKey = `${cat}::${natureLabel}`;
+    if (!expenseNatureMap[expKey]) {
+      expenseNatureMap[expKey] = {
+        key: expKey,
+        expenseNatureLabel: natureLabel,
+        catKey: cat,
+        count: 0,
+        totalAmount: 0,
+        chequesList: []
+      };
+    }
+    expenseNatureMap[expKey].count += 1;
+    expenseNatureMap[expKey].totalAmount += val;
+    expenseNatureMap[expKey].chequesList.push(c);
   });
 
   const categoryBreakdownList = Object.entries(categoriesMap)
     .map(([catKey, data]) => {
       const percent = totalDeboursAmount > 0 ? (data.totalAmount / totalDeboursAmount) * 100 : 0;
+      const subNatures = Object.entries(data.subNaturesMap)
+        .map(([name, subData]) => ({
+          name,
+          count: subData.count,
+          totalAmount: subData.totalAmount,
+          percentInCategory:
+            data.totalAmount > 0 ? Math.round((subData.totalAmount / data.totalAmount) * 1000) / 10 : 0
+        }))
+        .sort((a, b) => b.totalAmount - a.totalAmount);
       return {
         catKey,
-        ...data,
+        count: data.count,
+        totalAmount: data.totalAmount,
+        chequesList: data.chequesList,
+        subNatures,
+        percent: Math.round(percent * 10) / 10
+      };
+    })
+    .sort((a, b) => b.totalAmount - a.totalAmount);
+
+  const expenseNatureBreakdownList = Object.values(expenseNatureMap)
+    .map(item => {
+      const percent = totalDeboursAmount > 0 ? (item.totalAmount / totalDeboursAmount) * 100 : 0;
+      return {
+        ...item,
         percent: Math.round(percent * 10) / 10
       };
     })
@@ -216,10 +292,12 @@ export const DeboursBreakdownPrintModal: React.FC<DeboursBreakdownPrintModalProp
             </div>
             <div>
               <h2 className="text-sm font-bold text-slate-900">
-                Impression : Répartition des Débours par Nature de Charge
+                {groupingMode === 'EXPENSE_NATURE'
+                  ? 'Impression : Répartition des Débours par Nature de Dépenses'
+                  : 'Impression : Répartition des Débours par Nature de Charge'}
               </h2>
               <p className="text-xs text-slate-500 font-medium">
-                Rapport financier officiel pour la direction générale et la comptabilité
+                Rapport financier détaillé pour la direction générale et la comptabilité
               </p>
             </div>
           </div>
@@ -253,7 +331,20 @@ export const DeboursBreakdownPrintModal: React.FC<DeboursBreakdownPrintModalProp
 
         {/* Configuration Row (Hidden on print) */}
         <div className="print:hidden p-3 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <Layers className="h-3.5 w-3.5 text-cyan-700" />
+              <span className="font-semibold text-slate-700">Détail par :</span>
+              <select
+                value={groupingMode}
+                onChange={e => setGroupingMode(e.target.value as 'EXPENSE_NATURE' | 'CATEGORY')}
+                className="bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-bold text-cyan-900 focus:outline-none focus:border-cyan-600 cursor-pointer"
+              >
+                <option value="EXPENSE_NATURE">Nature de dépenses (Détaillé)</option>
+                <option value="CATEGORY">Nature de Charge / Catégorie</option>
+              </select>
+            </div>
+
             <div className="flex items-center gap-1.5">
               <Calendar className="h-3.5 w-3.5 text-slate-500" />
               <span className="font-semibold text-slate-700">Période :</span>
@@ -275,7 +366,7 @@ export const DeboursBreakdownPrintModal: React.FC<DeboursBreakdownPrintModalProp
                 onChange={e => setShowDetailedCheques(e.target.checked)}
                 className="rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
               />
-              <span>Inclure la liste détaillée des chèques émis par nature</span>
+              <span>Inclure la liste détaillée des chèques émis</span>
             </label>
           </div>
 
@@ -333,10 +424,14 @@ export const DeboursBreakdownPrintModal: React.FC<DeboursBreakdownPrintModalProp
 
             <div className="mt-4 pt-3 border-t border-slate-300 text-center">
               <h2 className="text-base font-extrabold uppercase tracking-wide text-slate-900">
-                ÉTAT RÉCAPITULATIF : RÉPARTITION DES DÉBOURS PAR NATURE DE CHARGE
+                {groupingMode === 'EXPENSE_NATURE'
+                  ? 'ÉTAT RÉCAPITULATIF : RÉPARTITION DES DÉBOURS PAR NATURE DE DÉPENSES'
+                  : 'ÉTAT RÉCAPITULATIF : RÉPARTITION DES DÉBOURS PAR NATURE DE CHARGE'}
               </h2>
               <p className="text-xs text-slate-600 mt-0.5">
-                Ventilation analytique des paiements de transit (Douane, Cautions Conteneurs, Frais Maritimes, Port & Transport)
+                {groupingMode === 'EXPENSE_NATURE'
+                  ? 'Ventilation analytique détaillée par nature de dépense (fret, droits de douane, acconage, cautions, transport...)'
+                  : 'Ventilation analytique par catégorie avec détail des natures de dépenses associées'}
               </p>
             </div>
           </div>
@@ -359,7 +454,9 @@ export const DeboursBreakdownPrintModal: React.FC<DeboursBreakdownPrintModalProp
                 {validCheques.length} chèques émis
               </span>
               <span className="text-[10px] text-slate-500">
-                Répartis sur {categoryBreakdownList.length} natures de charges
+                {groupingMode === 'EXPENSE_NATURE'
+                  ? `Répartis sur ${expenseNatureBreakdownList.length} natures de dépenses`
+                  : `Répartis sur ${categoryBreakdownList.length} natures de charges`}
               </span>
             </div>
 
@@ -382,7 +479,11 @@ export const DeboursBreakdownPrintModal: React.FC<DeboursBreakdownPrintModalProp
               <thead>
                 <tr className="bg-slate-100 border-b-2 border-slate-300 text-slate-800 font-bold uppercase text-[11px]">
                   <th className="py-2.5 px-3 border-r border-slate-300 w-12 text-center">N°</th>
-                  <th className="py-2.5 px-3 border-r border-slate-300">Nature de la Charge / Débours</th>
+                  <th className="py-2.5 px-3 border-r border-slate-300">
+                    {groupingMode === 'EXPENSE_NATURE'
+                      ? 'Nature de Dépenses & Catégorie'
+                      : 'Nature de la Charge / Catégorie & Détail'}
+                  </th>
                   <th className="py-2.5 px-3 border-r border-slate-300 text-center w-24">Nbre Chèques</th>
                   <th className="py-2.5 px-3 border-r border-slate-300 text-right w-36">Montant Total</th>
                   <th className="py-2.5 px-3 border-r border-slate-300 text-center w-20">Part (%)</th>
@@ -390,33 +491,24 @@ export const DeboursBreakdownPrintModal: React.FC<DeboursBreakdownPrintModalProp
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
-                {categoryBreakdownList.length === 0 ? (
+                {validCheques.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="py-8 text-center text-slate-400 italic">
                       Aucun débours émis pour cette période.
                     </td>
                   </tr>
-                ) : (
-                  categoryBreakdownList.map((item, idx) => {
+                ) : groupingMode === 'EXPENSE_NATURE' ? (
+                  expenseNatureBreakdownList.map((item, idx) => {
                     const info = CATEGORY_LABELS[item.catKey as keyof typeof CATEGORY_LABELS] || { label: item.catKey };
                     return (
-                      <tr key={item.catKey} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
+                      <tr key={item.key} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
                         <td className="py-2 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-600">
                           {idx + 1}
                         </td>
                         <td className="py-2 px-3 border-r border-slate-200">
-                          <strong className="text-slate-900 font-bold">{info.label}</strong>
-                          <div className="text-[10px] text-slate-500">
-                            {item.catKey === 'FRAIS_MARITIMES' && 'Fret maritime, échange B/L, BAD, surestaries (FFM)'}
-                            {item.catKey === 'MANUTENTION_PORT' && 'Frais portuaires, acconage, magasinage et manutention (FPM)'}
-                            {item.catKey === 'DROITS_DOUANE' && 'Liquidation Trésor Public / Droits et taxes douaniers (DTD)'}
-                            {item.catKey === 'HONORAIRES_TRANSIT' && 'Honoraires et prestations du transitaire (HFT)'}
-                            {item.catKey === 'TRANSPORT_TRACTION' && 'Transport terrestre et traction port-usine (FTT)'}
-                            {item.catKey === 'ASSURANCE_CAAT' && 'Assurance importation et transport marchandises (ASS)'}
-                            {item.catKey === 'CAUTION_CONTENEUR' && 'Cautions et consignations conteneurs remboursables (CC)'}
-                            {item.catKey === 'CX' && 'Pénalités (CX), contentieux douaniers et amendes (PAD)'}
-                            {item.catKey === 'AUTRE_DEBOURS' && 'Autres frais et débours annexes (AFD)'}
-                            {item.catKey === 'AVANCE_PROVISION' && 'Provisions et avances versées pour les débours'}
+                          <strong className="text-slate-900 font-bold">{item.expenseNatureLabel}</strong>
+                          <div className="text-[10px] text-cyan-800 font-semibold mt-0.5">
+                            Catégorie : {info.label}
                           </div>
                         </td>
                         <td className="py-2 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-800">
@@ -429,6 +521,49 @@ export const DeboursBreakdownPrintModal: React.FC<DeboursBreakdownPrintModalProp
                           {item.percent}%
                         </td>
                         <td className="py-2 px-3">
+                          <div className="w-full bg-slate-200 h-3 rounded-full overflow-hidden flex items-center">
+                            <div 
+                              className="h-full bg-cyan-700"
+                              style={{ width: `${Math.min(item.percent, 100)}%` }}
+                            />
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  categoryBreakdownList.map((item, idx) => {
+                    const info = CATEGORY_LABELS[item.catKey as keyof typeof CATEGORY_LABELS] || { label: item.catKey };
+                    return (
+                      <tr key={item.catKey} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
+                        <td className="py-2 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-600 align-top">
+                          {idx + 1}
+                        </td>
+                        <td className="py-2 px-3 border-r border-slate-200">
+                          <strong className="text-slate-900 font-bold">{info.label}</strong>
+                          {item.subNatures.length > 0 && (
+                            <div className="mt-1 pl-2 border-l-2 border-cyan-200 space-y-0.5">
+                              {item.subNatures.map(sub => (
+                                <div key={sub.name} className="text-[10px] text-slate-700 flex items-center justify-between gap-2">
+                                  <span>• {sub.name} ({sub.count})</span>
+                                  <span className="font-mono font-semibold text-slate-900 whitespace-nowrap">
+                                    {formatAmount(sub.totalAmount, selectedCurrency)} ({sub.percentInCategory}%)
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </td>
+                        <td className="py-2 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-800 align-top">
+                          {item.count}
+                        </td>
+                        <td className="py-2 px-3 border-r border-slate-200 text-right font-mono font-bold text-slate-950 whitespace-nowrap align-top">
+                          {formatAmount(item.totalAmount, selectedCurrency)}
+                        </td>
+                        <td className="py-2 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-800 align-top">
+                          {item.percent}%
+                        </td>
+                        <td className="py-2 px-3 align-top pt-3">
                           <div className="w-full bg-slate-200 h-3 rounded-full overflow-hidden flex items-center">
                             <div 
                               className="h-full bg-cyan-700"
@@ -477,56 +612,74 @@ export const DeboursBreakdownPrintModal: React.FC<DeboursBreakdownPrintModalProp
           </div>
 
           {/* Detailed list of cheques if requested */}
-          {showDetailedCheques && categoryBreakdownList.length > 0 && (
+          {showDetailedCheques && validCheques.length > 0 && (
             <div className="mt-6 pt-4 border-t border-slate-300">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-3 flex items-center gap-1.5">
                 <FileText className="h-4 w-4 text-cyan-700" />
-                <span>Détail exhaustif des chèques rattachés par nature de charge :</span>
+                <span>
+                  {groupingMode === 'EXPENSE_NATURE'
+                    ? 'Détail exhaustif des chèques rattachés par nature de dépenses :'
+                    : 'Détail exhaustif des chèques rattachés par nature de charge :'}
+                </span>
               </h3>
 
               <div className="space-y-4">
-                {categoryBreakdownList.map(item => {
-                  const info = CATEGORY_LABELS[item.catKey as keyof typeof CATEGORY_LABELS] || { label: item.catKey };
-                  return (
-                    <div key={`detail-${item.catKey}`} className="border border-slate-200 rounded-lg overflow-hidden">
-                      <div className="bg-slate-100 px-3 py-1.5 font-bold text-xs text-slate-800 flex items-center justify-between">
-                        <span>{info.label} ({item.count} chèques)</span>
-                        <span className="font-mono text-cyan-900">{formatAmount(item.totalAmount, selectedCurrency)}</span>
-                      </div>
-                      <table className="w-full text-left text-[11px]">
-                        <thead>
-                          <tr className="bg-slate-50 text-slate-600 border-b border-slate-200">
-                            <th className="py-1 px-2">Nature de chèque</th>
-                            <th className="py-1 px-2">Banque</th>
-                            <th className="py-1 px-2">Bénéficiaire</th>
-                            <th className="py-1 px-2">Dossier / Client</th>
-                            <th className="py-1 px-2">Date Remis à Transitaires</th>
-                            <th className="py-1 px-2 text-right">Montant</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 font-mono">
-                          {item.chequesList.map(chq => (
-                            <tr key={chq.id} className="hover:bg-slate-50">
-                              <td className={`py-1 px-2 font-sans font-bold ${chq.chequeNature === 'A_BLANC' ? 'text-red-700' : 'text-slate-800'}`}>
-                                {CHEQUE_NATURE_LABELS[chq.chequeNature || 'ORDINAIRE']?.label}
-                                <span className="block font-mono text-[10px] font-normal text-slate-500">{chq.chequeNumber}</span>
-                              </td>
-                              <td className="py-1 px-2 font-sans text-slate-600 truncate max-w-[120px]">{chq.bankName}</td>
-                              <td className="py-1 px-2 font-sans text-slate-800 font-semibold truncate max-w-[160px]">{chq.beneficiary}</td>
-                              <td className="py-1 px-2 font-sans text-slate-600">{chq.dossierNumber}</td>
-                              <td className="py-1 px-2 text-slate-600">{formatShortDate(chq.dateEmission)}</td>
-                              <td className={`py-1 px-2 text-right font-bold whitespace-nowrap ${chq.chequeNature === 'A_BLANC' && chq.amount === 0 ? 'text-red-700' : 'text-slate-900'}`}>
-                                {chq.chequeNature === 'A_BLANC' && chq.amount === 0
-                                  ? `0,00\u00A0${chq.currency}`
-                                  : formatAmount(chq.amount, chq.currency)}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                {(groupingMode === 'EXPENSE_NATURE'
+                  ? expenseNatureBreakdownList.map(item => ({
+                      key: item.key,
+                      title: `${item.expenseNatureLabel} — ${(CATEGORY_LABELS[item.catKey as keyof typeof CATEGORY_LABELS]?.short || item.catKey)}`,
+                      count: item.count,
+                      totalAmount: item.totalAmount,
+                      chequesList: item.chequesList
+                    }))
+                  : categoryBreakdownList.map(item => ({
+                      key: item.catKey,
+                      title: CATEGORY_LABELS[item.catKey as keyof typeof CATEGORY_LABELS]?.label || item.catKey,
+                      count: item.count,
+                      totalAmount: item.totalAmount,
+                      chequesList: item.chequesList
+                    }))
+                ).map(group => (
+                  <div key={`detail-${group.key}`} className="border border-slate-200 rounded-lg overflow-hidden">
+                    <div className="bg-slate-100 px-3 py-1.5 font-bold text-xs text-slate-800 flex items-center justify-between">
+                      <span>{group.title} ({group.count} chèques)</span>
+                      <span className="font-mono text-cyan-900">{formatAmount(group.totalAmount, selectedCurrency)}</span>
                     </div>
-                  );
-                })}
+                    <table className="w-full text-left text-[11px]">
+                      <thead>
+                        <tr className="bg-slate-50 text-slate-600 border-b border-slate-200">
+                          <th className="py-1 px-2">Nature de chèque</th>
+                          <th className="py-1 px-2">Nature de dépenses</th>
+                          <th className="py-1 px-2">Bénéficiaire</th>
+                          <th className="py-1 px-2">Dossier / Client</th>
+                          <th className="py-1 px-2">Date Remis à Transitaires</th>
+                          <th className="py-1 px-2 text-right">Montant</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 font-mono">
+                        {group.chequesList.map(chq => (
+                          <tr key={chq.id} className="hover:bg-slate-50">
+                            <td className={`py-1 px-2 font-sans font-bold ${chq.chequeNature === 'A_BLANC' ? 'text-red-700' : 'text-slate-800'}`}>
+                              {CHEQUE_NATURE_LABELS[chq.chequeNature || 'ORDINAIRE']?.label}
+                              <span className="block font-mono text-[10px] font-normal text-slate-500">{chq.chequeNumber}</span>
+                            </td>
+                            <td className="py-1 px-2 font-sans text-cyan-900 font-semibold">
+                              {chq.expenseNature || CATEGORY_LABELS[chq.category]?.short || chq.category}
+                            </td>
+                            <td className="py-1 px-2 font-sans text-slate-800 font-semibold truncate max-w-[160px]">{chq.beneficiary}</td>
+                            <td className="py-1 px-2 font-sans text-slate-600">{chq.dossierNumber}</td>
+                            <td className="py-1 px-2 text-slate-600">{formatShortDate(chq.dateEmission)}</td>
+                            <td className={`py-1 px-2 text-right font-bold whitespace-nowrap ${chq.chequeNature === 'A_BLANC' && chq.amount === 0 ? 'text-red-700' : 'text-slate-900'}`}>
+                              {chq.chequeNature === 'A_BLANC' && chq.amount === 0
+                                ? `0,00\u00A0${chq.currency}`
+                                : formatAmount(chq.amount, chq.currency)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ))}
               </div>
             </div>
           )}

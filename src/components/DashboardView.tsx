@@ -38,6 +38,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   agencyPhone = '+213 (0) 31 88 99 00'
 }) => {
   const [isPrintBreakdownOpen, setIsPrintBreakdownOpen] = useState(false);
+  const [breakdownMode, setBreakdownMode] = useState<'EXPENSE_NATURE' | 'CATEGORY'>('EXPENSE_NATURE');
   // Financial computations
   const totalDeboursEmis = cheques
     .filter(c => c.direction === 'EMIS' && c.status !== 'ANNULE')
@@ -67,15 +68,47 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     .filter(c => c.direction === 'RECU' && c.status === 'ENCAISSE')
     .reduce((sum, c) => sum + c.amount, 0);
 
-  // Category breakdown for emitted cheques
+  const emittedValidCheques = cheques.filter(c => c.direction === 'EMIS' && c.status !== 'ANNULE');
+
+  // Category breakdown for emitted cheques (with nested expense natures for detail)
   const categoryBreakdown = Object.entries(
-    cheques
-      .filter(c => c.direction === 'EMIS' && c.status !== 'ANNULE')
-      .reduce((acc, c) => {
-        acc[c.category] = (acc[c.category] || 0) + c.amount;
-        return acc;
-      }, {} as Record<string, number>)
-  ).sort((a, b) => b[1] - a[1]);
+    emittedValidCheques.reduce((acc, c) => {
+      if (!acc[c.category]) {
+        acc[c.category] = { amount: 0, count: 0, subNatures: {} as Record<string, { amount: number; count: number }> };
+      }
+      acc[c.category].amount += c.amount;
+      acc[c.category].count += 1;
+      const natureKey = c.expenseNature?.trim() || 'Non précisée';
+      if (!acc[c.category].subNatures[natureKey]) {
+        acc[c.category].subNatures[natureKey] = { amount: 0, count: 0 };
+      }
+      acc[c.category].subNatures[natureKey].amount += c.amount;
+      acc[c.category].subNatures[natureKey].count += 1;
+      return acc;
+    }, {} as Record<string, { amount: number; count: number; subNatures: Record<string, { amount: number; count: number }> }>)
+  ).sort((a, b) => b[1].amount - a[1].amount);
+
+  // Detailed Nature de dépenses breakdown for emitted cheques
+  const expenseNatureBreakdown = Object.values(
+    emittedValidCheques.reduce((acc, c) => {
+      const catInfo = CATEGORY_LABELS[c.category as keyof typeof CATEGORY_LABELS];
+      const natureLabel = c.expenseNature?.trim() || `${catInfo?.short || c.category} (Non précisée)`;
+      const key = `${c.category}::${natureLabel}`;
+      if (!acc[key]) {
+        acc[key] = {
+          key,
+          label: natureLabel,
+          category: c.category,
+          categoryShort: catInfo?.short || c.category,
+          amount: 0,
+          count: 0
+        };
+      }
+      acc[key].amount += c.amount;
+      acc[key].count += 1;
+      return acc;
+    }, {} as Record<string, { key: string; label: string; category: string; categoryShort: string; amount: number; count: number }>)
+  ).sort((a, b) => b.amount - a.amount);
 
   // Shipping line caution breakdown
   const shippingLineCautionBreakdown = Object.entries(
@@ -327,15 +360,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
       {/* Breakdown Charts / Proportions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Répartition par Catégorie de Débours */}
+        {/* Répartition détaillée par Nature de dépenses / Catégorie */}
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
-          <div className="flex items-start justify-between gap-3 mb-4">
+          <div className="flex items-start justify-between gap-3 mb-3">
             <div>
               <h3 className="text-sm font-bold text-slate-900">
-                Répartition des Débours par Nature de Charge
+                {breakdownMode === 'EXPENSE_NATURE'
+                  ? 'Répartition des Débours par Nature de Dépenses'
+                  : 'Répartition des Débours par Nature de Charge'}
               </h3>
               <p className="text-xs text-slate-500 font-medium">
-                Douane, cautions, frais d'échange B/L, acconage et transport
+                {breakdownMode === 'EXPENSE_NATURE'
+                  ? 'Ventilation détaillée par poste de dépense (fret, douane, acconage, caution...)'
+                  : 'Synthèse par catégorie avec détail des natures de dépenses'}
               </p>
             </div>
             <button
@@ -349,35 +386,127 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </button>
           </div>
 
-          <div className="space-y-3.5">
-            {categoryBreakdown.map(([catKey, amount]) => {
-              const info = CATEGORY_LABELS[catKey as keyof typeof CATEGORY_LABELS] || { label: catKey };
-              const percent = totalDeboursEmis > 0 ? Math.round((amount / totalDeboursEmis) * 100) : 0;
-              return (
-                <div key={catKey} className="space-y-1.5">
-                  <div className="flex justify-between text-xs font-medium">
-                    <span className="text-slate-700">{info.label}</span>
-                    <span className="font-mono text-slate-900 font-bold">
-                      {formatAmount(amount, selectedCurrency)} <span className="text-slate-400 font-normal">({percent}%)</span>
-                    </span>
-                  </div>
-                  <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full ${
-                        catKey === 'CAUTION_CONTENEUR' ? 'bg-amber-500' :
-                        catKey === 'DROITS_DOUANE' ? 'bg-emerald-600' :
-                        catKey === 'FRAIS_MARITIMES' ? 'bg-cyan-600' :
-                        catKey === 'MANUTENTION_PORT' ? 'bg-indigo-600' :
-                        catKey === 'CX' ? 'bg-orange-500' :
-                        catKey === 'ASSURANCE_CAAT' ? 'bg-rose-600' : 'bg-purple-600'
-                      }`}
-                      style={{ width: `${Math.min(percent, 100)}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
+          <div className="inline-flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 mb-4">
+            <button
+              type="button"
+              onClick={() => setBreakdownMode('EXPENSE_NATURE')}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                breakdownMode === 'EXPENSE_NATURE'
+                  ? 'bg-white text-cyan-800 shadow-2xs border border-slate-200'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Par Nature de dépenses ({expenseNatureBreakdown.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setBreakdownMode('CATEGORY')}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                breakdownMode === 'CATEGORY'
+                  ? 'bg-white text-cyan-800 shadow-2xs border border-slate-200'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Par Nature de Charge ({categoryBreakdown.length})
+            </button>
           </div>
+
+          {breakdownMode === 'EXPENSE_NATURE' ? (
+            <div className="space-y-3 max-h-[360px] overflow-y-auto pr-1">
+              {expenseNatureBreakdown.length === 0 ? (
+                <div className="text-xs text-slate-400 py-6 text-center italic">
+                  Aucun débours émis enregistré.
+                </div>
+              ) : (
+                expenseNatureBreakdown.map(item => {
+                  const percent = totalDeboursEmis > 0 ? Math.round((item.amount / totalDeboursEmis) * 100) : 0;
+                  const barColor =
+                    item.category === 'CAUTION_CONTENEUR' ? 'bg-amber-500' :
+                    item.category === 'DROITS_DOUANE' ? 'bg-emerald-600' :
+                    item.category === 'FRAIS_MARITIMES' ? 'bg-cyan-600' :
+                    item.category === 'MANUTENTION_PORT' ? 'bg-indigo-600' :
+                    item.category === 'CX' ? 'bg-orange-500' :
+                    item.category === 'ASSURANCE_CAAT' ? 'bg-rose-600' : 'bg-purple-600';
+                  return (
+                    <div key={item.key} className="space-y-1">
+                      <div className="flex justify-between items-start gap-2 text-xs font-medium">
+                        <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                          <span className="text-slate-800 font-semibold">{item.label}</span>
+                          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 border border-slate-200">
+                            {item.categoryShort}
+                          </span>
+                          <span className="text-[10px] text-slate-400">
+                            ({item.count} chq)
+                          </span>
+                        </div>
+                        <span className="font-mono text-slate-900 font-bold whitespace-nowrap shrink-0">
+                          {formatAmount(item.amount, selectedCurrency)} <span className="text-slate-400 font-normal">({percent}%)</span>
+                        </span>
+                      </div>
+                      <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full ${barColor}`}
+                          style={{ width: `${Math.min(percent, 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          ) : (
+            <div className="space-y-4 max-h-[360px] overflow-y-auto pr-1">
+              {categoryBreakdown.length === 0 ? (
+                <div className="text-xs text-slate-400 py-6 text-center italic">
+                  Aucun débours émis enregistré.
+                </div>
+              ) : (
+                categoryBreakdown.map(([catKey, catData]) => {
+                  const info = CATEGORY_LABELS[catKey as keyof typeof CATEGORY_LABELS] || { label: catKey };
+                  const percent = totalDeboursEmis > 0 ? Math.round((catData.amount / totalDeboursEmis) * 100) : 0;
+                  const subList = Object.entries(catData.subNatures).sort((a, b) => b[1].amount - a[1].amount);
+                  return (
+                    <div key={catKey} className="space-y-1.5">
+                      <div className="flex justify-between text-xs font-medium">
+                        <span className="text-slate-800 font-bold">{info.label}</span>
+                        <span className="font-mono text-slate-900 font-bold">
+                          {formatAmount(catData.amount, selectedCurrency)} <span className="text-slate-400 font-normal">({percent}%)</span>
+                        </span>
+                      </div>
+                      <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full ${
+                            catKey === 'CAUTION_CONTENEUR' ? 'bg-amber-500' :
+                            catKey === 'DROITS_DOUANE' ? 'bg-emerald-600' :
+                            catKey === 'FRAIS_MARITIMES' ? 'bg-cyan-600' :
+                            catKey === 'MANUTENTION_PORT' ? 'bg-indigo-600' :
+                            catKey === 'CX' ? 'bg-orange-500' :
+                            catKey === 'ASSURANCE_CAAT' ? 'bg-rose-600' : 'bg-purple-600'
+                          }`}
+                          style={{ width: `${Math.min(percent, 100)}%` }}
+                        />
+                      </div>
+                      {subList.length > 0 && (
+                        <div className="pl-3 border-l-2 border-slate-200 space-y-1 pt-0.5">
+                          {subList.map(([subName, subVal]) => {
+                            const subPct = catData.amount > 0 ? Math.round((subVal.amount / catData.amount) * 100) : 0;
+                            return (
+                              <div key={subName} className="flex items-center justify-between text-[11px] text-slate-600 gap-2">
+                                <span className="truncate">· {subName} <span className="text-slate-400">({subVal.count})</span></span>
+                                <span className="font-mono font-semibold text-slate-800 whitespace-nowrap">
+                                  {formatAmount(subVal.amount, selectedCurrency)} <span className="text-slate-400 font-normal">({subPct}%)</span>
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
         </div>
 
         {/* Cautions par Compagnie Maritime */}
@@ -503,6 +632,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         companyName={companyName}
         agencyCity={agencyCity}
         agencyPhone={agencyPhone}
+        initialGroupingMode={breakdownMode}
       />
     </div>
   );
