@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Printer, X, Download } from 'lucide-react';
 import { TransitCheque } from '../types/transit';
 import { formatAmount, formatShortDate, CATEGORY_LABELS, CHEQUE_NATURE_LABELS } from '../utils/storage';
@@ -286,12 +287,12 @@ export const DeboursBreakdownPrintModal: React.FC<DeboursBreakdownPrintModalProp
       ? 'Mois en cours'
       : `Exercice annuel ${new Date().getFullYear()}`;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-2 sm:p-5 overflow-y-auto backdrop-blur-xs print:p-0 print:bg-white print:static print:overflow-visible">
       <div className="bg-white border border-slate-300 rounded-2xl max-w-5xl w-full max-h-[94vh] flex flex-col shadow-2xl print:bg-white print:border-none print:shadow-none print:max-w-none print:max-h-none print:p-0">
         
         {/* Modal Controls Bar (Hidden when printing) */}
-        <div className="print:hidden p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/90 rounded-t-2xl">
+        <div className="print:hidden shrink-0 p-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 bg-slate-50/90 rounded-t-2xl">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-cyan-100 text-cyan-800 border border-cyan-200">
               <Printer className="h-5 w-5" />
@@ -342,7 +343,7 @@ export const DeboursBreakdownPrintModal: React.FC<DeboursBreakdownPrintModalProp
         </div>
 
         {/* Configuration Row (Hidden when printing) */}
-        <div className="print:hidden p-3 bg-slate-50 border-b border-slate-200 space-y-2.5 text-xs">
+        <div className="print:hidden shrink-0 p-3 bg-slate-50 border-b border-slate-200 space-y-2.5 text-xs">
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
             <div>
               <label className="block text-slate-600 font-semibold mb-1">Détail par :</label>
@@ -411,7 +412,7 @@ export const DeboursBreakdownPrintModal: React.FC<DeboursBreakdownPrintModalProp
         {/* PRINTABLE SHEET (White paper A4 style — identical structure to DossierPrintModal) */}
         <div 
           id="printable-debours-breakdown-sheet"
-          className="printable-document flex-1 overflow-y-auto p-6 sm:p-8 bg-white text-slate-900 font-sans print:p-0 print:overflow-visible"
+          className="printable-document flex-1 min-h-0 overflow-y-auto p-6 sm:p-8 bg-white text-slate-900 font-sans print:p-0 print:overflow-visible"
         >
           
           {/* Header */}
@@ -753,6 +754,7 @@ export const DeboursBreakdownPrintModal: React.FC<DeboursBreakdownPrintModalProp
         </div>
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

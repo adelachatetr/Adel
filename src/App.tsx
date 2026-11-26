@@ -653,17 +653,17 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen relative bg-slate-100 text-slate-900 flex flex-col font-['Plus_Jakarta_Sans',sans-serif]">
+    <div className="min-h-screen relative isolate bg-slate-100 text-slate-900 flex flex-col font-['Plus_Jakarta_Sans',sans-serif]">
       {/* Application Background Image */}
       <img
         src="/assets/aistudio/lili_5574055b.png"
         alt=""
         aria-hidden="true"
-        className="fixed inset-0 w-full h-full object-cover object-center pointer-events-none select-none z-0 print:hidden"
+        className="fixed inset-0 w-full h-full object-cover object-center pointer-events-none select-none -z-10 print:hidden"
       />
       <div
         aria-hidden="true"
-        className="fixed inset-0 bg-slate-100/45 pointer-events-none z-0 print:hidden"
+        className="fixed inset-0 bg-slate-100/45 pointer-events-none -z-10 print:hidden"
       />
 
       {/* Real-time sync feedback notification */}
@@ -736,7 +736,7 @@ export default function App() {
       />
 
       {/* Main Workspace Body */}
-      <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {activeTab === 'dashboard' && (
           <DashboardView
             cheques={cheques}
@@ -823,7 +823,7 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-slate-200 bg-white/95 backdrop-blur-sm py-4 text-xs text-slate-500 shadow-2xs">
+      <footer className="border-t border-slate-200 bg-white/95 backdrop-blur-sm py-4 text-xs text-slate-500 shadow-2xs">
         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <img 
