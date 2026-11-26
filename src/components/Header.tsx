@@ -91,11 +91,18 @@ export const Header: React.FC<HeaderProps> = ({
           
           {/* Left: Brand Logo & Title */}
           <div className="flex items-center gap-3">
-            <div className="bg-white p-1 rounded-xl border border-slate-200 shadow-2xs flex items-center justify-center shrink-0">
+            <div className="flex flex-col items-center gap-1 shrink-0">
+              <div className="bg-white p-1 rounded-xl border border-slate-200 shadow-2xs flex items-center justify-center">
+                <img
+                  src={GICA_LOGO_BASE64}
+                  alt="Logo Groupe GICA - SCHB"
+                  className="h-9 sm:h-10 w-auto object-contain"
+                />
+              </div>
               <img
-                src={GICA_LOGO_BASE64}
-                alt="Logo Groupe GICA - SCHB"
-                className="h-9 sm:h-10 w-auto object-contain"
+                src="/assets/aistudio/tttttttttttttttttttttt_3a5b8ed1.png"
+                alt="Transit Maritime, Aérien et Terrestre"
+                className="h-8 sm:h-10 w-auto object-contain mix-blend-multiply select-none"
               />
             </div>
             <div>
@@ -313,15 +320,6 @@ export const Header: React.FC<HeaderProps> = ({
                   </div>
                 </div>
               )}
-            </div>
-
-            {/* Illustration Transit Multimodal (En-tête à droite) */}
-            <div className="flex items-center shrink-0 pl-1">
-              <img
-                src="/assets/aistudio/tttttttttttttttttttttt_3a5b8ed1.png"
-                alt="Transit Maritime, Aérien et Terrestre"
-                className="h-11 sm:h-12 md:h-14 w-auto object-contain mix-blend-multiply select-none"
-              />
             </div>
 
           </div>
