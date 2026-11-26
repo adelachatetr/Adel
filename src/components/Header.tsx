@@ -315,6 +315,15 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </div>
 
+            {/* Illustration Transit Multimodal (En-tête à droite) */}
+            <div className="flex items-center shrink-0 pl-1">
+              <img
+                src="/assets/aistudio/tttttttttttttttttttttt_3a5b8ed1.png"
+                alt="Transit Maritime, Aérien et Terrestre"
+                className="h-11 sm:h-12 md:h-14 w-auto object-contain mix-blend-multiply select-none"
+              />
+            </div>
+
           </div>
         </div>
 
